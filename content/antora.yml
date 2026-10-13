@@ -1,0 +1,12 @@
+name: modules
+title: OpenShift Cloud Workshop
+version: master
+nav:
+  - modules/ROOT/nav.adoc
+
+asciidoc:
+  attributes:
+    lab_name: "OpenShift Cloud Workshop"
+    release-version: master
+    page-pagination: true
+    page-links: []

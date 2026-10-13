@@ -1,0 +1,8 @@
+component_version_filter:
+  names: '*'
+assembly:
+  root_level: 0
+  attributes:
+    source-highlighter: rouge
+build:
+  command: bundle exec asciidoctor-pdf

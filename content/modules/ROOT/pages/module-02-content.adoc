@@ -1,0 +1,14 @@
+= Provisioning Clusters
+:hardbreaks-option:
+
+// TODO: replace this placeholder with the module content.
+
+This module compares how clusters are created on each platform and what you get on day one.
+
+== Topics
+
+* Creating an EKS cluster with eksctl
+* Creating an AKS cluster with the az CLI
+* Creating a ROSA cluster with the rosa CLI
+* Creating an ARO cluster with the az aro CLI
+* Comparing what each cluster includes out of the box
