@@ -1,0 +1,3 @@
+= OpenShift Cloud Workshop
+
+A hands-on workshop comparing native managed Kubernetes on the public cloud (Amazon EKS and Azure AKS) with managed OpenShift (ROSA and ARO).
