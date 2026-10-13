@@ -1,4 +1,5 @@
 * xref:index.adoc[Introduction]
+* xref:setup-requirements.adoc[Setup Requirements]
 ifdef::openshift-102-showroom[]
 * xref:master@openshift-102:ROOT:cli-tools.adoc[Shared CLI tools]
 endif::[]
