@@ -33,3 +33,9 @@ video {
     width: 100%;
     background-color: #131313;
 }
+/* keep commands on one line and scroll sideways instead of wrapping mid-flag */
+.doc .listingblock pre,
+.doc .tableblock pre {
+    white-space: pre;
+    overflow-x: auto;
+}
