@@ -37,11 +37,15 @@ These resource providers must be registered:
 
 [source,bash]
 ----
-az provider register --namespace Microsoft.RedHatOpenShift --wait
-az provider register --namespace Microsoft.Compute --wait
-az provider register --namespace Microsoft.Storage --wait
-az provider register --namespace Microsoft.Authorization --wait
-az provider register --namespace Microsoft.Network --wait
+for namespace in \
+    Microsoft.RedHatOpenShift \
+    Microsoft.Compute \
+    Microsoft.Storage \
+    Microsoft.Authorization \
+    Microsoft.Network; do
+  az provider register --wait \
+    --namespace "$namespace"
+done
 ----
 |===
 
@@ -111,7 +115,9 @@ a|The attendee's AWS identity needs the same IAM rights, to create the ROSA acco
 ----
 rosa create account-roles --mode auto
 rosa create oidc-config --mode auto
-rosa create operator-roles --mode auto --prefix <prefix> --oidc-config-id <oidc-config-id>
+rosa create operator-roles --mode auto \
+  --prefix <prefix> \
+  --oidc-config-id <oidc-config-id>
 ----
 
 Their Red Hat account needs permission to create clusters in the organization.
@@ -139,10 +145,14 @@ a|Create the cluster with Workload ID (Module 3), the cluster autoscaler (Module
 
 [source,bash]
 ----
-az aks create --resource-group <resource-group> --name <cluster-name> \
+az aks create \
+  --resource-group <resource-group> \
+  --name <cluster-name> \
   --enable-oidc-issuer \
   --enable-workload-identity \
-  --enable-cluster-autoscaler --min-count 1 --max-count 3 \
+  --enable-cluster-autoscaler \
+  --min-count 1 \
+  --max-count 3 \
   --enable-app-routing
 ----
 
@@ -162,14 +172,18 @@ Attendees log in to EKS with their AWS identity; EKS creates an access entry for
 
 [source,bash]
 ----
-aws eks update-kubeconfig --region <region> --name <cluster-name>
+aws eks update-kubeconfig \
+  --region <region> \
+  --name <cluster-name>
 ----
 
 Attendees log in to AKS with:
 
 [source,bash]
 ----
-az aks get-credentials --resource-group <resource-group> --name <cluster-name>
+az aks get-credentials \
+  --resource-group <resource-group> \
+  --name <cluster-name>
 ----
 
 Attendees log in to ROSA as cluster-admin, through an identity provider or a temporary admin user:
@@ -183,7 +197,9 @@ Attendees log in to ARO as the kubeadmin user, with the password from:
 
 [source,bash]
 ----
-az aro list-credentials --resource-group <resource-group> --name <cluster-name>
+az aro list-credentials \
+  --resource-group <resource-group> \
+  --name <cluster-name>
 ----
 
 Module 3 then adds an identity provider on each cluster.
@@ -203,16 +219,29 @@ Delete every cluster at the end of the workshop:
 
 [source,bash]
 ----
-eksctl delete cluster --name <cluster-name> --region <region>
-az aks delete --resource-group <resource-group> --name <cluster-name> --yes
-rosa delete cluster --cluster <cluster-name> --yes
-az aro delete --resource-group <resource-group> --name <cluster-name> --yes
+eksctl delete cluster \
+  --name <cluster-name> \
+  --region <region>
+
+az aks delete --yes \
+  --resource-group <resource-group> \
+  --name <cluster-name>
+
+rosa delete cluster --yes \
+  --cluster <cluster-name>
+
+az aro delete --yes \
+  --resource-group <resource-group> \
+  --name <cluster-name>
 ----
 
 After the ROSA cluster is deleted, remove its operator roles and OIDC configuration:
 
 [source,bash]
 ----
-rosa delete operator-roles --prefix <prefix> --mode auto
-rosa delete oidc-config --oidc-config-id <oidc-config-id> --mode auto
+rosa delete operator-roles --mode auto \
+  --prefix <prefix>
+
+rosa delete oidc-config --mode auto \
+  --oidc-config-id <oidc-config-id>
 ----
