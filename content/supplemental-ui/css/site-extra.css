@@ -39,3 +39,7 @@ video {
     white-space: pre;
     overflow-x: auto;
 }
+/* let a code block inside a table scroll instead of widening the table past the screen */
+.doc table.tableblock:has(.listingblock) {
+    table-layout: fixed;
+}
