@@ -1,0 +1,57 @@
+name: Test PDF Build
+
+on:
+  pull_request:
+    paths:
+      - 'content/**'
+      - 'default-pdf.yml'
+      - 'antora-assembler.yml'
+      - 'Gemfile'
+  workflow_dispatch:  # Allow manual testing
+
+permissions:
+  contents: read
+
+jobs:
+  test-build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'  # @antora/pdf-extension 1.x requires Node.js >= 20.20
+
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.3'
+        bundler-cache: true  # installs asciidoctor-pdf and rouge from the Gemfile
+
+    - name: Install Node.js dependencies
+      run: npm install -g @antora/cli@3.2 @antora/site-generator@3.2 @antora/pdf-extension@1.0.1
+
+    - name: Build PDF with Antora
+      run: |
+        echo "Building PDF documentation..."
+        antora generate default-pdf.yml --stacktrace
+
+    - name: Verify PDF was created
+      run: |
+        pdf_file=$(find ./www -name "*.pdf" -type f | head -1)
+        if [ -z "$pdf_file" ]; then
+          echo "❌ No PDF file found!"
+          exit 1
+        fi
+        echo "✅ PDF successfully created: $pdf_file"
+        ls -la "$pdf_file"
+
+    - name: Upload PDF artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-pdf-build
+        path: ./www/**/*.pdf
+        retention-days: 7

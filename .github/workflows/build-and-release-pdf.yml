@@ -1,0 +1,99 @@
+name: Build and Release PDF Documentation
+
+on:
+  push:
+    tags:
+      - 'v*'  # Trigger on version tags like v1.0.0
+  workflow_dispatch:  # Allow manual triggering
+    inputs:
+      tag_name:
+        description: 'Tag name for the release (e.g., v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+
+permissions:
+  contents: write  # create the release and upload the PDF
+
+env:
+  PDF_NAME: ocp-cloud-workshop
+  PDF_TITLE: OpenShift Cloud Workshop
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '22'  # @antora/pdf-extension 1.x requires Node.js >= 20.20
+
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: '3.3'
+        bundler-cache: true  # installs asciidoctor-pdf and rouge from the Gemfile
+
+    - name: Install Node.js dependencies
+      run: npm install -g @antora/cli@3.2 @antora/site-generator@3.2 @antora/pdf-extension@1.0.1
+
+    - name: Build PDF with Antora
+      run: |
+        echo "Building PDF documentation..."
+        antora generate default-pdf.yml --stacktrace
+
+    - name: Determine tag name
+      id: tag_name
+      run: |
+        if [ "${{ github.event_name }}" = "push" ]; then
+          # Extract tag from ref (refs/tags/v1.0.0 -> v1.0.0)
+          tag_name=${GITHUB_REF#refs/tags/}
+        else
+          # Use manual input
+          tag_name=${{ github.event.inputs.tag_name }}
+        fi
+        echo "tag_name=$tag_name" >> $GITHUB_OUTPUT
+        echo "Using tag: $tag_name"
+
+    - name: Find generated PDF
+      id: find_pdf
+      run: |
+        pdf_file=$(find ./www -name "*.pdf" -type f | head -1)
+        if [ -z "$pdf_file" ]; then
+          echo "No PDF file found!"
+          exit 1
+        fi
+        echo "Found PDF: $pdf_file"
+        pdf_name="${PDF_NAME}-${{ steps.tag_name.outputs.tag_name }}.pdf"
+        cp "$pdf_file" "$pdf_name"
+        echo "pdf_path=$pdf_name" >> $GITHUB_OUTPUT
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        tag_name: ${{ steps.tag_name.outputs.tag_name }}
+        name: ${{ env.PDF_TITLE }} ${{ steps.tag_name.outputs.tag_name }}
+        target_commitish: ${{ github.sha }}
+        draft: false
+        prerelease: false
+        files: ${{ steps.find_pdf.outputs.pdf_path }}
+        body: |
+          ## ${{ env.PDF_TITLE }}
+
+          This release contains the PDF version of the ${{ env.PDF_TITLE }}.
+
+          ### Changes
+          - Generated from commit: ${{ github.sha }}
+          - Build: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          Download the PDF documentation below.
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: pdf-documentation
+        path: ${{ steps.find_pdf.outputs.pdf_path }}
+        retention-days: 30

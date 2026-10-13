@@ -1,0 +1,13 @@
+= Networking and Ingress
+:hardbreaks-option:
+
+// TODO: replace this placeholder with the module content.
+
+This module compares how applications are exposed and secured on the network.
+
+== Topics
+
+* Cluster networking: VPC CNI and Azure CNI compared with OVN-Kubernetes
+* Ingress controllers and cloud load balancers
+* OpenShift Routes and the default ingress controller
+* Network policies and private clusters

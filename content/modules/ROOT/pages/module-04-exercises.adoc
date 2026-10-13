@@ -1,0 +1,21 @@
+= Exercises
+:hardbreaks-option:
+
+// TODO: replace these placeholders with hands-on exercises.
+
+== Exercise 1: Cluster networking: VPC CNI and Azure CNI compared with OVN-Kubernetes
+
+Placeholder.
+
+== Exercise 2: Ingress controllers and cloud load balancers
+
+Placeholder.
+
+== Exercise 3: OpenShift Routes and the default ingress controller
+
+Placeholder.
+
+== Exercise 4: Network policies and private clusters
+
+Placeholder.
+

@@ -1,0 +1,24 @@
+= Home
+
+This workshop illustrates the differences between native managed Kubernetes on the public cloud (Amazon EKS and Azure AKS) and the managed OpenShift services on the same clouds (Red Hat OpenShift Service on AWS and Azure Red Hat OpenShift).
+
+ifdef::openshift-102-showroom[]
+include::openshift-102:ROOT:partial$cli-tools-container.adoc[]
+endif::[]
+
+== Prerequisites
+
+This workshop assumes the following:
+
+* You have basic familiarity with Kubernetes.
+* You have access to an AWS or Azure account, or to clusters provisioned for you.
+
+== Expectations
+
+After completing this workshop, you will be able to:
+
+* Explain what EKS and AKS provide compared with ROSA and ARO.
+
+* Provision, secure and expose workloads on each platform.
+
+* Choose between native managed Kubernetes and managed OpenShift for a given workload.

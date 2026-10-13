@@ -1,0 +1,25 @@
+= Exercises
+:hardbreaks-option:
+
+// TODO: replace these placeholders with hands-on exercises.
+
+== Exercise 1: Creating an EKS cluster with eksctl
+
+Placeholder.
+
+== Exercise 2: Creating an AKS cluster with the az CLI
+
+Placeholder.
+
+== Exercise 3: Creating a ROSA cluster with the rosa CLI
+
+Placeholder.
+
+== Exercise 4: Creating an ARO cluster with the az aro CLI
+
+Placeholder.
+
+== Exercise 5: Comparing what each cluster includes out of the box
+
+Placeholder.
+

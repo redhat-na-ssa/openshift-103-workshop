@@ -1,0 +1,18 @@
+* xref:index.adoc[Introduction]
+ifdef::openshift-102-showroom[]
+* xref:master@openshift-102:ROOT:cli-tools.adoc[Shared CLI tools]
+endif::[]
+* Module 1: Managed Kubernetes and Managed OpenShift
+  ** xref:module-01-content.adoc[Content]
+* Module 2: Provisioning Clusters
+  ** xref:module-02-content.adoc[Content]
+  ** xref:module-02-exercises.adoc[Exercises]
+* Module 3: Identity and Access
+  ** xref:module-03-content.adoc[Content]
+  ** xref:module-03-exercises.adoc[Exercises]
+* Module 4: Networking and Ingress
+  ** xref:module-04-content.adoc[Content]
+  ** xref:module-04-exercises.adoc[Exercises]
+* Module 5: Day-2 Operations
+  ** xref:module-05-content.adoc[Content]
+  ** xref:module-05-exercises.adoc[Exercises]
