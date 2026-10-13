@@ -22,3 +22,5 @@ After completing this workshop, you will be able to:
 * Provision, secure and expose workloads on each platform.
 
 * Choose between native managed Kubernetes and managed OpenShift for a given workload.
+
+Before running the workshop, review the xref:setup-requirements.adoc[Setup Requirements].
