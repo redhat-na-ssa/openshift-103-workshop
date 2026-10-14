@@ -43,3 +43,23 @@ video {
 .doc table.tableblock:has(.listingblock) {
     table-layout: fixed;
 }
+/* build stamp under the footer: release, commit and build time (partials/build-info.hbs) */
+.build-info {
+    background-color: #e1e1e1;
+    color: #5d5d5d;
+    font-size: 0.75rem;
+    text-align: center;
+    padding: 0 1rem 0.75rem;
+}
+.build-info span {
+    white-space: nowrap;
+}
+.build-info a {
+    color: #191919;
+}
+.build-info code {
+    font-size: inherit;
+}
+.build-info-sep {
+    margin: 0 0.4rem;
+}

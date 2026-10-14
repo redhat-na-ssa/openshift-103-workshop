@@ -1,0 +1,11 @@
+{{#if site.keys.buildCommit}}
+<div class="build-info">
+  {{#if site.keys.buildRelease}}
+  <span>Release <a href="{{site.keys.buildRepo}}/releases/tag/{{site.keys.buildRelease}}">{{site.keys.buildVersion}}</a></span>
+  <span class="build-info-sep" aria-hidden="true">·</span>
+  {{/if}}
+  <span>Commit <a href="{{site.keys.buildRepo}}/commit/{{site.keys.buildCommit}}"><code>{{site.keys.buildShort}}</code></a></span>
+  <span class="build-info-sep" aria-hidden="true">·</span>
+  <span>Built {{site.keys.buildDate}}</span>
+</div>
+{{/if}}
