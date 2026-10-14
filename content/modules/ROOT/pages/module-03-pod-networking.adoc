@@ -19,7 +19,8 @@ image::module-03-packet-path.svg["Pod packet path with the Amazon VPC CNI, Azure
 
 == On ROSA and ARO
 
-Do these steps on your ROSA cluster, then repeat them on your ARO cluster.
+Do these steps on your cluster.
+If you have both, finish them on ROSA, then repeat them on ARO.
 Where the two differ, the steps are split into ROSA and ARO tabs.
 They use the sample application in the `sample-app` project and the Route you created in xref:module-03-exposing-apps.adoc[Exposing an App].
 

@@ -9,7 +9,7 @@ ROSA and ARO scale in groups of identical nodes: machine pools on ROSA, MachineS
 ROSA also offers the Red Hat build of Karpenter from OpenShift 4.22.
 This is an area where the native services are ahead, and this section says so.
 
-In this section you add an autoscaling group of nodes to each cluster, push the sample application onto it until new nodes start, and look at who keeps the node OS patched.
+In this section you add an autoscaling group of nodes to your cluster, push the sample application onto it until new nodes start, and look at who keeps the node OS patched.
 
 == Two Ways to Add Nodes
 
@@ -84,7 +84,7 @@ Move the application back and remove the extra nodes.
 [#ex-module-04-scaling-nodes-1]
 === Exercise 1: Look at the Nodes You Have
 
-List the nodes with their instance type and zone, on both clusters:
+List the nodes with their instance type and zone:
 
 [source,bash]
 ----
@@ -390,7 +390,7 @@ az aks nodepool add \
 NOTE: *Not validated:* this exercise on ROSA, which needs the machine pool from Exercise 2.
 It was validated on ARO, and the ROSA behavior described below comes from Red Hat's documentation.
 
-Run these steps on both clusters.
+Run these steps on your cluster.
 
 Give each sample application pod a CPU request large enough that a few replicas fill a node:
 
@@ -517,6 +517,7 @@ The validation cluster ran ROSA 4.20, and AutoNode needs 4.22 and the `rosa` and
 From OpenShift 4.22, ROSA can run the Red Hat build of Karpenter, called AutoNode in OpenShift Cluster Manager.
 Its controller runs in the hosted control plane and launches EC2 instances in your account, so it needs an IAM role.
 Standard ARO has no equivalent, so this exercise is for your ROSA cluster only.
+If your cluster is ARO, read it without running it.
 
 Collect the cluster's OIDC issuer and your AWS account ID:
 
@@ -699,7 +700,7 @@ It then reads `karpenter.sh/v1` NodePools with an `AKSNodeClass`.
 [#ex-module-04-scaling-nodes-5]
 === Exercise 5: See Who Patches the Node OS
 
-List the nodes with their OS image and kernel, on both clusters:
+List the nodes with their OS image and kernel:
 
 [source,bash]
 ----
@@ -755,7 +756,7 @@ az aks update \
 [#ex-module-04-scaling-nodes-6]
 === Exercise 6: Clean Up
 
-Put the sample application back on the regular workers, on both clusters:
+Put the sample application back on the regular workers:
 
 [source,bash]
 ----

@@ -2,10 +2,12 @@
 
 This page lists everything needed to run this workshop.
 
-Attendees do the hands-on work on a ROSA cluster and an ARO cluster.
+Each attendee does the hands-on work on one cluster: ROSA or ARO, matching the platform their team runs.
+An attendee whose team runs both can have one of each and run every exercise twice.
 EKS and AKS appear only as reference blocks, so no EKS or AKS cluster is needed.
 The instructor creates the clusters ahead of time.
-Several exercises change cluster-wide settings (identity providers, AdminNetworkPolicy, machine pools), so each attendee or pair needs their own ROSA and ARO cluster.
+Several exercises change cluster-wide settings (identity providers, AdminNetworkPolicy, machine pools), so each attendee or pair needs their own cluster.
+An attendee needs only the parts of this page for their platform: for ROSA, the ROSA cluster, an AWS account, `rosa` and `aws`; for ARO, the ARO cluster, an Azure subscription and `az`.
 
 == Cluster
 
@@ -176,14 +178,14 @@ Clusters need outbound access to:
 
 Before the workshop, check each item for every attendee.
 
-The attendee can log in to both clusters:
+The attendee can log in to their cluster:
 
 [source,bash]
 ----
 oc whoami
 ----
 
-Both clusters report their version and are not upgrading:
+The cluster reports its version and is not upgrading:
 
 [source,bash]
 ----
@@ -208,7 +210,7 @@ az aro show \
   --query provisioningState
 ----
 
-Both clusters can reach the Software Catalog:
+The cluster can reach the Software Catalog:
 
 [source,bash]
 ----

@@ -43,7 +43,7 @@ image::module-02-login-flow.svg["Login flow on EKS, AKS, ROSA and ARO",link=self
 
 == On ROSA and ARO
 
-You work as two people on each cluster: a cluster administrator, and a developer who logs in through an identity provider.
+You work as two people on your cluster: a cluster administrator, and a developer who logs in through an identity provider.
 Use separate terminals so the two logins don't overwrite each other.
 
 .Exercises on this page
@@ -61,10 +61,10 @@ Create a group and give it a project, the way you would onboard a team.
 [#ex-module-02-access-and-tenancy-1]
 === Exercise 1: Check Your Administrator Login
 
-You logged in to both clusters as the cluster administrator in xref:module-01-who-manages-what.adoc#before-you-start[Before You Start].
-If you opened new terminals since, set the kubeconfig file and variables again, as described there.
+You logged in to your cluster as the cluster administrator in xref:module-01-who-manages-what.adoc#before-you-start[Before You Start].
+If you opened a new terminal since, set the kubeconfig file and variables again, as described there.
 
-Check who you are, in each terminal:
+Check who you are:
 
 [source,bash]
 ----
@@ -337,7 +337,7 @@ az role assignment create \
 NOTE: *Not validated:* this exercise, which needs a working identity provider login.
 Exercises 4 and 5 were validated as the cluster administrator, impersonating the developer.
 
-Open a second terminal for the developer on each cluster.
+Open a second terminal for the developer.
 Give it its own kubeconfig file, so the administrator's login stays in the first terminal.
 
 [tabs]

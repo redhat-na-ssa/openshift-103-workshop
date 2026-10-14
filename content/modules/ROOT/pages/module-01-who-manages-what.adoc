@@ -71,7 +71,7 @@ The responsibility matrices in the references list each task in detail.
 
 .Exercises on this page
 * <<ex-module-01-who-manages-what-1>> +
-See where each cluster's control plane runs, from the cloud CLI and from inside the cluster.
+See where the control plane runs, from the cloud CLI and from inside the cluster.
 * <<ex-module-01-who-manages-what-2>> +
 See the IAM roles Red Hat works through in your AWS account, and the locked resource group ARO keeps in your subscription.
 * <<ex-module-01-who-manages-what-3>> +
@@ -84,8 +84,9 @@ Learn where to open a support case on each platform and what it covers.
 [#before-you-start]
 === Before You Start
 
-Open two terminals, one for each cluster, and log in to each as the cluster administrator.
-Every exercise in the workshop runs in these terminals and uses the variables you set here.
+Open a terminal and log in to your cluster as the cluster administrator.
+If you have both a ROSA and an ARO cluster, open a terminal for each, follow both tabs, and run every later step in both.
+Every exercise in the workshop runs in the terminal you open here and uses the variables you set in it.
 If you open a new terminal later, run only the `export` steps in it: the kubeconfig file keeps your login.
 
 [tabs]
@@ -177,7 +178,7 @@ oc login "$API_URL" \
 --
 ======
 
-Check who you are, in each terminal:
+Check who you are:
 
 [source,bash]
 ----
@@ -237,7 +238,7 @@ oc get infrastructure cluster \
 ROSA shows `External`, because the control plane runs outside the cluster.
 ARO shows `HighlyAvailable`: three control plane nodes in your own subscription.
 
-List the nodes on each cluster:
+List the nodes:
 
 [source,bash]
 ----
