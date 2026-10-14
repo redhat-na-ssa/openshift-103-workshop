@@ -70,7 +70,7 @@ Attendees install these Operators during the exercises:
 
 |Red Hat OpenShift Logging
 |4
-|Forwards application logs to CloudWatch and Azure Monitor Logs.
+|Channel `stable-6.6`. Forwards application logs to CloudWatch and to Azure Monitor Logs through the Logs Ingestion API.
 |===
 
 The default ingress controller, OVN-Kubernetes, the CSI drivers and platform monitoring come with every ROSA and ARO cluster.
@@ -83,7 +83,7 @@ The default ingress controller, OVN-Kubernetes, the CSI drivers and platform mon
 
 |ROSA cluster
 |Cluster administrator, through the temporary admin user or an identity provider.
-On their Red Hat account, permission to manage the cluster in OpenShift Cluster Manager, so they can add identity providers, machine pools and upgrade policies with the `rosa` CLI.
+On their Red Hat account, permission to manage the cluster in OpenShift Cluster Manager, so they can add identity providers, machine pools and upgrade policies, and turn on AutoNode (the Red Hat build of Karpenter), with the `rosa` CLI.
 
 |ARO cluster
 |The kubeadmin credential, and `Contributor` on the cluster's resource group.
@@ -102,7 +102,7 @@ a|Permission to create, in a resource group:
 * User-assigned managed identities and federated credentials (Module 2)
 * Storage accounts and role assignments on them (Module 2)
 * Container registries (Module 2)
-* Log Analytics workspaces (Module 4)
+* Log Analytics workspaces and tables, data collection endpoints and rules, a user-assigned managed identity with a federated credential, and a role assignment on the rule (Module 4)
 
 In Microsoft Entra ID: permission to create an app registration for the ARO identity provider (Module 2).
 
@@ -122,7 +122,8 @@ In Microsoft Entra ID: permission to create an app registration for the ARO iden
 
 |`rosa`
 |ROSA
-|Logged in with a token from console.redhat.com.
+|Version 1.2.61 or later, for Karpenter in Module 4.
+Logged in with a token from console.redhat.com.
 
 |`aws` (v2)
 |ROSA
@@ -131,6 +132,7 @@ In Microsoft Entra ID: permission to create an app registration for the ARO iden
 |`az`
 |ARO
 |Logged in to the Azure subscription.
+Module 4 uses the `monitor-control-service` extension, which `az` offers to install on first use.
 
 |`jq`
 |All
@@ -202,7 +204,7 @@ oc get packagemanifests \
 == Cost and Cleanup
 
 ROSA and ARO clusters cost money while they run.
-At the end of the workshop, delete the cloud resources attendees created: IAM roles and policies, S3 buckets, ECR repositories, CloudWatch log groups, managed identities, storage accounts, container registries and Log Analytics workspaces.
+At the end of the workshop, delete the cloud resources attendees created: IAM roles and policies (including the Karpenter and log forwarding roles from Module 4), S3 buckets, ECR repositories, CloudWatch log groups, managed identities, storage accounts, container registries, Log Analytics workspaces, and data collection rules and endpoints.
 Then delete the clusters, following:
 
 * https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/install_clusters/index[Deleting ROSA with HCP clusters]
