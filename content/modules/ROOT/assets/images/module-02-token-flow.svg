@@ -25,8 +25,8 @@
 <text x="726.0" y="152.83333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">IAM role credentials</text>
 <text x="16" y="210" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="start" fill="#c9190b">ROSA (IRSA-style)</text>
 <rect x="16" y="218" width="184" height="80" rx="6" fill="#fff1f0" stroke="#c9190b" stroke-width="1.5"/>
-<text x="108.0" y="245.33333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Projected token for</text>
-<text x="108.0" y="262.33333333333337" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">sts.amazonaws.com,</text>
+<text x="108.0" y="245.33333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Projected token</text>
+<text x="108.0" y="262.33333333333337" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">(audience openshift),</text>
 <text x="108.0" y="279.33333333333337" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">AWS_ROLE_ARN (webhook)</text>
 <line x1="201" y1="258.0" x2="214" y2="258.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="221,258.0 213,253.5 213,262.5" fill="#4d5258"/>
 <rect x="222" y="218" width="184" height="80" rx="6" fill="#fff1f0" stroke="#c9190b" stroke-width="1.5"/>
@@ -79,5 +79,5 @@
 <text x="726.0" y="481.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Blob Storage with an</text>
 <text x="726.0" y="498.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Entra access token for</text>
 <text x="726.0" y="515.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">the managed identity</text>
-<text x="16" y="558" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="start" fill="#4d5258">IRSA on EKS works exactly like the ROSA row. EKS Pod Identity is not available on ROSA.</text>
+<text x="16" y="562" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="start" fill="#4d5258">IRSA on EKS works like the ROSA row, but the token audience is sts.amazonaws.com. EKS Pod Identity is not available on ROSA.</text>
 </svg>
