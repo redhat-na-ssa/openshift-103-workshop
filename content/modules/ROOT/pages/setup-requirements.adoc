@@ -92,6 +92,7 @@ On their Red Hat account, permission to manage the cluster in OpenShift Cluster 
 a|Permission to create:
 
 * IAM roles and policies (Module 2 and Module 4)
+* A policy attachment on the cluster's worker IAM role, for ECR pulls (Module 2)
 * S3 buckets (Module 2)
 * ECR repositories (Module 2)
 * CloudWatch log groups (Module 4)
@@ -100,15 +101,14 @@ a|Permission to create:
 a|Permission to create, in a resource group:
 
 * User-assigned managed identities and federated credentials (Module 2)
-* Storage accounts and role assignments on them (Module 2)
+* Storage accounts, and role assignments on them, which need Owner or User Access Administrator on the resource group (Module 2)
 * Container registries (Module 2)
 * Log Analytics workspaces (Module 4)
 
 In Microsoft Entra ID: permission to create an app registration for the ARO identity provider (Module 2).
-
-|GitHub
-|A GitHub account, to create an OAuth app for the ROSA identity provider (Module 2).
 |===
+
+The ROSA identity provider in Module 2 is an htpasswd provider created with the `rosa` CLI, so it needs no external application.
 
 == Attendee Workstation
 
@@ -148,11 +148,13 @@ Workstations need outbound HTTPS to:
 * console.redhat.com
 * api.openshift.com
 * the ROSA and ARO cluster API and application domains
+* ghcr.io, where Module 2 copies the sample application's image from
 
 Clusters need outbound access to:
 
 * quay.io
 * registry.redhat.io
+* ghcr.io, for the sample application's image (Module 2)
 * the attendee's ECR and ACR registries
 
 == Verification Checklist
@@ -203,6 +205,7 @@ oc get packagemanifests \
 
 ROSA and ARO clusters cost money while they run.
 At the end of the workshop, delete the cloud resources attendees created: IAM roles and policies, S3 buckets, ECR repositories, CloudWatch log groups, managed identities, storage accounts, container registries and Log Analytics workspaces.
+Also detach the ECR read policy from the ROSA worker IAM role, which other ROSA clusters in the account share, and delete the Entra ID app registration for the ARO identity provider.
 Then delete the clusters, following:
 
 * https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/install_clusters/index[Deleting ROSA with HCP clusters]

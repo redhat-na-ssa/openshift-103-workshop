@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="834" height="388" viewBox="0 0 834 388">
+<rect x="0" y="0" width="834" height="388" fill="#ffffff"/>
+<text x="16" y="30" font-family="Helvetica, Arial, sans-serif" font-size="18" font-weight="bold" text-anchor="start" fill="#151515">What decides how a pod runs</text>
+<text x="108.0" y="58" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" text-anchor="middle" fill="#4d5258">Pod is created</text>
+<text x="314.0" y="58" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" text-anchor="middle" fill="#4d5258">Security context constraints</text>
+<text x="520.0" y="58" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" text-anchor="middle" fill="#4d5258">Pod Security Admission</text>
+<text x="726.0" y="58" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" text-anchor="middle" fill="#4d5258">The container runs as</text>
+<text x="16" y="92" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="start" fill="#151515">EKS and AKS</text>
+<rect x="16" y="100" width="184" height="92" rx="6" fill="#f3f4f5" stroke="#6a6e73" stroke-width="1.5"/>
+<text x="108.0" y="133.33333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">By the ReplicaSet</text>
+<text x="108.0" y="150.33333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">controller, from your</text>
+<text x="108.0" y="167.33333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Deployment</text>
+<line x1="201" y1="146.0" x2="214" y2="146.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="221,146.0 213,141.5 213,150.5" fill="#4d5258"/>
+<rect x="222" y="100" width="184" height="92" rx="6" fill="#f3f4f5" stroke="#6a6e73" stroke-width="1.5"/>
+<text x="314.0" y="133.33333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Not part of</text>
+<text x="314.0" y="150.33333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Kubernetes: nothing</text>
+<text x="314.0" y="167.33333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">happens here</text>
+<line x1="407" y1="146.0" x2="420" y2="146.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="427,146.0 419,141.5 419,150.5" fill="#4d5258"/>
+<rect x="428" y="100" width="184" height="92" rx="6" fill="#f3f4f5" stroke="#6a6e73" stroke-width="1.5"/>
+<text x="520.0" y="141.83333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Enforces only on</text>
+<text x="520.0" y="158.83333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">namespaces you label</text>
+<line x1="613" y1="146.0" x2="626" y2="146.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="633,146.0 625,141.5 625,150.5" fill="#4d5258"/>
+<rect x="634" y="100" width="184" height="92" rx="6" fill="#f3f4f5" stroke="#6a6e73" stroke-width="1.5"/>
+<text x="726.0" y="141.83333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">The image's USER,</text>
+<text x="726.0" y="158.83333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">often root</text>
+<text x="16" y="222" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="start" fill="#c9190b">ROSA and ARO</text>
+<rect x="16" y="230" width="184" height="92" rx="6" fill="#fff1f0" stroke="#c9190b" stroke-width="1.5"/>
+<text x="108.0" y="263.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">By the ReplicaSet</text>
+<text x="108.0" y="280.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">controller, with the</text>
+<text x="108.0" y="297.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">pod's service account</text>
+<line x1="201" y1="276.0" x2="214" y2="276.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="221,276.0 213,271.5 213,280.5" fill="#4d5258"/>
+<rect x="222" y="230" width="184" height="92" rx="6" fill="#fff1f0" stroke="#c9190b" stroke-width="1.5"/>
+<text x="314.0" y="254.83333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">First SCC the service</text>
+<text x="314.0" y="271.83333333333337" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">account may use that fits;</text>
+<text x="314.0" y="288.83333333333337" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">fills in UID, SELinux,</text>
+<text x="314.0" y="305.83333333333337" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">drops capabilities</text>
+<line x1="407" y1="276.0" x2="420" y2="276.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="427,276.0 419,271.5 419,280.5" fill="#4d5258"/>
+<rect x="428" y="230" width="184" height="92" rx="6" fill="#fff1f0" stroke="#c9190b" stroke-width="1.5"/>
+<text x="520.0" y="263.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Enforce is privileged;</text>
+<text x="520.0" y="280.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">warn and audit labels</text>
+<text x="520.0" y="297.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">synced from the SCCs</text>
+<line x1="613" y1="276.0" x2="626" y2="276.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="633,276.0 625,271.5 625,280.5" fill="#4d5258"/>
+<rect x="634" y="230" width="184" height="92" rx="6" fill="#fff1f0" stroke="#c9190b" stroke-width="1.5"/>
+<text x="726.0" y="263.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">The project's UID,</text>
+<text x="726.0" y="280.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">such as 1000680000,</text>
+<text x="726.0" y="297.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">in group 0</text>
+<text x="16" y="346" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="start" fill="#4d5258">Policy engines such as Kyverno, Gatekeeper or Azure Policy run after these steps on all four platforms, if you install</text>
+<text x="16" y="364" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="start" fill="#4d5258">them.</text>
+</svg>

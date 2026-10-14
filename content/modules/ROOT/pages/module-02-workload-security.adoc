@@ -1,39 +1,357 @@
 = Workload Security Defaults
 
-NOTE: This section is an outline. Its diagrams and exercises are being written and validated on ROSA and ARO.
+NOTE: The exercises on this page have not been validated on live ROSA and ARO clusters yet.
 
 EKS and AKS admit almost any pod unless you add guardrails.
-ROSA and ARO admit pods through security context constraints (SCCs), which by default run every container as a non-root user with a random user ID chosen per project.
+ROSA and ARO admit pods through security context constraints (SCCs), which by default run every container as a non-root user ID picked for its project, with all capabilities dropped.
 This is the first difference most EKS and AKS engineers hit, and the one application teams notice most.
 
-// Planned visuals:
-// - Admission flow: Pod Security Admission (EKS, AKS) vs SCC
-//   admission plus synced Pod Security Admission labels (OpenShift).
-// - "Why my pod failed" decision tree: runs as root, fixed UID,
-//   host path, privileged port, added capabilities.
+This section deploys the workshop's sample application for the first time, the way you would on EKS or AKS, and fixes what breaks.
+
+image::module-02-admission-flow.svg["Admission path on EKS and AKS compared with ROSA and ARO",link=self,window=_blank]
 
 == On EKS and AKS
 
 * Pod Security Admission is available, but nothing is enforced until you label namespaces.
 * Guardrails come from policy engines you add: Kyverno, OPA Gatekeeper, or Azure Policy on AKS.
 * AKS Automatic enforces the baseline Pod Security Standard and Deployment Safeguards.
+* A container runs as whatever user its image says, which for many upstream images is root.
 
 == On ROSA and ARO
 
-Outline of the exercise:
+The sample application lists the objects in a storage bucket and serves HTTP on port 8080.
+It comes in two images built from the same https://github.com/shpwrck/ocp-cloud-workshop/tree/main/sample-app[Containerfile]:
 
-. Deploy the sample application from an upstream image that runs as root, the way you would on EKS or AKS.
-. Watch the pod fail, and read the SCC admission error.
-. Find the SCC the pod was admitted under, and the user ID it was given.
-. Fix it the right way: use an image that runs as non-root and tolerates an arbitrary user ID.
-. Fix it the wrong way for comparison: grant the `anyuid` SCC to the service account, and discuss why that is a last resort.
-. Look at the Pod Security Admission labels OpenShift synced onto the namespace.
+* `sample-app:1.0-root` behaves like many upstream images: it runs as root and writes to a directory owned by root.
+* `sample-app:1.0` is the same image, fixed to run under any user ID.
+
+Run the exercises on both clusters, in the administrator terminal from xref:module-02-access-and-tenancy.adoc[Access and Tenancy].
+The commands are the same on ROSA and ARO.
+
+=== Exercise 1: Deploy the sample application as you would on EKS
+
+Create the namespace:
+
+[source,bash]
+----
+oc create namespace sample-app
+----
+
+Deploy the application with the root image, using a manifest that would run unchanged on EKS or AKS:
+
+[source,bash]
+----
+oc apply --namespace sample-app -f - <<'EOF'
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sample-app
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sample-app
+  labels:
+    app.kubernetes.io/name: sample-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sample-app
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: sample-app
+    spec:
+      serviceAccountName: sample-app
+      containers:
+      - name: sample-app
+        image: ghcr.io/shpwrck/ocp-cloud-workshop/sample-app:1.0-root
+        ports:
+        - name: http
+          containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: http
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sample-app
+  labels:
+    app.kubernetes.io/name: sample-app
+spec:
+  selector:
+    app.kubernetes.io/name: sample-app
+  ports:
+  - name: http
+    port: 8080
+    targetPort: http
+EOF
+----
+
+Watch the pod:
+
+[source,bash]
+----
+oc get pods \
+  --namespace sample-app \
+  --watch
+----
+
+The pod starts, then goes into `CrashLoopBackOff`.
+Press kbd:[Ctrl+C] and read its log:
+
+[source,bash]
+----
+oc logs deployment/sample-app \
+  --namespace sample-app
+----
+
+The application could not write to `/var/lib/sample-app`, and it ran as a user ID such as `1000680000`, not root.
+On EKS or AKS, the same pod would run as root and work.
+
+.EKS and AKS (reference only)
+[%collapsible]
+====
+The same manifest runs as root on EKS and AKS.
+To get a similar guardrail, you label the namespace for the restricted Pod Security Standard:
+
+[source,bash]
+----
+kubectl label namespace sample-app \
+  pod-security.kubernetes.io/enforce=restricted
+----
+
+That rejects this pod outright, because it does not set `runAsNonRoot`, drop capabilities or set a seccomp profile.
+Pod Security Admission checks pods; it never changes them.
+====
+
+=== Exercise 2: See what OpenShift decided
+
+Find the SCC that admitted the pod:
+
+[source,bash]
+----
+oc get pods \
+  --namespace sample-app \
+  --output yaml \
+  | grep openshift.io/scc
+----
+
+The pod was admitted under `restricted-v2`.
+OpenShift also ships `restricted-v3`, which is just as strict but runs the pod in a Linux user namespace. A pod uses it only if it sets `hostUsers: false`.
+
+Look at the security context the SCC filled in:
+
+[source,bash]
+----
+oc get pods \
+  --namespace sample-app \
+  --output json \
+  | jq '.items[0].spec.containers[0].securityContext'
+----
+
+The SCC set `runAsUser`, `runAsNonRoot`, dropped all capabilities, and blocked privilege escalation.
+Your manifest set none of these.
+
+The user ID comes from a range assigned to the namespace:
+
+[source,bash]
+----
+oc describe namespace sample-app
+----
+
+Look for the `openshift.io/sa.scc.uid-range` and `openshift.io/sa.scc.mcs` annotations.
+Every namespace gets its own user ID range and SELinux category, so containers in different namespaces never share a user ID.
+Also note the `pod-security.kubernetes.io/audit` and `warn` labels set to `restricted`: OpenShift syncs them from the SCCs the namespace's service accounts can use.
+
+Many Helm charts pin a user ID.
+Try that, to see an admission failure instead of a crash:
+
+[source,bash]
+----
+oc patch deployment sample-app \
+  --namespace sample-app \
+  --type merge \
+  --patch '{"spec":{"template":{"spec":
+    {"securityContext":{"runAsUser":1000}}}}}'
+----
+
+No new pod appears.
+Read the ReplicaSet's events:
+
+[source,bash]
+----
+oc get events \
+  --namespace sample-app \
+  --field-selector reason=FailedCreate
+----
+
+The message lists every SCC the service account may use and why each one refused the pod.
+`restricted-v2` says `1000` is not in the namespace's range.
+`restricted-v3` says the pod does not set `hostUsers: false`.
+
+Undo the change:
+
+[source,bash]
+----
+oc rollout undo deployment/sample-app \
+  --namespace sample-app
+----
+
+Being cluster-admin does not change any of this.
+The ReplicaSet controller creates the pods, so only the SCCs that the pod's service account may use count, not yours.
+
+image::module-02-pod-failure-tree.svg["Common reasons a pod fails on OpenShift, and their fixes",link=self,window=_blank]
+
+=== Exercise 3: Fix it the right way
+
+The fixed image differs from the root image in one Containerfile stage:
+
+[source,dockerfile]
+----
+FROM root AS nonroot
+RUN chgrp -R 0 /var/lib/sample-app \
+ && chmod -R g=u /var/lib/sample-app
+USER 1001
+----
+
+OpenShift runs the container with an arbitrary user ID but always in group 0, so a directory owned by group 0 and writable by the group is writable whatever the user ID is.
+`USER 1001` makes the image run as non-root on other platforms too.
+
+Switch to the fixed image:
+
+[source,bash]
+----
+oc set image deployment/sample-app \
+  --namespace sample-app \
+  sample-app=ghcr.io/shpwrck/ocp-cloud-workshop/sample-app:1.0
+----
+
+[source,bash]
+----
+oc rollout status deployment/sample-app \
+  --namespace sample-app
+----
+
+[source,bash]
+----
+oc logs deployment/sample-app \
+  --namespace sample-app
+----
+
+The application starts, still as a user ID from the namespace's range, not as 1001.
+The SCC overrides the image's `USER`.
+
+=== Exercise 4: Fix it the wrong way, for comparison
+
+The quick fix you will find in many forum answers is to let the service account run as any user ID, including root:
+
+[source,bash]
+----
+oc adm policy add-scc-to-user anyuid \
+  --serviceaccount sample-app \
+  --namespace sample-app
+----
+
+Go back to the root image:
+
+[source,bash]
+----
+oc set image deployment/sample-app \
+  --namespace sample-app \
+  sample-app=ghcr.io/shpwrck/ocp-cloud-workshop/sample-app:1.0-root
+----
+
+[source,bash]
+----
+oc rollout status deployment/sample-app \
+  --namespace sample-app
+----
+
+The pod runs. Check its SCC and user ID:
+
+[source,bash]
+----
+oc get pods \
+  --namespace sample-app \
+  --output yaml \
+  | grep openshift.io/scc
+----
+
+[source,bash]
+----
+oc logs deployment/sample-app \
+  --namespace sample-app
+----
+
+It runs under `anyuid`, as user ID 0: real root on the node, contained only by SELinux and the dropped capabilities.
+The namespace's Pod Security Admission labels changed as well:
+
+[source,bash]
+----
+oc get namespace sample-app \
+  --output jsonpath='{.metadata.labels}' \
+  | jq
+----
+
+`warn` and `audit` are now `baseline`, because a service account in the namespace can run pods that the restricted standard would reject.
+
+Undo the grant:
+
+[source,bash]
+----
+oc adm policy remove-scc-from-user anyuid \
+  --serviceaccount sample-app \
+  --namespace sample-app
+----
+
+The running pod keeps `anyuid` until it is replaced, because SCCs are checked only when a pod is created.
+Switch back to the fixed image, which replaces it:
+
+[source,bash]
+----
+oc set image deployment/sample-app \
+  --namespace sample-app \
+  sample-app=ghcr.io/shpwrck/ocp-cloud-workshop/sample-app:1.0
+----
+
+[source,bash]
+----
+oc rollout status deployment/sample-app \
+  --namespace sample-app
+----
+
+Use `anyuid` only for images you cannot change, and grant it to one dedicated service account, never to `default`.
+Before granting any SCC, you can ask which one a pod would get:
+
+[source,bash]
+----
+oc get deployment sample-app \
+  --namespace sample-app \
+  --output yaml \
+  | oc adm policy scc-subject-review -f -
+----
+
+The sample application now runs securely on both clusters.
+The next section gives it cloud credentials.
 
 == What Matters
 
-* New OpenShift 4.21 clusters admit ordinary users under `restricted-v3`; earlier clusters use `restricted-v2`. Check which one your cluster uses.
-* SCCs are granted to service accounts, users and groups through RBAC, not set per namespace.
-* OpenShift keeps Pod Security Admission labels in sync with the SCCs a namespace's service accounts can use, so upstream tooling that reads those labels still works.
+* Pods run as a user ID from their namespace's range, in group 0, with all capabilities dropped. This is enforced by default on every ROSA and ARO cluster; you do not opt in.
+* SCCs are granted to service accounts, users and groups through RBAC, not set per namespace. For Deployments, only the pod's service account counts.
+* A fixed `runAsUser` outside the namespace's range is rejected at admission. A root image that needs to write as root is admitted and then crashes. Learn to tell the two apart: no pods and a `FailedCreate` event, or a pod in `CrashLoopBackOff`.
+* OpenShift 4.20 and later also ship `restricted-v3`, which runs pods in a Linux user namespace. Pods use it only if they set `hostUsers: false`; everything else still lands on `restricted-v2`.
+* Pod Security Admission runs too, but OpenShift enforces `privileged` cluster-wide and syncs only the `warn` and `audit` labels from the SCCs. Upstream tooling that reads those labels still works.
+* Never edit the default SCCs; create a custom SCC if you need one. On ROSA, a managed webhook blocks changes to the default SCCs, and `dedicated-admin` can grant only `anyuid` and `nonroot`.
 
 == Where Each Wins
 
@@ -41,18 +359,28 @@ Outline of the exercise:
 |===
 |ROSA and ARO win |EKS and AKS win
 
-|Secure by default: non-root, random user IDs and dropped capabilities with nothing to build.
+|Secure by default: non-root, per-namespace user IDs and dropped capabilities with nothing to build or label.
 |Upstream Pod Security Standards only, so upstream Helm charts and policies work unchanged.
 
-|Per-project user ID ranges isolate tenants from each other.
-|Azure Policy gives fleet-wide enforcement and compliance reporting.
+|Per-namespace user ID ranges and SELinux categories isolate tenants from each other, even if one breaks out of its container.
+|Azure Policy gives fleet-wide enforcement and compliance reporting from the Azure control plane.
+
+|The SCC fills in a safe security context, so manifests stay short.
+|Images that need root, or a fixed user ID, work without an exception process.
 |===
 
 == App Teams Will Notice
 
-Images that run as root, expect a fixed user ID, write to the image file system, or bind to ports below 1024 fail on first deploy.
+Images that run as root, expect a fixed user ID, write to the image's file system, or need to own their files fail on first deploy.
 Many upstream Helm charts need a `securityContext` change or an SCC grant before they run.
-Give teams a short guide: build images that run as non-root, make writable paths group-writable for group 0, and listen on high ports.
+
+Give teams a short guide:
+
+* Build images that run as a non-root user and work under any user ID.
+* Make writable paths owned by group 0 and group-writable, as the sample application's Containerfile does.
+* Don't set `runAsUser` or `fsGroup` in manifests; let OpenShift assign them.
+* Listen on a port above 1024.
+* Red Hat's Universal Base Images (UBI) already follow these rules.
 
 == References
 
@@ -66,3 +394,4 @@ Give teams a short guide: build images that run as non-root, make writable paths
 * OpenShift (ARO uses the OpenShift documentation)
 ** https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/authentication_and_authorization/managing-pod-security-policies[Managing security context constraints]
 ** https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/authentication_and_authorization/understanding-and-managing-pod-security-admission[Pod security admission and SCC synchronization]
+** https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/images/creating-images[Creating images: support arbitrary user IDs]

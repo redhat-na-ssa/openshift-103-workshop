@@ -1,0 +1,83 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="834" height="582" viewBox="0 0 834 582">
+<rect x="0" y="0" width="834" height="582" fill="#ffffff"/>
+<text x="16" y="30" font-family="Helvetica, Arial, sans-serif" font-size="18" font-weight="bold" text-anchor="start" fill="#151515">How a pod's service account becomes cloud credentials</text>
+<text x="108.0" y="58" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" text-anchor="middle" fill="#4d5258">In the pod</text>
+<text x="314.0" y="58" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" text-anchor="middle" fill="#4d5258">Exchanged at</text>
+<text x="520.0" y="58" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" text-anchor="middle" fill="#4d5258">Trust is checked against</text>
+<text x="726.0" y="58" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" text-anchor="middle" fill="#4d5258">Cloud API</text>
+<text x="16" y="92" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="start" fill="#151515">EKS Pod Identity</text>
+<rect x="16" y="100" width="184" height="80" rx="6" fill="#f3f4f5" stroke="#6a6e73" stroke-width="1.5"/>
+<text x="108.0" y="127.33333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Service account token</text>
+<text x="108.0" y="144.33333333333331" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">sent to the node's</text>
+<text x="108.0" y="161.33333333333331" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Pod Identity Agent</text>
+<line x1="201" y1="140.0" x2="214" y2="140.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="221,140.0 213,135.5 213,144.5" fill="#4d5258"/>
+<rect x="222" y="100" width="184" height="80" rx="6" fill="#f3f4f5" stroke="#6a6e73" stroke-width="1.5"/>
+<text x="314.0" y="135.83333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">EKS Auth API</text>
+<text x="314.0" y="152.83333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">AssumeRoleForPodIdentity</text>
+<line x1="407" y1="140.0" x2="420" y2="140.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="427,140.0 419,135.5 419,144.5" fill="#4d5258"/>
+<rect x="428" y="100" width="184" height="80" rx="6" fill="#f3f4f5" stroke="#6a6e73" stroke-width="1.5"/>
+<text x="520.0" y="127.33333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Pod identity association:</text>
+<text x="520.0" y="144.33333333333331" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">cluster + namespace +</text>
+<text x="520.0" y="161.33333333333331" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">service account -&gt; role</text>
+<line x1="613" y1="140.0" x2="626" y2="140.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="633,140.0 625,135.5 625,144.5" fill="#4d5258"/>
+<rect x="634" y="100" width="184" height="80" rx="6" fill="#f3f4f5" stroke="#6a6e73" stroke-width="1.5"/>
+<text x="726.0" y="135.83333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">S3 with temporary</text>
+<text x="726.0" y="152.83333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">IAM role credentials</text>
+<text x="16" y="210" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="start" fill="#c9190b">ROSA (IRSA-style)</text>
+<rect x="16" y="218" width="184" height="80" rx="6" fill="#fff1f0" stroke="#c9190b" stroke-width="1.5"/>
+<text x="108.0" y="245.33333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Projected token for</text>
+<text x="108.0" y="262.33333333333337" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">sts.amazonaws.com,</text>
+<text x="108.0" y="279.33333333333337" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">AWS_ROLE_ARN (webhook)</text>
+<line x1="201" y1="258.0" x2="214" y2="258.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="221,258.0 213,253.5 213,262.5" fill="#4d5258"/>
+<rect x="222" y="218" width="184" height="80" rx="6" fill="#fff1f0" stroke="#c9190b" stroke-width="1.5"/>
+<text x="314.0" y="253.83333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">AWS STS</text>
+<text x="314.0" y="270.83333333333337" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">AssumeRoleWithWebIdentity</text>
+<line x1="407" y1="258.0" x2="420" y2="258.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="427,258.0 419,253.5 419,262.5" fill="#4d5258"/>
+<rect x="428" y="218" width="184" height="80" rx="6" fill="#fff1f0" stroke="#c9190b" stroke-width="1.5"/>
+<text x="520.0" y="245.33333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">IAM role trust policy:</text>
+<text x="520.0" y="262.33333333333337" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">cluster OIDC provider +</text>
+<text x="520.0" y="279.33333333333337" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">system:serviceaccount:ns:sa</text>
+<line x1="613" y1="258.0" x2="626" y2="258.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="633,258.0 625,253.5 625,262.5" fill="#4d5258"/>
+<rect x="634" y="218" width="184" height="80" rx="6" fill="#fff1f0" stroke="#c9190b" stroke-width="1.5"/>
+<text x="726.0" y="253.83333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">S3 with temporary</text>
+<text x="726.0" y="270.83333333333337" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">IAM role credentials</text>
+<text x="16" y="328" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="start" fill="#151515">AKS Workload ID</text>
+<rect x="16" y="336" width="184" height="80" rx="6" fill="#f3f4f5" stroke="#6a6e73" stroke-width="1.5"/>
+<text x="108.0" y="363.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Projected token,</text>
+<text x="108.0" y="380.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">AZURE_CLIENT_ID and</text>
+<text x="108.0" y="397.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">other env (webhook)</text>
+<line x1="201" y1="376.0" x2="214" y2="376.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="221,376.0 213,371.5 213,380.5" fill="#4d5258"/>
+<rect x="222" y="336" width="184" height="80" rx="6" fill="#f3f4f5" stroke="#6a6e73" stroke-width="1.5"/>
+<text x="314.0" y="371.8333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Microsoft Entra ID</text>
+<text x="314.0" y="388.8333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">token endpoint</text>
+<line x1="407" y1="376.0" x2="420" y2="376.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="427,376.0 419,371.5 419,380.5" fill="#4d5258"/>
+<rect x="428" y="336" width="184" height="80" rx="6" fill="#f3f4f5" stroke="#6a6e73" stroke-width="1.5"/>
+<text x="520.0" y="363.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Federated credential:</text>
+<text x="520.0" y="380.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">AKS OIDC issuer +</text>
+<text x="520.0" y="397.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">system:serviceaccount:ns:sa</text>
+<line x1="613" y1="376.0" x2="626" y2="376.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="633,376.0 625,371.5 625,380.5" fill="#4d5258"/>
+<rect x="634" y="336" width="184" height="80" rx="6" fill="#f3f4f5" stroke="#6a6e73" stroke-width="1.5"/>
+<text x="726.0" y="363.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Blob Storage with an</text>
+<text x="726.0" y="380.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Entra access token for</text>
+<text x="726.0" y="397.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">the managed identity</text>
+<text x="16" y="446" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="start" fill="#c9190b">ARO workload identity</text>
+<rect x="16" y="454" width="184" height="80" rx="6" fill="#fff1f0" stroke="#c9190b" stroke-width="1.5"/>
+<text x="108.0" y="481.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Same token and env vars,</text>
+<text x="108.0" y="498.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">injected by the cluster's</text>
+<text x="108.0" y="515.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">pod-identity-webhook</text>
+<line x1="201" y1="494.0" x2="214" y2="494.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="221,494.0 213,489.5 213,498.5" fill="#4d5258"/>
+<rect x="222" y="454" width="184" height="80" rx="6" fill="#fff1f0" stroke="#c9190b" stroke-width="1.5"/>
+<text x="314.0" y="489.8333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Microsoft Entra ID</text>
+<text x="314.0" y="506.8333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">token endpoint</text>
+<line x1="407" y1="494.0" x2="420" y2="494.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="427,494.0 419,489.5 419,498.5" fill="#4d5258"/>
+<rect x="428" y="454" width="184" height="80" rx="6" fill="#fff1f0" stroke="#c9190b" stroke-width="1.5"/>
+<text x="520.0" y="481.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Federated credential:</text>
+<text x="520.0" y="498.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">ARO OIDC issuer +</text>
+<text x="520.0" y="515.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">system:serviceaccount:ns:sa</text>
+<line x1="613" y1="494.0" x2="626" y2="494.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="633,494.0 625,489.5 625,498.5" fill="#4d5258"/>
+<rect x="634" y="454" width="184" height="80" rx="6" fill="#fff1f0" stroke="#c9190b" stroke-width="1.5"/>
+<text x="726.0" y="481.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Blob Storage with an</text>
+<text x="726.0" y="498.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Entra access token for</text>
+<text x="726.0" y="515.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">the managed identity</text>
+<text x="16" y="558" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="start" fill="#4d5258">IRSA on EKS works exactly like the ROSA row. EKS Pod Identity is not available on ROSA.</text>
+</svg>

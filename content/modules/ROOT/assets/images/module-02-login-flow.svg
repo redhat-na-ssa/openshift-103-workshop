@@ -1,0 +1,82 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="834" height="600" viewBox="0 0 834 600">
+<rect x="0" y="0" width="834" height="600" fill="#ffffff"/>
+<text x="16" y="30" font-family="Helvetica, Arial, sans-serif" font-size="18" font-weight="bold" text-anchor="start" fill="#151515">How a person's login reaches the API server</text>
+<text x="108.0" y="58" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" text-anchor="middle" fill="#4d5258">Client</text>
+<text x="314.0" y="58" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" text-anchor="middle" fill="#4d5258">Who issues the token</text>
+<text x="520.0" y="58" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" text-anchor="middle" fill="#4d5258">API server checks</text>
+<text x="726.0" y="58" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" text-anchor="middle" fill="#4d5258">Authorization</text>
+<text x="16" y="92" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="start" fill="#151515">EKS</text>
+<rect x="16" y="100" width="184" height="80" rx="6" fill="#f3f4f5" stroke="#6a6e73" stroke-width="1.5"/>
+<text x="108.0" y="127.33333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">aws eks get-token</text>
+<text x="108.0" y="144.33333333333331" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">signs a request with</text>
+<text x="108.0" y="161.33333333333331" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">your IAM identity</text>
+<line x1="201" y1="140.0" x2="214" y2="140.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="221,140.0 213,135.5 213,144.5" fill="#4d5258"/>
+<rect x="222" y="100" width="184" height="80" rx="6" fill="#f3f4f5" stroke="#6a6e73" stroke-width="1.5"/>
+<text x="314.0" y="127.33333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">AWS STS: the token is</text>
+<text x="314.0" y="144.33333333333331" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">a presigned request,</text>
+<text x="314.0" y="161.33333333333331" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">no separate login</text>
+<line x1="407" y1="140.0" x2="420" y2="140.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="427,140.0 419,135.5 419,144.5" fill="#4d5258"/>
+<rect x="428" y="100" width="184" height="80" rx="6" fill="#f3f4f5" stroke="#6a6e73" stroke-width="1.5"/>
+<text x="520.0" y="127.33333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Access entry maps the</text>
+<text x="520.0" y="144.33333333333331" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">IAM principal to a</text>
+<text x="520.0" y="161.33333333333331" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">user and groups</text>
+<line x1="613" y1="140.0" x2="626" y2="140.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="633,140.0 625,135.5 625,144.5" fill="#4d5258"/>
+<rect x="634" y="100" width="184" height="80" rx="6" fill="#f3f4f5" stroke="#6a6e73" stroke-width="1.5"/>
+<text x="726.0" y="135.83333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Access policies</text>
+<text x="726.0" y="152.83333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">or Kubernetes RBAC</text>
+<text x="16" y="210" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="start" fill="#151515">AKS</text>
+<rect x="16" y="218" width="184" height="80" rx="6" fill="#f3f4f5" stroke="#6a6e73" stroke-width="1.5"/>
+<text x="108.0" y="245.33333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">kubelogin</text>
+<text x="108.0" y="262.33333333333337" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">gets a token for</text>
+<text x="108.0" y="279.33333333333337" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">your Entra account</text>
+<line x1="201" y1="258.0" x2="214" y2="258.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="221,258.0 213,253.5 213,262.5" fill="#4d5258"/>
+<rect x="222" y="218" width="184" height="80" rx="6" fill="#f3f4f5" stroke="#6a6e73" stroke-width="1.5"/>
+<text x="314.0" y="262.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Microsoft Entra ID</text>
+<line x1="407" y1="258.0" x2="420" y2="258.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="427,258.0 419,253.5 419,262.5" fill="#4d5258"/>
+<rect x="428" y="218" width="184" height="80" rx="6" fill="#f3f4f5" stroke="#6a6e73" stroke-width="1.5"/>
+<text x="520.0" y="253.83333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Validates the</text>
+<text x="520.0" y="270.83333333333337" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Entra ID token</text>
+<line x1="613" y1="258.0" x2="626" y2="258.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="633,258.0 625,253.5 625,262.5" fill="#4d5258"/>
+<rect x="634" y="218" width="184" height="80" rx="6" fill="#f3f4f5" stroke="#6a6e73" stroke-width="1.5"/>
+<text x="726.0" y="245.33333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Azure RBAC role</text>
+<text x="726.0" y="262.33333333333337" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">assignments or</text>
+<text x="726.0" y="279.33333333333337" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Kubernetes RBAC</text>
+<text x="16" y="328" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="start" fill="#c9190b">ROSA and ARO (OAuth server)</text>
+<rect x="16" y="336" width="184" height="80" rx="6" fill="#fff1f0" stroke="#c9190b" stroke-width="1.5"/>
+<text x="108.0" y="371.8333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">oc login --web</text>
+<text x="108.0" y="388.8333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">or the web console</text>
+<line x1="201" y1="376.0" x2="214" y2="376.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="221,376.0 213,371.5 213,380.5" fill="#4d5258"/>
+<rect x="222" y="336" width="184" height="80" rx="6" fill="#fff1f0" stroke="#c9190b" stroke-width="1.5"/>
+<text x="314.0" y="363.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">OpenShift OAuth server,</text>
+<text x="314.0" y="380.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">after you log in to</text>
+<text x="314.0" y="397.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">GitHub, Entra, OIDC ...</text>
+<line x1="407" y1="376.0" x2="420" y2="376.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="427,376.0 419,371.5 419,380.5" fill="#4d5258"/>
+<rect x="428" y="336" width="184" height="80" rx="6" fill="#fff1f0" stroke="#c9190b" stroke-width="1.5"/>
+<text x="520.0" y="363.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">OpenShift access token</text>
+<text x="520.0" y="380.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">for a User object</text>
+<text x="520.0" y="397.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">(sha256~...)</text>
+<line x1="613" y1="376.0" x2="626" y2="376.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="633,376.0 625,371.5 625,380.5" fill="#4d5258"/>
+<rect x="634" y="336" width="184" height="80" rx="6" fill="#fff1f0" stroke="#c9190b" stroke-width="1.5"/>
+<text x="726.0" y="371.8333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Kubernetes RBAC on</text>
+<text x="726.0" y="388.8333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Users and Groups</text>
+<text x="16" y="446" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="bold" text-anchor="start" fill="#c9190b">ROSA HCP (external auth)</text>
+<rect x="16" y="454" width="184" height="80" rx="6" fill="#fff1f0" stroke="#c9190b" stroke-width="1.5"/>
+<text x="108.0" y="489.8333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">oc login with the</text>
+<text x="108.0" y="506.8333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">oc-oidc exec plugin</text>
+<line x1="201" y1="494.0" x2="214" y2="494.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="221,494.0 213,489.5 213,498.5" fill="#4d5258"/>
+<rect x="222" y="454" width="184" height="80" rx="6" fill="#fff1f0" stroke="#c9190b" stroke-width="1.5"/>
+<text x="314.0" y="481.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Your OIDC provider,</text>
+<text x="314.0" y="498.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">such as Entra ID,</text>
+<text x="314.0" y="515.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">directly</text>
+<line x1="407" y1="494.0" x2="420" y2="494.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="427,494.0 419,489.5 419,498.5" fill="#4d5258"/>
+<rect x="428" y="454" width="184" height="80" rx="6" fill="#fff1f0" stroke="#c9190b" stroke-width="1.5"/>
+<text x="520.0" y="481.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Validates the</text>
+<text x="520.0" y="498.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">OIDC token, as</text>
+<text x="520.0" y="515.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">AKS does</text>
+<line x1="613" y1="494.0" x2="626" y2="494.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="633,494.0 625,489.5 625,498.5" fill="#4d5258"/>
+<rect x="634" y="454" width="184" height="80" rx="6" fill="#fff1f0" stroke="#c9190b" stroke-width="1.5"/>
+<text x="726.0" y="489.8333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Kubernetes RBAC on</text>
+<text x="726.0" y="506.8333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">token claims</text>
+<text x="16" y="558" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="start" fill="#4d5258">External auth is chosen when a ROSA HCP cluster is created and cannot be turned off. Standard ARO always uses the</text>
+<text x="16" y="576" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="start" fill="#4d5258">OAuth server.</text>
+</svg>
