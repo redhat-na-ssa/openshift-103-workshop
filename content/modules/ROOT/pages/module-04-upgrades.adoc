@@ -1,6 +1,7 @@
 = Upgrades
 
-NOTE: Validated on ROSA 4.20 and ARO 4.21 in October 2026.
+[.validation]
+NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026.
 Steps and statements that were not checked on a live cluster carry a *Not validated* note.
 The comparison tables and summaries come from vendor documentation.
 
@@ -13,12 +14,12 @@ A real upgrade takes an hour or more, so this section inspects and schedules upg
 The timeline shows what you run on each platform, in order, and what happens without you.
 
 .Upgrade steps per platform
-image::module-04-upgrade-timeline.svg["Upgrade steps on EKS, AKS, ROSA and ARO, colored by whether you run the step or it runs automatically.",width=100%]
+image::module-04-upgrade-timeline.svg["Upgrade steps on EKS, AKS, ROSA and ARO, colored by whether you run the step or it runs automatically.",width=100%,link=self,window=_blank]
 
 The chart shows which parts of the platform move in the same update as the Kubernetes control plane, and which you update separately.
 
 .What moves together
-image::module-04-what-moves-together.svg["Matrix of platform components against EKS, AKS, ROSA and ARO, showing which components move with the control plane.",width=100%]
+image::module-04-what-moves-together.svg["Matrix of platform components against EKS, AKS, ROSA and ARO, showing which components move with the control plane.",width=100%,link=self,window=_blank]
 
 On ROSA and ARO, the CNI, DNS, ingress, storage drivers and monitoring are platform Operators.
 They are tested together as one OpenShift release, so there is no compatibility matrix to check.
@@ -87,6 +88,7 @@ Patch releases arrive in the current channel, and a new minor version needs a ch
 ROSA (AWS)::
 +
 --
+[.validation]
 NOTE: *Not validated:* the `rosa` commands in this part, and the claim that machine pools can trail the control plane by two minor versions.
 
 On ROSA the channel and the list of updates come from OpenShift Cluster Manager.
@@ -122,6 +124,7 @@ ARO (Azure)::
 --
 On ARO the channel is a field of the cluster's ClusterVersion, and it is not set by default.
 
+[.validation]
 NOTE: *Not validated:* setting the channel, which was not run on the validation cluster.
 That a new ARO cluster has no channel was validated.
 
@@ -206,6 +209,7 @@ An `Upgradeable` condition appears, set to `False`, only when something blocks t
 [#ex-module-04-upgrades-3]
 === Exercise 3: Schedule an Upgrade, Then Cancel It (ROSA Only)
 
+[.validation]
 NOTE: *Not validated:* this whole exercise, which needs the `rosa` CLI, and the `UpgradeConfig` example, which was not created.
 
 On ROSA you schedule upgrades with the `rosa` CLI or OpenShift Cluster Manager, and Red Hat runs them.
@@ -296,7 +300,9 @@ ROSA can also apply patch releases automatically on a recurring schedule, with t
 .On ARO, for comparison (do not apply)
 [%collapsible]
 ====
-On standard ARO you start the update yourself, with the console, `oc adm upgrade --to`, or an `UpgradeConfig` for the managed upgrade operator, which waits for a time you set:
+On standard ARO you start the update yourself, with the console, `oc adm upgrade --to`, or an `UpgradeConfig` for the managed upgrade operator, which waits for a time you set.
+
+WARNING: Do not create this `UpgradeConfig` on your ARO cluster in this workshop: it would start a real update at that time.
 
 [source,yaml]
 ----
@@ -313,8 +319,6 @@ spec:
     channel: "stable-4.21"
     version: "<target-version>"
 ----
-
-Do not create it on your ARO cluster in this workshop: it would start a real update at that time.
 ====
 
 If Terraform or Bicep describes your clusters, read xref:module-04-scaling-nodes.adoc#nodes-as-code[node pools as code] in Scaling Nodes first, which says which tool owns the version and the node pools on each platform.
@@ -430,6 +434,7 @@ The list is often empty, and that is a real answer.
 OpenShift flags only the APIs it has scheduled for removal in a coming release, and on 4.20 and 4.21 every API scheduled so far has already been removed.
 An empty list means nothing on the cluster calls an API that is about to disappear; it fills in when a future release schedules more removals.
 
+[.validation]
 NOTE: *Not validated:* a non-empty result. The command returned nothing on both validation clusters, as expected on 4.20 and 4.21.
 
 To see who calls one of them, look at its users, for example:
@@ -484,6 +489,7 @@ oc get poddisruptionbudgets \
 The sample application's budget is in the list.
 Budgets in `openshift-*` namespaces, such as `packageserver-pdb`, can appear too; those belong to the platform and Red Hat manages them.
 
+[.validation]
 NOTE: *Not validated:* the drain behavior below, which comes from the vendors' documentation.
 No upgrade was run.
 
@@ -496,6 +502,7 @@ With an `UpgradeConfig`, the managed upgrade operator forces the drain after `PD
 * EKS managed node group updates fail with a pod eviction error unless you force them.
 * AKS upgrades fail on a node that cannot drain, unless you set the undrainable node behavior to cordon it and move on.
 
+[.validation]
 NOTE: *Not validated:* `rosa describe machinepool` and `rosa edit machinepool`, which need the `rosa` CLI.
 
 On ROSA, check the pool's node drain grace period and its `Management upgrade` settings.
@@ -542,6 +549,7 @@ With a single replica, that eviction still means downtime during a drain, so run
 [#ex-module-04-upgrades-5]
 === Exercise 5: Know Where Upgrade Notices Arrive
 
+[.validation]
 NOTE: *Not validated:* these notification paths, which come from the vendors' documentation.
 
 Nothing to run here, but worth setting up before you need it.

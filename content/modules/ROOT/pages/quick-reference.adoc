@@ -3,6 +3,7 @@
 This page sums up the workshop: the habits that change when you move from EKS or AKS to ROSA or ARO, the commands worth keeping at hand, and the traps to remember.
 Each row points back to the module that covers it.
 
+[.validation]
 NOTE: The commands here are copied from the modules, which mark anything that was not validated on a live cluster.
 
 == Habits That Change
@@ -276,6 +277,7 @@ oc get clusterlogforwarder <name> \
 ROSA (AWS)::
 +
 --
+[.validation]
 NOTE: *Not validated:* the `rosa` commands below, which need a `rosa` login to the cluster's Red Hat organization.
 
 Describe the cluster: its control plane, version and IAM roles:

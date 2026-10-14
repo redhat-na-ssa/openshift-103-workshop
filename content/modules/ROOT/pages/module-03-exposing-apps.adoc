@@ -1,5 +1,6 @@
 = Exposing an App
 
+[.validation]
 NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026.
 Steps and statements that were not checked on a live cluster carry a *Not validated* note.
 The comparison tables and summaries come from vendor documentation.
@@ -9,7 +10,7 @@ ROSA and ARO arrive with a default ingress controller behind a cloud load balanc
 This section exposes the sample application three ways: an OpenShift Route, a standard Kubernetes Ingress, and the Gateway API.
 
 .How a request reaches a pod on each platform
-image::module-03-request-path.svg["Request path from client to pod on EKS, AKS, ROSA and ARO",width=100%]
+image::module-03-request-path.svg["Request path from client to pod on EKS, AKS, ROSA and ARO",width=100%,link=self,window=_blank]
 
 == On EKS and AKS
 
@@ -90,6 +91,7 @@ oc get service router-default \
 It prints `nlb`.
 AWS shows the same:
 
+[.validation]
 NOTE: *Not validated:* `aws elbv2 describe-load-balancers`, which needs AWS credentials for the account that owns the cluster.
 
 [source,bash]
@@ -101,6 +103,7 @@ aws elbv2 describe-load-balancers \
 
 See the ingress the way the service manages it:
 
+[.validation]
 NOTE: *Not validated:* `rosa list ingresses`, which needs a `rosa` login to the cluster's Red Hat organization.
 
 [source,bash]
@@ -112,6 +115,7 @@ rosa list ingresses \
 On ROSA, SRE manages the default ingress controller, and `rosa edit ingress` changes only its visibility and component routes.
 For anything else, such as sharding, a wildcard or namespace ownership policy, or another load balancer type, you add your own IngressController, or use the AWS Load Balancer Operator for ALBs.
 
+[.validation]
 NOTE: *Not validated:* changing the default ingress with `rosa edit ingress`, which comes from the ROSA documentation.
 --
 ARO (Azure)::
@@ -146,6 +150,7 @@ az network public-ip list \
 The public IP lives in the cluster's managed resource group.
 A deny assignment there lets you read it but not change it.
 
+[.validation]
 NOTE: *Not validated:* the deny assignment, which comes from the ARO documentation.
 The validation run did not try to change the public IP.
 
@@ -496,6 +501,7 @@ oc delete gateway workshop \
 The `openshift-default` GatewayClass and `istiod-openshift-gateway` stay.
 Delete the GatewayClass if you do not want an Istio control plane running.
 
+[.validation]
 NOTE: *Not validated:* deleting the Ingress, which the validation run did not do.
 
 Remove the Ingress from Exercise 3 as well:
@@ -511,6 +517,7 @@ The next section applies network policy to it.
 
 == What Matters
 
+[.validation]
 NOTE: *Not validated:* that the Gateway's load balancer on ROSA is a Classic Load Balancer, that on ARO a Gateway adds a public IP to the cluster's Azure load balancer instead of creating a new one, and that `dedicated-admin` cannot use the Gateway API.
 The ROSA load balancer type was read from its host name and annotations, not checked in AWS, the ARO detail comes from the Azure documentation, and `dedicated-admin` was not tried.
 
@@ -532,6 +539,7 @@ For DNS, point a record for each host at the router's load balancer (a CNAME on 
 On ROSA, use the AWS Load Balancer Operator instead of the router when you need an ALB with an ACM certificate or AWS WAF.
 The Cloud Experts guides for https://cloud.redhat.com/experts/rosa/dynamic-certificates/[ROSA] and https://cloud.redhat.com/experts/aro/cert-manager/[ARO] walk through the issuer setup.
 
+[.validation]
 NOTE: *Not validated:* cert-manager, the External DNS Operator and the AWS Load Balancer Operator, which were not run on a cluster.
 
 This Certificate asks for a custom host's certificate from a ClusterIssuer named `letsencrypt-dns01`, which you set up as the guides show:

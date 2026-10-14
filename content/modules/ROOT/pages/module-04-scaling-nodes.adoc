@@ -1,6 +1,7 @@
 = Scaling Nodes
 
-NOTE: Validated on ROSA 4.20 and ARO 4.21 in October 2026.
+[.validation]
+NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026.
 Steps and statements that were not checked on a live cluster carry a *Not validated* note.
 The comparison tables and summaries come from vendor documentation.
 
@@ -16,7 +17,7 @@ In this section you add an autoscaling group of nodes to your cluster, push the 
 Every platform in this workshop offers one or both of these models.
 
 .Group autoscaling and provisioning
-image::module-04-scaling-models.svg["Group autoscaling grows pre-defined groups of identical nodes. Provisioning picks an instance type for each batch of pending pods.",width=100%]
+image::module-04-scaling-models.svg["Group autoscaling grows pre-defined groups of identical nodes. Provisioning picks an instance type for each batch of pending pods.",width=100%,link=self,window=_blank]
 
 [cols="2,2,2,2,2",options="header"]
 |===
@@ -102,6 +103,7 @@ ARO also shows three control plane nodes, which run in your subscription but whi
 ROSA (AWS)::
 +
 --
+[.validation]
 NOTE: *Not validated:* `rosa list machinepools`.
 The `oc` command after it was validated.
 
@@ -179,6 +181,7 @@ The group starts small and the cluster autoscaler grows it when pods are pending
 ROSA (AWS)::
 +
 --
+[.validation]
 NOTE: *Not validated:* the ROSA steps of this exercise, which need the `rosa` CLI, including a machine pool that starts at zero nodes.
 
 A machine pool on ROSA lives in one subnet, so in one availability zone.
@@ -399,6 +402,7 @@ Keep them in Git and apply them with OpenShift GitOps, which you installed in xr
 [#ex-module-04-scaling-nodes-3]
 === Exercise 3: Scale the Sample Application Past Capacity
 
+[.validation]
 NOTE: *Not validated:* this exercise on ROSA, which needs the machine pool from Exercise 2.
 It was validated on ARO, and the ROSA behavior described below comes from Red Hat's documentation.
 
@@ -523,6 +527,7 @@ kubectl get configmap cluster-autoscaler-status \
 [#ex-module-04-scaling-nodes-4]
 === Exercise 4: Let Karpenter Pick the Nodes (ROSA Only)
 
+[.validation]
 NOTE: *Not validated:* this whole exercise.
 The validation cluster ran ROSA 4.20, and AutoNode needs 4.22 and the `rosa` and `aws` CLIs.
 
@@ -809,6 +814,7 @@ oc scale deployment/sample-app \
 ROSA (AWS)::
 +
 --
+[.validation]
 NOTE: *Not validated:* the ROSA cleanup steps, which need the `rosa` CLI.
 
 If you skipped Exercise 4, delete the machine pool instead:
@@ -849,6 +855,7 @@ oc delete machineset scale-lab \
   --namespace openshift-machine-api
 ----
 
+[.validation]
 NOTE: *Not validated:* deleting the ClusterAutoscaler.
 
 If you created the ClusterAutoscaler in Exercise 2, delete it:

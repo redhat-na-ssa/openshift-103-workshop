@@ -139,3 +139,45 @@ video {
         overflow-wrap: normal;
     }
 }
+/* collapsible blocks ("EKS and AKS (reference only)", "In production: ...") get a tinted
+   panel with a grey edge, so their commands don't read as hands-on steps once opened */
+.doc details {
+    background-color: #f3f5f8;
+    border-left: 4px solid #8a8d90;
+    border-radius: 0 0.25rem 0.25rem 0;
+    padding: 0.6rem 1rem;
+}
+.doc details > summary {
+    font-weight: 600;
+    cursor: pointer;
+}
+.doc details[open] > summary {
+    margin-bottom: 0.75rem;
+}
+.doc details > .content > :first-child {
+    margin-top: 0;
+}
+.doc details > .content > :last-child {
+    margin-bottom: 0;
+}
+/* validation notes ([.validation]: "Validated on ...", "Not validated: ...") are quieter
+   than guidance notes: a grey "Validation" badge and an outlined box instead of a filled one */
+.doc .admonitionblock.validation .icon {
+    background-color: #6a6e73;
+}
+.doc .admonitionblock.validation .icon i::after {
+    content: "Validation";
+}
+.doc .admonitionblock.validation td.content {
+    background: transparent;
+    border: 1px solid #d2d2d2;
+    color: #4d4d4d;
+}
+.doc .admonitionblock.validation td.content,
+.doc .admonitionblock.validation p {
+    font-size: 0.83333rem;
+}
+/* a validation note inside a reference panel sits on the panel's tint */
+.doc details .admonitionblock.validation td.content {
+    background: #ffffff;
+}
