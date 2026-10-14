@@ -13,16 +13,18 @@ A real upgrade takes an hour or more, so this section inspects and schedules upg
 The timeline shows what you run on each platform, in order, and what happens without you.
 
 .Upgrade steps per platform
-image::module-04-upgrade-timeline.svg[Upgrade steps on EKS, AKS, ROSA and ARO, colored by whether you run the step or it runs automatically.,width=100%]
+image::module-04-upgrade-timeline.svg["Upgrade steps on EKS, AKS, ROSA and ARO, colored by whether you run the step or it runs automatically.",width=100%]
 
 The chart shows which parts of the platform move in the same update as the Kubernetes control plane, and which you update separately.
 
 .What moves together
-image::module-04-what-moves-together.svg[Matrix of platform components against EKS, AKS, ROSA and ARO, showing which components move with the control plane.,width=100%]
+image::module-04-what-moves-together.svg["Matrix of platform components against EKS, AKS, ROSA and ARO, showing which components move with the control plane.",width=100%]
 
 On ROSA and ARO, the CNI, DNS, ingress, storage drivers and monitoring are platform Operators.
 They are tested together as one OpenShift release, so there is no compatibility matrix to check.
 The difference between the two is the nodes: ROSA updates each machine pool separately, while standard ARO rolls the workers as part of the cluster update.
+
+Operators you add from the Software Catalog (GitOps, Logging, OADP) support their own OpenShift version ranges; check the https://access.redhat.com/support/policy/updates/openshift_operators[Red Hat Operator life cycle] page and update them before a minor update.
 
 == On EKS and AKS
 
@@ -138,12 +140,21 @@ ARO supports only the `stable`, `fast` and `eus` channels.
 .EKS and AKS (reference only)
 [%collapsible]
 ====
-EKS, list the Kubernetes versions the cluster can move to, and the upgrade insights that flag problems first:
+EKS, show the cluster's Kubernetes version:
+
+[source,bash]
+----
+aws eks describe-cluster \
+  --name my-cluster \
+  --query cluster.version
+----
+
+List the Kubernetes versions in EKS standard support, with their end-of-support dates, and the upgrade insights that flag problems first:
 
 [source,bash]
 ----
 aws eks describe-cluster-versions \
-  --default-only
+  --version-status STANDARD_SUPPORT
 ----
 
 [source,bash]
@@ -209,6 +220,10 @@ Pick the first version in the list:
 TARGET=$(rosa list upgrades \
   --cluster "$CLUSTER" \
   | awk 'NR==2 {print $1}')
+----
+
+[source,bash]
+----
 echo "$TARGET"
 ----
 
@@ -256,7 +271,13 @@ rosa delete upgrade \
   --cluster "$CLUSTER"
 ----
 
-Run `rosa describe upgrade` again to check that nothing is scheduled.
+Check that nothing is scheduled:
+
+[source,bash]
+----
+rosa describe upgrade \
+  --cluster "$CLUSTER"
+----
 
 For a real upgrade you would then upgrade each machine pool, after the control plane finishes:
 
@@ -271,6 +292,9 @@ rosa upgrade machinepool \
 Nodes created by the Red Hat build of Karpenter from the `default` node class follow the control plane version without this step.
 ROSA can also apply patch releases automatically on a recurring schedule, with the `--schedule` flag and a cron expression.
 
+.On ARO, for comparison (do not apply)
+[%collapsible]
+====
 On standard ARO you start the update yourself, with the console, `oc adm upgrade --to`, or an `UpgradeConfig` for the managed upgrade operator, which waits for a time you set:
 
 [source,yaml]
@@ -290,11 +314,12 @@ spec:
 ----
 
 Do not create it on your ARO cluster in this workshop: it would start a real update at that time.
+====
 
 .EKS and AKS (reference only)
 [%collapsible]
 ====
-EKS upgrades start when you run them; there is no scheduler:
+EKS upgrades start when you run them, with no scheduler:
 
 [source,bash]
 ----
@@ -302,6 +327,8 @@ aws eks update-cluster-version \
   --name my-cluster \
   --kubernetes-version 1.34
 ----
+
+The exception: a control plane left past the end of extended support (or the end of standard support, if extended support is off) is upgraded automatically, and add-ons and nodes are not.
 
 Each add-on and node group follows, one command each:
 
@@ -356,6 +383,7 @@ oc get clusteroperators -o json \
 ----
 
 No output means no Operator blocks a minor update.
+If `operator-lifecycle-manager` appears, an installed catalog Operator declares a maximum OpenShift version; update that Operator first.
 
 Some minor updates also need an administrator's acknowledgment, for example of an API removal.
 The platform lists these gates in one ConfigMap:
@@ -498,13 +526,15 @@ oc patch poddisruptionbudget sample-app \
     {"op":"add","path":"/spec/maxUnavailable","value":1}]'
 ----
 
-Its allowed disruptions are now above zero, as long as at least two replicas are running:
+Its allowed disruptions are now 1:
 
 [source,bash]
 ----
 oc get poddisruptionbudget sample-app \
   --namespace sample-app
 ----
+
+With a single replica, that eviction still means downtime during a drain, so run at least two (see App Teams Will Notice).
 
 [#ex-module-04-upgrades-5]
 === Exercise 5: Know Where Upgrade Notices Arrive
@@ -540,7 +570,7 @@ Test updates on a non-production cluster first.
 |===
 |ROSA and ARO win |EKS and AKS win
 
-|One tested payload: no add-on version juggling.
+|Platform components upgrade together in one tested release.
 |Newer Kubernetes versions sooner.
 
 |Upgrade-blocking checks and API usage counts catch problems before they start.

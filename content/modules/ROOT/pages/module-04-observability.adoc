@@ -13,7 +13,7 @@ In this section you look at what monitoring ships, add the sample application's 
 == What You Build and What Ships
 
 .Observability stacks
-image::module-04-observability-stack.svg[On EKS and AKS you install collectors and agents that send to managed cloud services. On ROSA and ARO, monitoring ships in the cluster and you add the Logging Operator to send logs to CloudWatch or Log Analytics.,width=100%]
+image::module-04-observability-stack.svg["On EKS and AKS you install collectors and agents that send to managed cloud services. On ROSA and ARO, monitoring ships in the cluster and you add the Logging Operator to send logs to CloudWatch or Log Analytics.",width=100%]
 
 [cols="2,3,3",options="header"]
 |===
@@ -39,6 +39,8 @@ image::module-04-observability-stack.svg[On EKS and AKS you install collectors a
 |A switch on the cluster, to CloudWatch or diagnostic settings
 |ROSA: a log forwarder in OpenShift Cluster Manager. ARO: the API server audit log, through the Logging Operator
 |===
+
+The optional box in the diagram is Prometheus remote write: the cluster's Prometheus can also send metrics to Amazon Managed Service for Prometheus or Azure Monitor managed Prometheus, which this workshop does not set up.
 
 == On EKS and AKS
 
@@ -430,6 +432,14 @@ The collector writes to CloudWatch with an IAM role, which it assumes with its s
 This is the same STS pattern as in xref:module-02-cloud-credentials.adoc[Pod Cloud Credentials].
 
 Work in your ROSA terminal.
+The steps use the `CLUSTER` variable from xref:module-01-who-manages-what.adoc#before-you-start[Before You Start].
+If you open a new terminal, set it again:
+
+[source,bash]
+----
+export CLUSTER=<your-rosa-cluster-name>
+----
+
 Collect the values you need; they are the same as in Module 2:
 
 [source,bash]
@@ -644,6 +654,10 @@ If you open a new terminal, set them again:
 [source,bash]
 ----
 export CLUSTER=<your-aro-cluster-name>
+----
+
+[source,bash]
+----
 export RESOURCE_GROUP=<your-resource-group>
 ----
 
@@ -856,6 +870,10 @@ CLIENT_ID=$(az identity show \
   --name sample-app-logging \
   --query clientId \
   --output tsv)
+----
+
+[source,bash]
+----
 TENANT_ID=$(az account show \
   --query tenantId \
   --output tsv)

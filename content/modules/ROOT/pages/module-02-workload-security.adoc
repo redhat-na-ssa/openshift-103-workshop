@@ -110,6 +110,9 @@ spec:
 EOF
 ----
 
+The command may print a `PodSecurity "restricted:latest"` warning.
+It is only a warning; Exercise 2 explains it.
+
 Watch the pod:
 
 [source,bash]
@@ -120,7 +123,7 @@ oc get pods \
 ----
 
 The pod starts, then goes into `CrashLoopBackOff`.
-Press kbd:[Ctrl+C] and read its log:
+Press Ctrl+C and read its log:
 
 [source,bash]
 ----
@@ -212,7 +215,9 @@ oc get events \
   --field-selector reason=FailedCreate
 ----
 
-The message lists every SCC the service account may use and why each one refused the pod.
+The message lists every SCC on the cluster.
+Most say `not usable by user or serviceaccount`.
+The ones the service account may use give a reason:
 `restricted-v2` says `1000` is not in the namespace's range.
 `restricted-v3` says the pod does not set `hostUsers: false`.
 
@@ -393,10 +398,10 @@ The next section gives it cloud credentials.
 |===
 |ROSA and ARO win |EKS and AKS win
 
-|Secure by default: non-root, per-namespace user IDs and dropped capabilities with nothing to build or label.
+|Restrictive by default: non-root, per-namespace user IDs and dropped capabilities with nothing to build or label.
 |Upstream Pod Security Standards only, so upstream Helm charts and policies work unchanged.
 
-|Per-namespace user ID ranges and SELinux categories isolate tenants from each other, even if one breaks out of its container.
+|Each namespace gets its own user ID range and SELinux categories, so a process that escapes its container is still an unprivileged, uniquely numbered user confined by SELinux. This limits, but does not prevent, damage from a kernel-level escape.
 |Azure Policy gives fleet-wide enforcement and compliance reporting from the Azure control plane.
 
 |The SCC fills in a safe security context, so manifests stay short.
@@ -414,7 +419,7 @@ Give teams a short guide:
 * Make writable paths owned by group 0 and group-writable, as the sample application's Containerfile does.
 * Don't set `runAsUser` or `fsGroup` in manifests; let OpenShift assign them.
 * Listen on a port above 1024.
-* Red Hat's Universal Base Images (UBI) already follow these rules.
+* Red Hat's Universal Base Image (UBI) language runtime images (for example `ubi9/python-312` and `ubi9/nodejs-22`) already follow these rules. The plain `ubi` and `ubi-minimal` base images run as root and need the same `chgrp`, `chmod` and `USER` steps.
 
 == References
 

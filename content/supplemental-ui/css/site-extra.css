@@ -99,7 +99,7 @@ video {
 .doc .listingblock,
 .doc .tabs,
 .doc details,
-.doc .tableblock,
+.doc table.tableblock,
 .doc .imageblock {
     margin-top: 1.75rem;
     margin-bottom: 1.75rem;
@@ -122,4 +122,20 @@ video {
 .doc .ulist > .title {
     font-weight: 600;
     margin-top: 1.5rem;
+}
+/* every code block gets the theme's copy button (partials/footer.hbs adds .copypaste);
+   keep the normal code background instead of the theme's copypaste tint */
+.doc .copypaste pre.highlight code {
+    background-color: #ededed;
+}
+/* on phones, let wide tables scroll sideways instead of breaking words mid-word */
+@media screen and (max-width: 600px) {
+    .doc table.tableblock {
+        display: block;
+        overflow-x: auto;
+    }
+    .doc table.tableblock th,
+    .doc table.tableblock td {
+        overflow-wrap: normal;
+    }
 }

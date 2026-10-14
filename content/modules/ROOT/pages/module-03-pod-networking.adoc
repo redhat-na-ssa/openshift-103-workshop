@@ -9,11 +9,11 @@ ROSA and ARO run OVN-Kubernetes as an overlay: pod addresses never appear in the
 This section explains the packet path, then applies network policy at two levels: per project, and cluster-wide.
 
 .Where pod addresses come from, what a database in the same network sees, and where filtering happens
-image::module-03-packet-path.svg[Pod packet path with the Amazon VPC CNI, Azure CNI Overlay and OVN-Kubernetes,width=100%]
+image::module-03-packet-path.svg["Pod packet path with the Amazon VPC CNI, Azure CNI Overlay and OVN-Kubernetes",width=100%]
 
 == On EKS and AKS
 
-* EKS: pods take VPC addresses, can carry their own security groups, and you plan subnets around address exhaustion. Network policy is a VPC CNI feature you turn on.
+* EKS: pods take VPC addresses, can carry their own security groups, and you plan subnets around address exhaustion. Network policy is a VPC CNI feature you turn on. ClusterNetworkPolicy adds cluster-wide Admin and Baseline tiers (VPC CNI 1.21.1 or later, with network policy enabled), and Auto Mode adds DNS-based policies.
 * AKS: choose Azure CNI, Azure CNI Overlay, or Azure CNI powered by Cilium, and a network policy engine.
 * Private clusters: the EKS endpoint can switch between public and private at any time, and AKS offers private clusters and API Server VNet Integration.
 
@@ -183,7 +183,8 @@ It prints `000` when the connection is blocked:
 probe() {
   oc exec client \
     --namespace net-client \
-    -- curl --silent \
+    -- curl \
+    --silent \
     --output /dev/null \
     --write-out '%{http_code}\n' \
     --max-time 5 \
@@ -339,7 +340,7 @@ aws eks update-addon \
   --configuration-values '{"enableNetworkPolicy":"true"}'
 ----
 
-AKS: you choose the network plugin and policy engine when you create the cluster, for example an overlay with the Cilium dataplane.
+AKS: you pick the network plugin when you create the cluster (Azure CNI Overlay if you name none), for example an overlay with the Cilium dataplane.
 
 [source,bash]
 ----
@@ -350,6 +351,8 @@ az aks create \
   --network-plugin-mode overlay \
   --network-dataplane cilium
 ----
+
+`az aks update --network-policy` adds or changes the policy engine later, and Azure CNI clusters can move to the Cilium dataplane.
 
 The NetworkPolicy objects themselves are the same on all four platforms.
 ====
@@ -490,7 +493,9 @@ Ask a public service which address the client pod's traffic comes from:
 ----
 oc exec client \
   --namespace net-client \
-  -- curl --silent https://checkip.amazonaws.com
+  -- curl \
+  --silent \
+  https://checkip.amazonaws.com
 ----
 
 Compare it with the cloud's outbound addresses for the cluster below: it is one of them.
@@ -505,7 +510,6 @@ ROSA (AWS)::
 Find the NAT gateway addresses in the cluster's VPC:
 
 NOTE: *Not validated:* the NAT gateway lookup, which needs AWS credentials for the account that owns the cluster.
-That the pod's address on ARO is one of the cluster's outbound addresses was validated.
 
 [source,bash]
 ----
@@ -535,6 +539,8 @@ az network public-ip list \
   --query "[].{name:name,address:ipAddress}" \
   --output table
 ----
+
+The validation run confirmed that the pod's address is one of these.
 --
 ======
 
@@ -573,11 +579,13 @@ oc delete project net-client
 
 == Private Clusters
 
-Making a cluster private is an install-time choice on ROSA and ARO, so there is no exercise for it.
+A private API is an install-time choice on ROSA and ARO, as is private ingress on ARO, so there is no exercise for it.
 What changes is where the control plane runs and how you, and the provider's SRE team, reach it:
 
 .Where the control plane runs and how private API access works
 image::module-03-private-clusters.svg[Where the control plane runs and how private API access works,width=100%]
+
+NOTE: *Not validated:* making the ROSA default ingress private after the cluster is created.
 
 [cols="1,1,1,1,1",options="header"]
 |===
@@ -596,13 +604,13 @@ image::module-03-private-clusters.svg[Where the control plane runs and how priva
 |Private ingress
 |Internal load balancers you request
 |Internal load balancers you request
-|`--default-ingress-private` at create
+|`--default-ingress-private` at create, or `rosa edit ingress --private` later
 |`--ingress-visibility Private` at create
 
 |Change after create
 |Yes, at any time
 |Depends on the option
-|Plan it at create
+|Ingress: yes; API: plan it at create
 |Plan it at create
 |===
 
@@ -613,10 +621,10 @@ ROSA also offers clusters with no internet egress at all (egress zero).
 
 * OVN-Kubernetes is the default and the only CNI Red Hat supports. ROSA can be created without a CNI, at create time only, so you can install your own, such as Cilium or Calico, with support from that vendor. ARO is OVN-Kubernetes only.
 * Pod addresses never use VPC or virtual network space, so there is no subnet exhaustion from pods. The other side: anything outside the cluster sees node addresses, never pod addresses.
-* NetworkPolicy works with nothing to enable. A default-deny policy also blocks the router and monitoring until you allow their policy groups.
+* NetworkPolicy works with nothing to enable. A default-deny policy also blocks the router and monitoring until you allow the router's policy group and the user workload monitoring namespace.
 * AdminNetworkPolicy adds cluster-wide rules that project administrators cannot override. Keep its subjects away from `openshift-*` namespaces, which the platform and SRE need.
 * Egress IPs give a project a fixed source address, with cloud-specific limits: on AWS the capacity depends on the instance type, and on ARO namespace egress IPs need a private cluster created with user-defined routing. Public ARO clusters cannot use them.
-* Private clusters are an install-time choice on ROSA and ARO. ROSA workers always reach the hosted control plane over AWS PrivateLink.
+* A private API is an install-time choice on ROSA and ARO, and so is private ingress on ARO. ROSA workers always reach the hosted control plane over AWS PrivateLink.
 
 == Where Each Wins
 
@@ -624,10 +632,10 @@ ROSA also offers clusters with no internet egress at all (egress zero).
 |===
 |ROSA and ARO win |EKS and AKS win
 
-|No pod address planning in your VPC or virtual network.
-|Pods are first-class network citizens: routable addresses, security groups for pods, flow logs by pod address.
+|No pod address planning in your VPC or virtual network (as on Azure CNI Overlay, the AKS default; unlike the VPC CNI).
+|With the VPC CNI or an Azure CNI pod subnet, pods are first-class network citizens: routable addresses, security groups for pods (EKS), flow logs by pod address.
 
-|NetworkPolicy, AdminNetworkPolicy and egress IPs built in (on ARO, only on private clusters with user-defined routing).
+|NetworkPolicy, AdminNetworkPolicy and BaselineAdminNetworkPolicy on by default, nothing to enable; egress IPs built in (on ARO, only on private clusters with user-defined routing).
 |Cilium on AKS adds an eBPF dataplane, L7 and FQDN policy.
 
 |A supported private pattern that keeps SRE access working.
@@ -639,6 +647,7 @@ ROSA also offers clusters with no internet egress at all (egress zero).
 * A new project allows all traffic until someone adds policy. If the cluster's project template adds a default-deny policy, their Route returns `503` until they allow the router.
 * Databases and APIs outside the cluster see node addresses. Allow-lists that expect a pod or per-app address need an egress IP; on a public ARO cluster, allow-list the cluster's outbound addresses instead.
 * Service names resolve the same way as on EKS and AKS: `<service>.<project>.svc`.
+* Cluster-wide policies written as EKS ClusterNetworkPolicy must be rewritten as AdminNetworkPolicy or BaselineAdminNetworkPolicy, because the APIs differ.
 
 == References
 

@@ -19,7 +19,7 @@ This section tours what ships, then shows how you add more through the Software 
 On ROSA and ARO, every capability a production cluster needs arrives in one of three ways.
 The diagram sorts them; the names in code font are the cluster Operators or resources you look up in the exercises.
 
-image::module-01-what-ships.svg[How platform capabilities arrive on ROSA and ARO: shipped and upgraded with the cluster, shipped and configured by you, or added from the Software Catalog]
+image::module-01-what-ships.svg["How platform capabilities arrive on ROSA and ARO: shipped and upgraded with the cluster, shipped and configured by you, or added from the Software Catalog"]
 
 === Ships, Upgraded with the Cluster
 
@@ -233,6 +233,16 @@ az aks show \
   --name <cluster-name> \
   --query addonProfiles
 ----
+
+[source,bash]
+----
+az k8s-extension list \
+  --resource-group <resource-group> \
+  --cluster-name <cluster-name> \
+  --cluster-type managedClusters
+----
+
+EKS Auto Mode components do not appear in `aws eks list-addons`, and newer AKS features, such as app routing, KEDA, managed Prometheus and Istio, live in their own profiles of `az aks show`, not in `addonProfiles`.
 ====
 
 [#ex-module-01-what-ships-3]
@@ -334,7 +344,19 @@ oc get catalogsources \
 ----
 
 ARO only shows Red Hat's catalogs when the cluster has a Red Hat pull secret.
-If `redhat-operators` is missing on the ARO cluster, the pull secret was not added; see the xref:setup-requirements.adoc[Setup Requirements].
+If `redhat-operators` is missing on ARO, either the cluster has no Red Hat pull secret, or it was added after creation and the sources are still disabled.
+
+NOTE: *Not validated:* the OperatorHub check, which is read-only.
+
+On ARO, check which default sources are disabled:
+
+[source,bash]
+----
+oc get operatorhub cluster \
+  -o jsonpath='{.spec.sources}{"\n"}'
+----
+
+For the fix, see the xref:setup-requirements.adoc[Setup Requirements].
 
 Find the OpenShift GitOps Operator and its default channel:
 
@@ -547,13 +569,13 @@ Keep the OpenShift GitOps Operator installed; later modules do not depend on it,
 |Ingress, registry, monitoring, storage and console work on day one.
 |Smaller footprint: you run only what you choose, and Auto Mode runs its controllers outside your nodes.
 
-|No add-on version matrix: components upgrade with the cluster.
+|Platform components upgrade together in one tested release.
 |Freedom to swap components, such as Cilium or a different ingress.
 
 |One catalog and lifecycle model (Operators) for platform add-ons, with one health view for the components that ship with the cluster.
 |Managed GitOps: the EKS Argo CD capability and the AKS Flux extension run without an in-cluster Argo CD to operate.
 
-|
+|SRE monitors every component that ships with the cluster and is alerted when one degrades.
 |AKS Automatic gives a similar opinionated default set, with AKS add-ons supported by Microsoft.
 |===
 

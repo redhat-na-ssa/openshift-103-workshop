@@ -43,7 +43,7 @@ az aks show \
 
 The diagram shows where the control plane and the nodes of each platform run, and who operates them.
 
-image::module-01-architecture.svg[Where the control plane and nodes run on EKS, AKS, ROSA and ARO]
+image::module-01-architecture.svg["Where the control plane and nodes run on EKS, AKS, ROSA and ARO"]
 
 Two things stand out:
 
@@ -55,7 +55,7 @@ This workshop uses standard ARO.
 
 == The Responsibility Line
 
-image::module-01-responsibility.svg[Who is responsible for each area on EKS, AKS, ROSA and ARO]
+image::module-01-responsibility.svg["Who is responsible for each area on EKS, AKS, ROSA and ARO"]
 
 Read the chart by row:
 
@@ -368,7 +368,7 @@ oc get pods \
 ----
 
 On ROSA, the managed service also installs validating admission webhooks.
-They stop even cluster administrators from changing resources SRE owns, such as the ClusterVersion, the machine API and the cluster autoscaler.
+They stop even cluster administrators from changing resources SRE owns, such as the ClusterVersion, cluster-wide configuration like the APIServer and Proxy objects, and the default SCCs (Module 2).
 Their names start with `sre-`:
 
 [source,bash]
@@ -430,7 +430,7 @@ On ROSA and ARO, the platform components are part of the service, so one case co
 
 == What Matters
 
-* On ROSA, the control plane runs in a Red Hat account and is reached over AWS PrivateLink, like EKS. On ARO it runs in your subscription, locked by a deny assignment.
+* On ROSA, the control plane runs in a Red Hat account, as EKS runs it in an AWS account; your workers reach it through AWS PrivateLink, where EKS uses cross-account network interfaces. On ARO it runs in your subscription, locked by a deny assignment.
 * Some cluster settings are SRE-owned. Changes to them are refused or reverted, so automation that worked on EKS or AKS may fail here. Test cluster-wide automation against a ROSA or ARO cluster before rolling it out.
 * Application backup is yours on every platform. SRE backs up etcd for its own disaster recovery, not for restores you request, and never your volumes.
 
@@ -456,12 +456,12 @@ On ROSA and ARO you install the OpenShift API for Data Protection (OADP) Operato
 
 |What it backs up
 |Cluster configuration, Kubernetes resources, and EBS, EFS and S3 volumes
-|Kubernetes resources and Azure Disk volumes
+|Kubernetes resources, Azure Disk and Azure Files (SMB) volumes
 |Kubernetes resources, and volumes through CSI snapshots or the node agent
 
 |Policies and storage
 |Backup plans and vaults, with cross-Region copy
-|Backup policies and vaults
+|Backup policies and vaults, with cross-region restore from the vault tier (Azure Disk only)
 |Schedules you define, in a bucket or storage account you own
 |===
 
@@ -473,7 +473,7 @@ NOTE: *Not validated:* the two OADP samples below, which were not applied to a c
 .Sample OADP configuration for ROSA
 [%collapsible]
 ====
-On ROSA the `cloud-credentials` secret holds an IAM role ARN rather than access keys, the same pattern Module 2 uses for application pods.
+On ROSA you give the IAM role ARN when you install the Operator, and the Cloud Credential Operator creates the `cloud-credentials` secret: an STS credentials file that references the role, not access keys.
 
 [source,yaml]
 ----
@@ -488,6 +488,7 @@ spec:
       defaultPlugins:
         - openshift
         - aws
+        - csi
   backupLocations:
     - velero:
         provider: aws
@@ -495,14 +496,6 @@ spec:
         objectStorage:
           bucket: <bucket-name>
           prefix: velero
-        config:
-          region: <region>
-        credential:
-          name: cloud-credentials
-          key: credentials
-  snapshotLocations:
-    - velero:
-        provider: aws
         config:
           region: <region>
         credential:
@@ -580,7 +573,7 @@ The pricing pages in the references have current numbers.
 |===
 
 * The AKS column is a paid tier. The free tier has no uptime SLA, so it is not a fair comparison for production.
-* Worker compute costs about the same on every platform. The OpenShift fee grows with every worker vCPU, so on larger clusters it outweighs the control plane fee, and commitments on that fee matter more than anything else on the bill.
+* Instance prices are the same, but on ROSA and ARO the platform's own pods (router, monitoring, registry, networking) use part of every cluster's worker capacity, and ARO needs at least three workers. The OpenShift fee scales with worker vCPUs, so commitments on it are a major lever on larger clusters, alongside compute commitments.
 * ROSA and ARO both carry a financially backed SLA and joint support: one case reaches both the cloud provider and Red Hat.
 
 == Where Each Wins
@@ -595,11 +588,9 @@ The pricing pages in the references have current numbers.
 |One support case covers the cloud and the platform.
 |Lower platform cost, with no per-vCPU OpenShift fee.
 
-|A tested, integrated stack instead of an add-on matrix you maintain.
+|Platform components upgrade together in one tested release.
 |Managed backup services with policies and vaults.
-
-|
-|One vendor and one support channel for the whole stack.
+One vendor to deal with when you use only AWS or Microsoft add-ons.
 |===
 
 == App Teams Will Notice

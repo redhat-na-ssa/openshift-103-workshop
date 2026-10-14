@@ -16,7 +16,7 @@ In this section you add an autoscaling group of nodes to each cluster, push the 
 Every platform in this workshop offers one or both of these models.
 
 .Group autoscaling and provisioning
-image::module-04-scaling-models.svg[Group autoscaling grows pre-defined groups of identical nodes. Provisioning picks an instance type for each batch of pending pods.,width=100%]
+image::module-04-scaling-models.svg["Group autoscaling grows pre-defined groups of identical nodes. Provisioning picks an instance type for each batch of pending pods.",width=100%]
 
 [cols="2,2,2,2,2",options="header"]
 |===
@@ -190,6 +190,10 @@ SUBNET=$(rosa list machinepools \
   --cluster "$CLUSTER" \
   --output json \
   | jq -r '.[0].subnet')
+----
+
+[source,bash]
+----
 echo "$SUBNET"
 ----
 
@@ -238,6 +242,10 @@ Pick the first worker MachineSet:
 SOURCE_MS=$(oc get machinesets \
   --namespace openshift-machine-api \
   -o jsonpath='{.items[0].metadata.name}')
+----
+
+[source,bash]
+----
 echo "$SOURCE_MS"
 ----
 
@@ -304,7 +312,8 @@ EOF
 ----
 
 Then attach a MachineAutoscaler to the new MachineSet.
-It keeps at least one node, because ARO's support policy forbids scaling workers to zero:
+It keeps one node so the exercise starts with capacity.
+An extra MachineSet may scale from zero on Azure, but ARO's support policy requires at least three workers in the cluster and forbids scaling the original worker MachineSets, or all workers, to zero:
 
 [source,bash]
 ----
@@ -517,6 +526,10 @@ OIDC_PROVIDER=$(oc get authentication.config.openshift.io \
   cluster \
   -o jsonpath='{.spec.serviceAccountIssuer}' \
   | sed 's|^https://||')
+----
+
+[source,bash]
+----
 ACCOUNT_ID=$(aws sts get-caller-identity \
   --query Account \
   --output text)
@@ -822,6 +835,15 @@ oc delete machineautoscaler scale-lab \
 oc delete machineset scale-lab \
   --namespace openshift-machine-api
 ----
+
+NOTE: *Not validated:* deleting the ClusterAutoscaler.
+
+If you created the ClusterAutoscaler in Exercise 2, delete it:
+
+[source,bash]
+----
+oc delete clusterautoscaler default
+----
 --
 ======
 
@@ -831,8 +853,9 @@ oc delete machineset scale-lab \
 ROSA machine pools are managed through the `rosa` CLI or OpenShift Cluster Manager.
 Standard ARO has no pool API, and you edit MachineSets in the cluster with `oc`.
 * Each machine pool or MachineSet uses one instance type.
-To offer two instance types, or spot and on-demand, you create two groups.
+On ARO, and on ROSA without the Red Hat build of Karpenter (4.22+), you create two groups to offer two instance types, or spot and on-demand.
 * ROSA machine pools can scale to zero.
+On ARO an extra MachineSet can too, but the cluster must keep at least three workers, and the original worker MachineSets must not scale to zero.
 * The Red Hat build of Karpenter requires ROSA 4.22.
 ARO with hosted control planes has its own autoscaling, in preview.
 * Red Hat owns the node OS image.
@@ -849,9 +872,9 @@ There is no separate node image channel to follow, and no custom AMI or node ima
 |Karpenter, Auto Mode and node auto-provisioning are mature, flexible and bin-pack well.
 
 |The cluster autoscaler is part of the platform, so there is nothing to install or keep in step with the Kubernetes version.
-|Spot and mixed instance types per workload, without one group per type.
+|Spot and mixed instance types per workload, without one group per type. On ARO, and on ROSA without the Red Hat build of Karpenter (4.22+), each type needs its own group.
 
-|The same machine pool model across both clouds.
+|The same node OS and cluster autoscaler, and the same label and taint conventions, on both clouds.
 |One API for pools on each cloud. Standard ARO has no pool API, so pools are edited inside the cluster.
 |===
 
