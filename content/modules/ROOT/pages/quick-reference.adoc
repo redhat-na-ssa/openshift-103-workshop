@@ -7,6 +7,8 @@ NOTE: The commands here are copied from the modules, which mark anything that wa
 
 == Habits That Change
 
+The EKS and AKS column describes their standard modes; EKS Auto Mode and AKS Automatic take over more of the work.
+
 [cols="2,3,4",options="header"]
 |===
 |Topic |On EKS and AKS |On ROSA and ARO
@@ -18,11 +20,11 @@ NOTE: The commands here are copied from the modules, which mark anything that wa
 |ROSA: in Red Hat's AWS account, like EKS. ARO: in your subscription, locked by a deny assignment.
 
 |Node OS and platform components
-|You roll out node images and every add-on version.
+|EKS: you roll AMIs and add-on versions. AKS: core add-ons move with the cluster, and a node OS channel applies node images.
 |ARO: one cluster update moves them all. ROSA: the control plane upgrade, then each machine pool. You start or schedule them; SRE monitors.
 
 |Add-ons
-|You pick, install and version each one.
+|You pick, install and version most of them; AKS keeps its core add-ons in step with the cluster.
 |Platform plumbing ships as cluster Operators. Anything else comes from the Software Catalog, and you run it.
 
 |Platform health
@@ -66,7 +68,7 @@ NOTE: The commands here are copied from the modules, which mark anything that wa
 3+h|Module 3: Networking
 
 |Ingress controller
-|You install the AWS Load Balancer Controller or the app routing add-on.
+|EKS: you install the AWS Load Balancer Controller, or use Auto Mode. AKS: you enable the app routing add-on.
 |A default router ships behind a cloud load balancer, with a wildcard apps domain and certificate.
 
 |Exposing an app
@@ -79,10 +81,10 @@ NOTE: The commands here are copied from the modules, which mark anything that wa
 
 |Gateway API
 |Through the cloud load balancer controller.
-|The `openshift-default` GatewayClass, for cluster admins. Each Gateway gets its own load balancer and needs its own certificate. On ARO's `aroapp.io` domain, you manage its DNS yourself.
+|The `openshift-default` GatewayClass, for cluster admins. Each Gateway gets its own Classic Load Balancer on ROSA, or its own public IP and rules on the cluster's Azure load balancer on ARO, and needs its own certificate. On ARO's `aroapp.io` domain, you manage its DNS yourself.
 
 |Pod network
-|Pods take VPC or virtual network addresses.
+|EKS: pods take VPC addresses with the VPC CNI. AKS: Azure CNI Overlay, the default, keeps pods off the virtual network; an Azure CNI pod subnet gives them addresses.
 |OVN-Kubernetes overlay (`10.128.0.0/14`). Pods never use VPC or virtual network addresses; outside the cluster you see node, NAT or load balancer addresses.
 
 |Network policy
@@ -90,17 +92,17 @@ NOTE: The commands here are copied from the modules, which mark anything that wa
 |NetworkPolicy works out of the box. A default-deny also blocks the router and monitoring until you allow namespaces labeled `policy-group.network.openshift.io/ingress` and the `openshift-user-workload-monitoring` namespace.
 
 |Cluster-wide guardrails
-|Through a policy add-on.
-|AdminNetworkPolicy, evaluated before any NetworkPolicy, so project admins can't override it.
+|EKS: ClusterNetworkPolicy admin and baseline tiers, with VPC CNI network policy enabled. AKS: through a policy add-on.
+|AdminNetworkPolicy, on by default and evaluated before any NetworkPolicy, so project admins can't override it.
 
 |Private cluster
 |You can make the API endpoint private later.
-|A private API and private ingress are choices made when the cluster is created. ROSA workers always reach the hosted control plane over PrivateLink.
+|A private API is chosen when the cluster is created, and so is private ingress on ARO. On ROSA the default ingress can be made private later. ROSA workers always reach the hosted control plane over PrivateLink.
 
 3+h|Module 4: Day-2 Operations
 
 |Node autoscaling
-|You install and upgrade the Cluster Autoscaler or Karpenter.
+|EKS: you install the Cluster Autoscaler or Karpenter, or use Auto Mode. AKS: the built-in autoscaler or node auto-provisioning.
 |The cluster autoscaler is built in. ROSA: it runs in the hosted control plane, and you set min and max per machine pool with `rosa`. ARO: you create a ClusterAutoscaler, plus a MachineAutoscaler per MachineSet, with `oc`.
 
 |Instance types
@@ -108,15 +110,15 @@ NOTE: The commands here are copied from the modules, which mark anything that wa
 |ROSA machine pools and ARO MachineSets each use one instance type. ROSA 4.22 adds the Red Hat build of Karpenter (AutoNode); ARO has no equivalent.
 
 |Node images
-|You build or roll AMIs and node images.
-|There are none to manage. RHCOS is patched with each OpenShift update, so current patch releases are how nodes get OS fixes.
+|EKS: you roll AMIs unless Auto Mode replaces nodes. AKS: a node OS upgrade channel applies images for you.
+|There are none to build. RHCOS is patched in each OpenShift release, and nodes get OS fixes when the cluster (ARO) or each machine pool (ROSA) takes an update.
 
 |Upgrades
 |Control plane, then each add-on against a compatibility matrix, then nodes.
 |One release moves Kubernetes, networking, ingress, storage and monitoring together. ROSA: you schedule it, control plane first, then each machine pool, which may trail by up to two minor versions. ARO: you start each update, and workers roll with it. No rollback on either.
 
 |Upgrade blockers
-|You check for deprecated APIs with your own tools.
+|EKS upgrade insights flag deprecated API use; AKS blocks an upgrade on recent deprecated API use.
 |`oc adm upgrade` and the Upgradeable condition flag blockers, including admin-ack gates. A zero-disruption PodDisruptionBudget stalls node drains on both, unless a ROSA machine pool sets a node drain grace period.
 
 |Metrics
@@ -214,7 +216,7 @@ The cluster's apps domain:
 ----
 oc get ingresscontroller default \
   --namespace openshift-ingress-operator \
-  --output jsonpath='{.status.domain}'
+  --output jsonpath='{.status.domain}{"\n"}'
 ----
 
 Expose a Service over HTTPS:
