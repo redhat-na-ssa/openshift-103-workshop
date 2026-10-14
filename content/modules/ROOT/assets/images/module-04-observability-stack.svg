@@ -4,71 +4,71 @@
 <rect x="10" y="10" width="455" height="430" rx="8" fill="#f7f8fa" stroke="#d9dee5"/>
 <text x="26" y="36" font-size="16" text-anchor="start" font-weight="bold" fill="#1f2933">EKS and AKS: you assemble it</text>
 <rect x="26" y="52" width="200" height="252" rx="6" fill="#ffffff" stroke="#9aa5b1" stroke-dasharray="4,3"/>
-<text x="126" y="72" font-size="13" text-anchor="middle" font-weight="bold" fill="#52606d">Your cluster</text>
-<rect x="38" y="86" width="176" height="96" rx="6" fill="#fff4e0" stroke="#b26b00" stroke-width="1.5"/>
-<text x="126.0" y="122.0" font-size="12.5" text-anchor="middle" font-weight="bold" fill="#1f2933">Metrics collector</text>
-<text x="126.0" y="138.0" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#1f2933">ADOT, AMP scraper,</text>
-<text x="126.0" y="154.0" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#1f2933">or Azure Monitor agent</text>
-<rect x="38" y="198" width="176" height="96" rx="6" fill="#fff4e0" stroke="#b26b00" stroke-width="1.5"/>
-<text x="126.0" y="234.0" font-size="12.5" text-anchor="middle" font-weight="bold" fill="#1f2933">Log agent</text>
-<text x="126.0" y="250.0" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#1f2933">CloudWatch agent and</text>
-<text x="126.0" y="266.0" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#1f2933">Fluent Bit, or AMA</text>
-<rect x="38" y="310" width="176" height="96" rx="6" fill="#fff4e0" stroke="#b26b00" stroke-width="1.5"/>
-<text x="126.0" y="346.0" font-size="12.5" text-anchor="middle" font-weight="bold" fill="#1f2933">Dashboards and alerts</text>
-<text x="126.0" y="362.0" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#1f2933">you build them in</text>
-<text x="126.0" y="378.0" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#1f2933">Grafana or the cloud</text>
-<rect x="258" y="86" width="192" height="96" rx="6" fill="#eef0f3" stroke="#7b8794" stroke-width="1.5"/>
-<text x="354.0" y="122.0" font-size="12.5" text-anchor="middle" font-weight="bold" fill="#1f2933">Managed Prometheus</text>
-<text x="354.0" y="138.0" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#1f2933">Amazon Managed Service</text>
-<text x="354.0" y="154.0" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#1f2933">for Prometheus, Azure Monitor</text>
-<rect x="258" y="198" width="192" height="96" rx="6" fill="#eef0f3" stroke="#7b8794" stroke-width="1.5"/>
-<text x="354.0" y="234.0" font-size="12.5" text-anchor="middle" font-weight="bold" fill="#1f2933">Logs</text>
-<text x="354.0" y="250.0" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#1f2933">CloudWatch Logs,</text>
-<text x="354.0" y="266.0" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#1f2933">Log Analytics</text>
-<rect x="258" y="310" width="192" height="96" rx="6" fill="#eef0f3" stroke="#7b8794" stroke-width="1.5"/>
-<text x="354.0" y="346.0" font-size="12.5" text-anchor="middle" font-weight="bold" fill="#1f2933">Grafana and alerts</text>
-<text x="354.0" y="362.0" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#1f2933">Amazon or Azure</text>
-<text x="354.0" y="378.0" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#1f2933">Managed Grafana</text>
+<text x="126" y="72" font-size="13.5" text-anchor="middle" font-weight="bold" fill="#52606d">Your cluster</text>
+<rect x="38" y="86" width="176" height="96" rx="6" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1.5"/>
+<text x="126.0" y="122.0" font-size="13.5" text-anchor="middle" font-weight="bold" fill="#1f2933">Metrics collector</text>
+<text x="126.0" y="138.0" font-size="13.5" text-anchor="middle" font-weight="normal" fill="#1f2933">ADOT, AMP scraper,</text>
+<text x="126.0" y="154.0" font-size="13.5" text-anchor="middle" font-weight="normal" fill="#1f2933">or Azure Monitor agent</text>
+<rect x="38" y="198" width="176" height="96" rx="6" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1.5"/>
+<text x="126.0" y="234.0" font-size="13.5" text-anchor="middle" font-weight="bold" fill="#1f2933">Log agent</text>
+<text x="126.0" y="250.0" font-size="13.5" text-anchor="middle" font-weight="normal" fill="#1f2933">CloudWatch agent and</text>
+<text x="126.0" y="266.0" font-size="13.5" text-anchor="middle" font-weight="normal" fill="#1f2933">Fluent Bit, or AMA</text>
+<rect x="38" y="310" width="176" height="96" rx="6" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1.5"/>
+<text x="126.0" y="346.0" font-size="13.5" text-anchor="middle" font-weight="bold" fill="#1f2933">Dashboards and alerts</text>
+<text x="126.0" y="362.0" font-size="13.5" text-anchor="middle" font-weight="normal" fill="#1f2933">you build them in</text>
+<text x="126.0" y="378.0" font-size="13.5" text-anchor="middle" font-weight="normal" fill="#1f2933">Grafana or the cloud</text>
+<rect x="258" y="86" width="192" height="96" rx="6" fill="#d3f0e5" stroke="#1baf7a" stroke-width="1.5"/>
+<text x="354.0" y="122.0" font-size="13.5" text-anchor="middle" font-weight="bold" fill="#1f2933">Managed Prometheus</text>
+<text x="354.0" y="138.0" font-size="13.5" text-anchor="middle" font-weight="normal" fill="#1f2933">Amazon Managed Service</text>
+<text x="354.0" y="154.0" font-size="13.5" text-anchor="middle" font-weight="normal" fill="#1f2933">for Prometheus, Azure Monitor</text>
+<rect x="258" y="198" width="192" height="96" rx="6" fill="#d3f0e5" stroke="#1baf7a" stroke-width="1.5"/>
+<text x="354.0" y="234.0" font-size="13.5" text-anchor="middle" font-weight="bold" fill="#1f2933">Logs</text>
+<text x="354.0" y="250.0" font-size="13.5" text-anchor="middle" font-weight="normal" fill="#1f2933">CloudWatch Logs,</text>
+<text x="354.0" y="266.0" font-size="13.5" text-anchor="middle" font-weight="normal" fill="#1f2933">Log Analytics</text>
+<rect x="258" y="310" width="192" height="96" rx="6" fill="#d3f0e5" stroke="#1baf7a" stroke-width="1.5"/>
+<text x="354.0" y="346.0" font-size="13.5" text-anchor="middle" font-weight="bold" fill="#1f2933">Grafana and alerts</text>
+<text x="354.0" y="362.0" font-size="13.5" text-anchor="middle" font-weight="normal" fill="#1f2933">Amazon or Azure</text>
+<text x="354.0" y="378.0" font-size="13.5" text-anchor="middle" font-weight="normal" fill="#1f2933">Managed Grafana</text>
 <line x1="214" y1="134" x2="256" y2="134" stroke="#52606d" stroke-width="1.5" marker-end="url(#a)"/>
 <line x1="214" y1="246" x2="256" y2="246" stroke="#52606d" stroke-width="1.5" marker-end="url(#a)"/>
 <line x1="214" y1="358" x2="256" y2="358" stroke="#52606d" stroke-width="1.5" marker-end="url(#a)"/>
 <rect x="485" y="10" width="465" height="430" rx="8" fill="#f7f8fa" stroke="#d9dee5"/>
 <text x="501" y="36" font-size="16" text-anchor="start" font-weight="bold" fill="#1f2933">ROSA and ARO: monitoring ships, you add log shipping</text>
 <rect x="501" y="52" width="230" height="372" rx="6" fill="#ffffff" stroke="#9aa5b1" stroke-dasharray="4,3"/>
-<text x="616" y="72" font-size="13" text-anchor="middle" font-weight="bold" fill="#52606d">Your cluster</text>
-<rect x="513" y="82" width="206" height="74" rx="6" fill="#e6f4ea" stroke="#2e7d4f" stroke-width="1.5"/>
-<text x="616.0" y="107.0" font-size="12.5" text-anchor="middle" font-weight="bold" fill="#1f2933">Platform monitoring</text>
-<text x="616.0" y="123.0" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#1f2933">Prometheus, Alertmanager,</text>
-<text x="616.0" y="139.0" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#1f2933">alerts tuned by SRE</text>
-<rect x="513" y="164" width="206" height="74" rx="6" fill="#e6f4ea" stroke="#2e7d4f" stroke-width="1.5"/>
-<text x="616.0" y="189.0" font-size="12.5" text-anchor="middle" font-weight="bold" fill="#1f2933">User workload monitoring</text>
-<text x="616.0" y="205.0" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#1f2933">your ServiceMonitors</text>
-<text x="616.0" y="221.0" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#1f2933">and alert rules</text>
-<rect x="513" y="246" width="206" height="74" rx="6" fill="#e6f4ea" stroke="#2e7d4f" stroke-width="1.5"/>
-<text x="616.0" y="271.0" font-size="12.5" text-anchor="middle" font-weight="bold" fill="#1f2933">Console</text>
-<text x="616.0" y="287.0" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#1f2933">Observe: dashboards,</text>
-<text x="616.0" y="303.0" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#1f2933">metrics, alerts</text>
-<rect x="513" y="328" width="206" height="82" rx="6" fill="#fff4e0" stroke="#b26b00" stroke-width="1.5"/>
-<text x="616.0" y="357.0" font-size="12.5" text-anchor="middle" font-weight="bold" fill="#1f2933">Logging Operator</text>
-<text x="616.0" y="373.0" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#1f2933">Vector collector and</text>
-<text x="616.0" y="389.0" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#1f2933">ClusterLogForwarder</text>
-<rect x="763" y="310" width="172" height="52" rx="6" fill="#eef0f3" stroke="#7b8794" stroke-width="1.5"/>
-<text x="849.0" y="332.0" font-size="12.5" text-anchor="middle" font-weight="bold" fill="#1f2933">CloudWatch Logs</text>
-<text x="849.0" y="348.0" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#1f2933">ROSA, IAM role</text>
-<rect x="763" y="372" width="172" height="52" rx="6" fill="#eef0f3" stroke="#7b8794" stroke-width="1.5"/>
-<text x="849.0" y="394.0" font-size="12.5" text-anchor="middle" font-weight="bold" fill="#1f2933">Log Analytics</text>
-<text x="849.0" y="410.0" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#1f2933">ARO, workload identity</text>
+<text x="616" y="72" font-size="13.5" text-anchor="middle" font-weight="bold" fill="#52606d">Your cluster</text>
+<rect x="513" y="82" width="206" height="74" rx="6" fill="#fbe1d6" stroke="#eb6834" stroke-width="1.5"/>
+<text x="616.0" y="107.0" font-size="13.5" text-anchor="middle" font-weight="bold" fill="#1f2933">Platform monitoring</text>
+<text x="616.0" y="123.0" font-size="13.5" text-anchor="middle" font-weight="normal" fill="#1f2933">Prometheus, Alertmanager,</text>
+<text x="616.0" y="139.0" font-size="13.5" text-anchor="middle" font-weight="normal" fill="#1f2933">alerts tuned by SRE</text>
+<rect x="513" y="164" width="206" height="74" rx="6" fill="#fbe1d6" stroke="#eb6834" stroke-width="1.5"/>
+<text x="616.0" y="189.0" font-size="13.5" text-anchor="middle" font-weight="bold" fill="#1f2933">User workload monitoring</text>
+<text x="616.0" y="205.0" font-size="13.5" text-anchor="middle" font-weight="normal" fill="#1f2933">your ServiceMonitors</text>
+<text x="616.0" y="221.0" font-size="13.5" text-anchor="middle" font-weight="normal" fill="#1f2933">and alert rules</text>
+<rect x="513" y="246" width="206" height="74" rx="6" fill="#fbe1d6" stroke="#eb6834" stroke-width="1.5"/>
+<text x="616.0" y="271.0" font-size="13.5" text-anchor="middle" font-weight="bold" fill="#1f2933">Console</text>
+<text x="616.0" y="287.0" font-size="13.5" text-anchor="middle" font-weight="normal" fill="#1f2933">Observe: dashboards,</text>
+<text x="616.0" y="303.0" font-size="13.5" text-anchor="middle" font-weight="normal" fill="#1f2933">metrics, alerts</text>
+<rect x="513" y="328" width="206" height="82" rx="6" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1.5"/>
+<text x="616.0" y="357.0" font-size="13.5" text-anchor="middle" font-weight="bold" fill="#1f2933">Logging Operator</text>
+<text x="616.0" y="373.0" font-size="13.5" text-anchor="middle" font-weight="normal" fill="#1f2933">Vector collector and</text>
+<text x="616.0" y="389.0" font-size="13.5" text-anchor="middle" font-weight="normal" fill="#1f2933">ClusterLogForwarder</text>
+<rect x="763" y="310" width="172" height="52" rx="6" fill="#d3f0e5" stroke="#1baf7a" stroke-width="1.5"/>
+<text x="849.0" y="332.0" font-size="13.5" text-anchor="middle" font-weight="bold" fill="#1f2933">CloudWatch Logs</text>
+<text x="849.0" y="348.0" font-size="13.5" text-anchor="middle" font-weight="normal" fill="#1f2933">ROSA, IAM role</text>
+<rect x="763" y="372" width="172" height="52" rx="6" fill="#d3f0e5" stroke="#1baf7a" stroke-width="1.5"/>
+<text x="849.0" y="394.0" font-size="13.5" text-anchor="middle" font-weight="bold" fill="#1f2933">Log Analytics</text>
+<text x="849.0" y="410.0" font-size="13.5" text-anchor="middle" font-weight="normal" fill="#1f2933">ARO, workload identity</text>
 <line x1="719" y1="360" x2="761" y2="336" stroke="#52606d" stroke-width="1.5" marker-end="url(#a)"/>
 <line x1="719" y1="378" x2="761" y2="398" stroke="#52606d" stroke-width="1.5" marker-end="url(#a)"/>
-<rect x="763" y="140" width="172" height="80" rx="6" fill="#eef0f3" stroke="#7b8794" stroke-width="1.5"/>
-<text x="849.0" y="168.0" font-size="12.5" text-anchor="middle" font-weight="bold" fill="#1f2933">Optional</text>
-<text x="849.0" y="184.0" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#1f2933">remote write to AMP</text>
-<text x="849.0" y="200.0" font-size="12.5" text-anchor="middle" font-weight="normal" fill="#1f2933">or Azure Monitor</text>
+<rect x="763" y="140" width="172" height="80" rx="6" fill="#d3f0e5" stroke="#1baf7a" stroke-width="1.5"/>
+<text x="849.0" y="168.0" font-size="13.5" text-anchor="middle" font-weight="bold" fill="#1f2933">Optional</text>
+<text x="849.0" y="184.0" font-size="13.5" text-anchor="middle" font-weight="normal" fill="#1f2933">remote write to AMP</text>
+<text x="849.0" y="200.0" font-size="13.5" text-anchor="middle" font-weight="normal" fill="#1f2933">or Azure Monitor</text>
 <line x1="719" y1="190" x2="761" y2="180" stroke="#52606d" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#a)"/>
-<rect x="26" y="458" width="22" height="16" rx="3" fill="#e6f4ea" stroke="#2e7d4f" stroke-width="1.5"/>
-<text x="56" y="471" font-size="13" text-anchor="start" font-weight="normal" fill="#1f2933">Ships with the cluster, managed by Red Hat</text>
-<rect x="371" y="458" width="22" height="16" rx="3" fill="#fff4e0" stroke="#b26b00" stroke-width="1.5"/>
-<text x="401" y="471" font-size="13" text-anchor="start" font-weight="normal" fill="#1f2933">You install, configure and run it</text>
-<rect x="656" y="458" width="22" height="16" rx="3" fill="#eef0f3" stroke="#7b8794" stroke-width="1.5"/>
-<text x="686" y="471" font-size="13" text-anchor="start" font-weight="normal" fill="#1f2933">Cloud service, billed by use</text>
+<rect x="26" y="458" width="22" height="16" rx="3" fill="#fbe1d6" stroke="#eb6834" stroke-width="1.5"/>
+<text x="56" y="471" font-size="13.5" text-anchor="start" font-weight="normal" fill="#1f2933">Ships with the cluster, managed by Red Hat</text>
+<rect x="371" y="458" width="22" height="16" rx="3" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1.5"/>
+<text x="401" y="471" font-size="13.5" text-anchor="start" font-weight="normal" fill="#1f2933">You install, configure and run it</text>
+<rect x="656" y="458" width="22" height="16" rx="3" fill="#d3f0e5" stroke="#1baf7a" stroke-width="1.5"/>
+<text x="686" y="471" font-size="13.5" text-anchor="start" font-weight="normal" fill="#1f2933">Cloud service, billed by use</text>
 </svg>

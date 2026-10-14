@@ -9,61 +9,61 @@
   <!-- Lane A: group autoscaling -->
   <rect x="10" y="10" width="940" height="190" rx="8" fill="#f5f8fc" stroke="#c3d3e8"/>
   <text x="26" y="36" font-size="16" font-weight="bold">Group autoscaling: you size groups of identical nodes</text>
-  <text x="26" y="58" font-size="13" fill="#52606d">EKS managed node groups, AKS node pools, ROSA machine pools, ARO MachineSets, each with the cluster autoscaler</text>
+  <text x="26" y="58" font-size="13.5" fill="#52606d">EKS managed node groups, AKS node pools, ROSA machine pools, ARO MachineSets, each with the cluster autoscaler</text>
 
   <rect x="26" y="78" width="200" height="72" rx="6" fill="#ffffff" stroke="#2f6db5" stroke-width="1.5"/>
   <text x="126" y="108" text-anchor="middle" font-weight="bold">Pod is Pending</text>
-  <text x="126" y="128" text-anchor="middle" font-size="13">no node has room</text>
+  <text x="126" y="128" text-anchor="middle" font-size="13.5">no node has room</text>
 
   <rect x="262" y="78" width="200" height="72" rx="6" fill="#ffffff" stroke="#2f6db5" stroke-width="1.5"/>
   <text x="362" y="102" text-anchor="middle" font-weight="bold">Autoscaler checks</text>
-  <text x="362" y="120" text-anchor="middle" font-size="13">each group's template:</text>
-  <text x="362" y="138" text-anchor="middle" font-size="13">would the pod fit there?</text>
+  <text x="362" y="120" text-anchor="middle" font-size="13.5">each group's template:</text>
+  <text x="362" y="138" text-anchor="middle" font-size="13.5">would the pod fit there?</text>
 
   <rect x="498" y="78" width="200" height="72" rx="6" fill="#ffffff" stroke="#2f6db5" stroke-width="1.5"/>
   <text x="598" y="102" text-anchor="middle" font-weight="bold">Grows one group</text>
-  <text x="598" y="120" text-anchor="middle" font-size="13">by N nodes of that group's</text>
-  <text x="598" y="138" text-anchor="middle" font-size="13">single instance type</text>
+  <text x="598" y="120" text-anchor="middle" font-size="13.5">by N nodes of that group's</text>
+  <text x="598" y="138" text-anchor="middle" font-size="13.5">single instance type</text>
 
   <rect x="734" y="78" width="200" height="72" rx="6" fill="#ffffff" stroke="#2f6db5" stroke-width="1.5"/>
   <text x="834" y="108" text-anchor="middle" font-weight="bold">Node joins</text>
-  <text x="834" y="128" text-anchor="middle" font-size="13">pod is scheduled</text>
+  <text x="834" y="128" text-anchor="middle" font-size="13.5">pod is scheduled</text>
 
   <line x1="226" y1="114" x2="260" y2="114" stroke="#52606d" stroke-width="1.5" marker-end="url(#arrow)"/>
   <line x1="462" y1="114" x2="496" y2="114" stroke="#52606d" stroke-width="1.5" marker-end="url(#arrow)"/>
   <line x1="698" y1="114" x2="732" y2="114" stroke="#52606d" stroke-width="1.5" marker-end="url(#arrow)"/>
 
-  <text x="26" y="182" font-size="13" fill="#52606d">You create a group for every instance type, zone, label and taint you need. Empty groups shrink after a quiet period.</text>
+  <text x="26" y="182" font-size="13.5" fill="#52606d">You create a group for every instance type, zone, label and taint you need. Empty groups shrink after a quiet period.</text>
 
   <!-- Lane B: provisioning -->
   <rect x="10" y="220" width="940" height="200" rx="8" fill="#f4faf6" stroke="#bfdcc9"/>
   <text x="26" y="246" font-size="16" font-weight="bold">Provisioning: a controller picks each node for the pods that are waiting</text>
-  <text x="26" y="268" font-size="13" fill="#52606d">Karpenter and EKS Auto Mode, AKS node auto-provisioning, the Red Hat build of Karpenter on ROSA 4.22</text>
+  <text x="26" y="268" font-size="13.5" fill="#52606d">Karpenter and EKS Auto Mode, AKS node auto-provisioning, the Red Hat build of Karpenter on ROSA 4.22</text>
 
   <rect x="26" y="288" width="200" height="72" rx="6" fill="#ffffff" stroke="#2e7d4f" stroke-width="1.5"/>
   <text x="126" y="318" text-anchor="middle" font-weight="bold">Pods are Pending</text>
-  <text x="126" y="338" text-anchor="middle" font-size="13">batched for a few seconds</text>
+  <text x="126" y="338" text-anchor="middle" font-size="13.5">batched for a few seconds</text>
 
   <rect x="262" y="288" width="200" height="72" rx="6" fill="#ffffff" stroke="#2e7d4f" stroke-width="1.5"/>
   <text x="362" y="312" text-anchor="middle" font-weight="bold">Reads their needs</text>
-  <text x="362" y="330" text-anchor="middle" font-size="13">requests, selectors, zones,</text>
-  <text x="362" y="348" text-anchor="middle" font-size="13">tolerations, spot or not</text>
+  <text x="362" y="330" text-anchor="middle" font-size="13.5">requests, selectors, zones,</text>
+  <text x="362" y="348" text-anchor="middle" font-size="13.5">tolerations, spot or not</text>
 
   <rect x="498" y="288" width="200" height="72" rx="6" fill="#ffffff" stroke="#2e7d4f" stroke-width="1.5"/>
   <text x="598" y="312" text-anchor="middle" font-weight="bold">Launches a node</text>
-  <text x="598" y="330" text-anchor="middle" font-size="13">cheapest instance type</text>
-  <text x="598" y="348" text-anchor="middle" font-size="13">that fits the batch</text>
+  <text x="598" y="330" text-anchor="middle" font-size="13.5">cheapest instance type</text>
+  <text x="598" y="348" text-anchor="middle" font-size="13.5">that fits the batch</text>
 
   <rect x="734" y="288" width="200" height="72" rx="6" fill="#ffffff" stroke="#2e7d4f" stroke-width="1.5"/>
   <text x="834" y="318" text-anchor="middle" font-weight="bold">Node joins</text>
-  <text x="834" y="338" text-anchor="middle" font-size="13">pods are scheduled</text>
+  <text x="834" y="338" text-anchor="middle" font-size="13.5">pods are scheduled</text>
 
   <line x1="226" y1="324" x2="260" y2="324" stroke="#52606d" stroke-width="1.5" marker-end="url(#arrow)"/>
   <line x1="462" y1="324" x2="496" y2="324" stroke="#52606d" stroke-width="1.5" marker-end="url(#arrow)"/>
   <line x1="698" y1="324" x2="732" y2="324" stroke="#52606d" stroke-width="1.5" marker-end="url(#arrow)"/>
 
   <path d="M834,360 C834,392 598,392 598,362" fill="none" stroke="#2e7d4f" stroke-width="1.5" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
-  <text x="716" y="406" text-anchor="middle" font-size="13" fill="#2e7d4f">later: consolidates underused nodes</text>
+  <text x="716" y="406" text-anchor="middle" font-size="13.5" fill="#2e7d4f">later: consolidates underused nodes</text>
 
-  <text x="26" y="406" font-size="13" fill="#52606d">You set allowed instance families and limits, not groups.</text>
+  <text x="26" y="406" font-size="13.5" fill="#52606d">You set allowed instance families and limits, not groups.</text>
 </svg>
