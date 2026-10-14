@@ -610,7 +610,7 @@ ROSA also offers clusters with no internet egress at all (egress zero).
 
 == What Matters
 
-* OVN-Kubernetes is the only network plugin. There is no CNI choice.
+* OVN-Kubernetes is the default and the only CNI Red Hat supports. ROSA can be created without a CNI, at create time only, so you can install your own, such as Cilium or Calico, with support from that vendor. ARO is OVN-Kubernetes only.
 * Pod addresses never use VPC or virtual network space, so there is no subnet exhaustion from pods. The other side: anything outside the cluster sees node addresses, never pod addresses.
 * NetworkPolicy works with nothing to enable. A default-deny policy also blocks the router and monitoring until you allow their policy groups.
 * AdminNetworkPolicy adds cluster-wide rules that project administrators cannot override. Keep its subjects away from `openshift-*` namespaces, which the platform and SRE need.
