@@ -57,8 +57,6 @@ Read every update the cluster has taken, and how long each one ran.
 Schedule a ROSA upgrade with the rosa CLI and cancel it before it starts.
 * <<ex-module-04-upgrades-4>> +
 Find the Operators, removed APIs and PodDisruptionBudgets that would hold an upgrade back.
-* <<ex-module-04-upgrades-5>> +
-Know where each platform tells you about upcoming and finished upgrades.
 
 [#ex-module-04-upgrades-1]
 === Exercise 1: See Where the Cluster Stands
@@ -546,13 +544,13 @@ oc get poddisruptionbudget sample-app \
 
 With a single replica, that eviction still means downtime during a drain, so run at least two (see App Teams Will Notice).
 
-[#ex-module-04-upgrades-5]
-=== Exercise 5 (Read Only): Know Where Upgrade Notices Arrive
+[#upgrade-notices]
+=== Where Upgrade Notices Arrive
 
 [.validation]
 NOTE: *Not validated:* these notification paths, which come from the vendors' documentation.
 
-Nothing to run here, but worth setting up before you need it.
+Set these up before you need them.
 
 * ROSA: notices about scheduled, started, and completed upgrades, and about critical patches Red Hat applies, appear in the cluster's *Cluster history* in the Red Hat Hybrid Cloud Console.
 Only the cluster owner receives them by email by default, so add your team as notification contacts.
@@ -562,6 +560,7 @@ In extreme cases you get 72 hours to apply a critical security patch, after whic
 
 == What Matters
 
+* Cluster upgrades are on the shared row of Module 1's xref:module-01-who-manages-what.adoc#_the_responsibility_line[responsibility line]: you choose the version and the time, the service carries out the update, and on ROSA you also move each machine pool.
 * ROSA upgrades the control plane and each machine pool separately.
 Machine pools can trail the control plane by up to two minor versions, so you choose when nodes are replaced.
 Each replacement adds a new node before removing an old one, so the pool needs room in your EC2 quota and subnet.

@@ -79,8 +79,6 @@ See the IAM roles Red Hat works through in your AWS account, and the locked reso
 Spot the namespaces, webhooks and agents that SRE runs inside your cluster.
 * <<ex-module-01-who-manages-what-4>> +
 Watch the platform refuse a change to a resource SRE owns.
-* <<ex-module-01-who-manages-what-5>> +
-Learn where to open a support case on each platform and what it covers.
 
 [#before-you-start]
 === Before You Start
@@ -336,6 +334,12 @@ az rest \
 The deny assignment blocks every write by everyone else, including subscription owners.
 Only the exempt principals, such as the ARO resource provider, may change the resources.
 
+[.validation]
+NOTE: *Not validated:* the Owner's error message below, which comes from Red Hat's knowledge base.
+
+An Owner who tries, for example to delete a disk there, gets an error that ends with "the access is denied because of the deny assignment with name '<name>' and Id '<id>' at scope '<managed-resource-group>'".
+With the Reader role that Setup gives you, the same attempt fails earlier with a plain `AuthorizationFailed`, so this exercise only reads the deny assignment.
+
 NOTE: Azure Policy assigned at the subscription or management group still applies to this managed resource group.
 A policy that blocks SRE maintenance there, such as one that requires tags on the resource group, makes the cluster unsupported.
 If a tagging policy applies, it may put at most 10 user-defined tags on the resources in it.
@@ -401,7 +405,8 @@ oc label clusterversion version \
 ----
 
 On ROSA, a managed webhook refuses the request, even though you are a cluster administrator.
-On ROSA you change upgrade settings through the `rosa` CLI or OpenShift Cluster Manager, never through the ClusterVersion.
+On ROSA you change upgrade settings through the `rosa` CLI or OpenShift Cluster Manager (OCM), never through the ClusterVersion.
+OCM is Red Hat's cluster management service at console.redhat.com, and the `rosa` CLI calls it.
 
 On ARO, the request is accepted.
 ARO protects its platform through the deny assignment on the Azure side and its support policy, rather than through admission webhooks, and you start upgrades in the cluster yourself.
@@ -414,8 +419,8 @@ NOTE: *Not validated:* the `Limited Support` section, because the workshop's ROS
 
 If your ROSA cluster is in limited support, `rosa describe cluster` shows a `Limited Support` section with the reasons.
 
-[#ex-module-01-who-manages-what-5]
-=== Exercise 5 (Read Only): Know Your Support Path
+[#support-paths]
+=== Support Paths
 
 [cols="1,2,2",options="header"]
 |===

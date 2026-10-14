@@ -148,6 +148,9 @@ ARO (Azure)::
 On ARO, you configure the cluster's OAuth resource yourself.
 This exercise adds Microsoft Entra ID, the identity provider your AKS users already have.
 
+[discrete]
+==== Register an Application in Entra ID
+
 Look up the console URL:
 
 [source,bash]
@@ -220,6 +223,9 @@ Check that you got a secret: this prints its length, which must not be 0:
 ----
 echo "${#CLIENT_SECRET}"
 ----
+
+[discrete]
+==== Configure the OAuth Server
 
 Store the client secret in the cluster:
 
@@ -300,6 +306,9 @@ If it never starts, check the Operator's message for an identity provider error:
 oc get clusteroperator authentication \
   --output jsonpath='{.status.conditions[?(@.type=="Degraded")].message}'
 ----
+
+[discrete]
+==== Set the Developer User
 
 Your Entra ID account is the developer in this exercise.
 Set its user name, which is your email address or UPN:

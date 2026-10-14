@@ -522,6 +522,7 @@ NOTE: *Not validated:* that the Gateway's load balancer on ROSA is a Classic Loa
 The ROSA load balancer type was read from its host name and annotations, not checked in AWS, the ARO detail comes from the Azure documentation, and `dedicated-admin` was not tried.
 
 * A Route is OpenShift's own resource, with edge, re-encrypt and passthrough TLS. Ingress objects still work and become Routes.
+* On Module 1's xref:module-01-who-manages-what.adoc#_the_responsibility_line[responsibility line], the default router is a platform component that SRE runs, and the Routes, Ingresses and Gateways you create on it are yours, like your workloads.
 * OpenShift only turns an Ingress into a Route when it has no `ingressClassName` or uses `openshift-default`. An Ingress that still says `alb` or `webapprouting.kubernetes.azure.com` is silently ignored.
 * ALB and NGINX annotations do nothing here. Route behavior is set with `haproxy.router.openshift.io/*` annotations instead, for example timeouts and rewrites.
 * On ROSA, SRE owns the default ingress controller's settings, and `rosa edit ingress` changes only its visibility and component routes. For other needs you add another ingress controller, or the AWS Load Balancer Operator for ALBs.

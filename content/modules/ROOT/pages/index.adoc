@@ -30,6 +30,8 @@ Every section follows the same pattern:
 * *Where Each Wins*: what ROSA and ARO take off your plate, and where EKS and AKS are better.
 * *App Teams Will Notice*: differences your application teams will ask you about, where there are any.
 
+The last page of each module ends with a few questions to check your understanding.
+
 == Modules
 
 . *xref:module-01-who-manages-what.adoc[The Service Model]*: who manages what on each platform, what it costs, and what a cluster ships with.
