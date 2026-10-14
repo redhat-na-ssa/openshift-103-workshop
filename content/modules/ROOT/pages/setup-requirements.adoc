@@ -71,7 +71,6 @@ Attendees install these Operators during the exercises:
 |Red Hat OpenShift Logging
 |4
 |Channel `stable-6.6`. Forwards application logs to CloudWatch and to Azure Monitor Logs through the Logs Ingestion API.
-|Forwards application logs to CloudWatch and Azure Monitor Logs.
 
 |Red Hat OpenShift Service Mesh 3
 |3
@@ -159,7 +158,7 @@ Workstations need outbound HTTPS to:
 * the AWS and Azure APIs
 * console.redhat.com
 * api.openshift.com
-* the ROSA and ARO cluster API and application domains
+* the ROSA and ARO cluster API and application domains. The ROSA with HCP API listens on port 443 and the ARO API on port 6443, so a firewall that allows only 443 blocks the ARO API.
 * ghcr.io, where Module 2 copies the sample application's image from
 
 Clusters need outbound access to:
@@ -168,7 +167,7 @@ Clusters need outbound access to:
 * registry.redhat.io
 * registry.access.redhat.com (UBI images for the test pods in Module 3)
 * checkip.amazonaws.com (the egress address check in Module 3)
-* ghcr.io, for the sample application's image (Module 2)
+* ghcr.io, for the sample application's image (Modules 2 and 3)
 * the attendee's ECR and ACR registries
 
 == Verification Checklist

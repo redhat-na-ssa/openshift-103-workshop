@@ -1,5 +1,9 @@
 = Exposing an App
 
+NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026.
+Steps and statements that were not checked on a live cluster carry a *Not validated* note.
+The comparison tables and summaries come from vendor documentation.
+
 On EKS and AKS you install or enable an ingress controller before anything can be reached from outside.
 ROSA and ARO arrive with a default ingress controller behind a cloud load balancer, a wildcard DNS name for applications and a certificate for it, so the sample application gets an HTTPS address in one step.
 This section exposes the sample application three ways: an OpenShift Route, a standard Kubernetes Ingress, and the Gateway API.
@@ -59,6 +63,20 @@ LB_HOST=$(oc get service router-default \
   --output jsonpath='{.status.loadBalancer.ingress[0].hostname}')
 ----
 
+The Service's annotation already names the type:
+
+[source,bash]
+----
+oc get service router-default \
+  --namespace openshift-ingress \
+  --output jsonpath='{.metadata.annotations.service\.beta\.kubernetes\.io/aws-load-balancer-type}{"\n"}'
+----
+
+It prints `nlb`.
+AWS shows the same:
+
+NOTE: *Not validated:* `aws elbv2 describe-load-balancers`, which needs AWS credentials for the account that owns the cluster.
+
 [source,bash]
 ----
 aws elbv2 describe-load-balancers \
@@ -68,6 +86,8 @@ aws elbv2 describe-load-balancers \
 
 See the ingress the way the service manages it:
 
+NOTE: *Not validated:* `rosa list ingresses`, which needs a `rosa` login to the cluster's Red Hat organization.
+
 [source,bash]
 ----
 rosa list ingresses \
@@ -75,6 +95,8 @@ rosa list ingresses \
 ----
 
 On ROSA you change the default ingress with `rosa edit ingress`, not by editing the IngressController object.
+
+NOTE: *Not validated:* changing the default ingress with `rosa edit ingress`, which comes from the ROSA documentation.
 
 ==== ARO
 
@@ -106,6 +128,9 @@ az network public-ip list \
 
 The public IP lives in the cluster's managed resource group.
 A deny assignment there lets you read it but not change it.
+
+NOTE: *Not validated:* the deny assignment, which comes from the ARO documentation.
+The validation run did not try to change the public IP.
 
 See the ingress the way the service manages it:
 
@@ -148,7 +173,17 @@ curl --silent \
 
 It prints `200`: the app answers over HTTPS with a trusted certificate, and you created no DNS record or certificate.
 
-Plain HTTP still reaches the app.
+Try plain HTTP:
+
+[source,bash]
+----
+curl --silent \
+  --output /dev/null \
+  --write-out '%{http_code}\n' \
+  "http://$ROUTE_HOST/healthz"
+----
+
+It prints `503`: an edge Route refuses plain HTTP unless you say otherwise.
 Tell the router to redirect it to HTTPS:
 
 [source,bash]
@@ -262,6 +297,7 @@ oc get routes \
 ----
 
 The new Route has a generated name that starts with `sample-app-ingress-`.
+Its termination shows `edge/Redirect`: a Route generated from an Ingress redirects HTTP to HTTPS without being asked.
 Its owner is the Ingress, so OpenShift reverts any edit you make to the Route itself.
 Change the Ingress instead.
 
@@ -276,7 +312,8 @@ curl --silent \
 === Exercise 4: Use the Gateway API
 
 OpenShift implements the Gateway API with an Envoy-based gateway that the Ingress Operator manages.
-Creating the GatewayClass installs what the gateway needs, including OpenShift Service Mesh, so it takes a few minutes.
+Creating the GatewayClass makes the Ingress Operator start an Istio control plane for it, `istiod-openshift-gateway`, in the `openshift-ingress` namespace.
+On some OpenShift versions it installs the OpenShift Service Mesh operator first, which takes a few minutes.
 
 [source,bash]
 ----
@@ -329,7 +366,8 @@ oc wait gateway/workshop \
   --timeout=600s
 ----
 
-The Gateway got its own load balancer and DNS record, next to the router's:
+The Gateway got its own load balancer and DNS record, next to the router's.
+Its Service is named after the Gateway and the GatewayClass, `workshop-openshift-default`:
 
 [source,bash]
 ----
@@ -374,12 +412,15 @@ curl --silent \
   "http://sample-app.gwapi.$APPS_DOMAIN/healthz"
 ----
 
-If the name does not resolve yet, wait a minute for the new DNS record and try again.
+On ROSA it prints `200` once the new load balancer is ready, which takes a minute or two.
+Until then it prints `000`, so wait and try again.
 
 [NOTE]
 ====
-On ARO with the default `aroapp.io` domain, the Gateway's DNS record may never be published, because Azure manages that zone.
-If the name still does not resolve, send the request straight to the Gateway's address:
+On ARO with the default `aroapp.io` domain, the command keeps printing `503`.
+Azure manages that DNS zone, so the cluster's DNS configuration names no zone and the Gateway's DNS record is never published.
+The name still resolves through the `*.apps` wildcard, to the default router, which has no Route for it.
+Send the request straight to the Gateway's address instead:
 
 [source,bash]
 ----
@@ -396,6 +437,9 @@ curl --silent \
   --resolve "sample-app.gwapi.$APPS_DOMAIN:80:$GW_IP" \
   "http://sample-app.gwapi.$APPS_DOMAIN/healthz"
 ----
+
+It prints `200`.
+To reach the Gateway by name, create the DNS record in a zone you manage.
 ====
 
 The Gateway serves plain HTTP because nothing gave it a certificate.
@@ -420,11 +464,14 @@ The next section applies network policy to it.
 
 == What Matters
 
+NOTE: *Not validated:* that the Gateway's load balancer on ROSA is a Classic Load Balancer, and that `dedicated-admin` cannot use the Gateway API.
+The load balancer type was read from its host name and annotations, not checked in AWS, and `dedicated-admin` was not tried.
+
 * A Route is OpenShift's own resource, with edge, re-encrypt and passthrough TLS. Ingress objects still work and become Routes.
 * OpenShift only turns an Ingress into a Route when it has no `ingressClassName` or uses `openshift-default`. An Ingress that still says `alb` or `webapprouting.kubernetes.azure.com` is silently ignored.
 * ALB and NGINX annotations do nothing here. Route behavior is set with `haproxy.router.openshift.io/*` annotations instead, for example timeouts and rewrites.
 * On ROSA, SRE owns the default ingress controller's settings, and you change them with `rosa edit ingress`. For other needs you add another ingress controller, or the AWS Load Balancer Operator for ALBs.
-* OpenShift supports the Gateway API from 4.19. Each Gateway gets its own load balancer and needs its own certificate. The ROSA and ARO documentation do not cover it yet, it needs `cluster-admin` (not `dedicated-admin` on ROSA), and on ARO's default domain you manage its DNS yourself, so check it on your clusters before you rely on it.
+* OpenShift supports the Gateway API from 4.19. Each Gateway gets its own load balancer and needs its own certificate. On ROSA that load balancer is a Classic Load Balancer, not a Network Load Balancer like the router's. The ROSA and ARO documentation do not cover it yet, it needs `cluster-admin` (not `dedicated-admin` on ROSA), and on ARO's default domain you manage its DNS yourself, so check it on your clusters before you rely on it.
 
 == Where Each Wins
 
