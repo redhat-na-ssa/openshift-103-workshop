@@ -63,7 +63,9 @@ A setting on a ROSA machine pool, or a MachineAutoscaler on ARO (Module 4).
 On EKS you install Cluster Autoscaler or Karpenter, unless you use Auto Mode; on AKS it is a cluster setting or node auto-provisioning.
 
 Ingress settings::
-Changed through the IngressController resource, never by editing the router Deployment.
+On ARO, changed through the IngressController resource, never by editing the router Deployment.
+On ROSA, SRE manages the default IngressController: you can read it but not edit it.
+`rosa edit ingress` changes only its visibility and component routes; for anything else you add a second IngressController (Module 3).
 
 Identity providers::
 Configured through OpenShift OAuth (Module 2).
@@ -248,6 +250,8 @@ For the ingress Operator that resource is the IngressController:
 oc get ingresscontrollers \
   --namespace openshift-ingress-operator
 ----
+
+On ROSA, read the default IngressController but don't edit it: SRE manages it.
 
 Repeat for two more Operators from the diagram above, such as `storage` and `monitoring`.
 

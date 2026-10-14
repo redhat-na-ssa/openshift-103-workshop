@@ -288,7 +288,7 @@ rosa list machinepools \
   --cluster <cluster-name>
 ----
 
-Show the default ingress settings, which you change through `rosa`, not in the cluster:
+Show the default ingress settings. SRE manages them, and `rosa edit ingress` changes only their visibility and component routes:
 
 [source,bash]
 ----
