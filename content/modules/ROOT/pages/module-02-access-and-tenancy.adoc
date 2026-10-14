@@ -1,6 +1,8 @@
 = Access and Tenancy
 
-NOTE: The exercises on this page have not been validated on live ROSA and ARO clusters yet.
+NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026.
+Steps and statements that were not checked on a live cluster carry a *Not validated* note.
+The comparison tables and summaries come from vendor documentation.
 
 On EKS and AKS, your cloud identity is your cluster identity.
 On ROSA and ARO, the OpenShift OAuth server sits in between: you add identity providers, people log in to the CLI and web console through it, and OpenShift keeps its own User, Identity and Group objects.
@@ -63,6 +65,9 @@ Set the cluster name:
 ----
 export CLUSTER=<rosa-cluster-name>
 ----
+
+NOTE: *Not validated:* `rosa create admin`, which needs the `rosa` CLI logged in to the cluster's organization.
+Logging in with the credentials it prints was validated.
 
 Create a temporary cluster administrator:
 
@@ -161,7 +166,12 @@ There is no separate login step and no shared administrator password, unless you
 
 === Exercise 2: Add an identity provider
 
+NOTE: *Not validated:* signing in through either identity provider, which the validation environments do not allow.
+On ARO, the steps up to and including the authentication Operator rollout were validated.
+
 ==== ROSA
+
+NOTE: *Not validated:* `rosa create idp`, which needs the `rosa` CLI logged in to the cluster's organization.
 
 On ROSA, you add identity providers with the `rosa` CLI, and Red Hat applies them to the cluster.
 This workshop uses an htpasswd provider with one developer account, so you don't need to register an application anywhere.
@@ -380,6 +390,9 @@ az role assignment create \
 
 === Exercise 3: Log in as the developer
 
+NOTE: *Not validated:* this exercise, which needs a working identity provider login.
+Exercises 4 and 5 were validated as the cluster administrator, impersonating the developer.
+
 Open a second terminal for the developer on each cluster.
 Give it its own kubeconfig file, so the administrator's login stays in the first terminal:
 
@@ -530,8 +543,27 @@ oc patch project.config.openshift.io cluster \
     {"name":"project-request"}}}'
 ----
 
-The OpenShift API server picks up the change after a few minutes.
-On ROSA, where the API server runs in the hosted control plane, it can take about five.
+The OpenShift API servers restart to pick up the change, which takes about five minutes.
+Until they all have, some project requests use the template and some don't.
+
+On ARO, wait for the restart to start, then to finish:
+
+[source,bash]
+----
+oc wait clusteroperator/openshift-apiserver \
+  --for=condition=Progressing=True \
+  --timeout=2m
+----
+
+[source,bash]
+----
+oc wait clusteroperator/openshift-apiserver \
+  --for=condition=Progressing=False \
+  --timeout=15m
+----
+
+On ROSA, the API servers run in the hosted control plane and the cluster shows no rollout, so wait about five minutes.
+
 Then, in the developer terminal, create another project:
 
 [source,bash]
@@ -549,7 +581,7 @@ oc describe quota
 oc describe limitrange
 ----
 
-If the project has no quota, the API server had not picked up the template yet.
+If the project has no quota, an API server had not picked up the template yet.
 Wait a minute and create a project with a new name, such as `dev-team-2`.
 A deleted project's name stays taken until its deletion finishes.
 
@@ -582,6 +614,9 @@ The request is refused with `You may not request a new project via this API`.
 
 The template applies only to projects created through a project request (`oc new-project` or the console).
 A Namespace created directly, by `oc create namespace` or by a GitOps tool, gets no quota from the template.
+
+To remove the template later, remove `spec.projectRequestTemplate` first and wait for the API servers to restart again, as above, before you delete the template.
+Until they all have, project requests fail with `templates.template.openshift.io "project-request" not found`.
 
 .EKS and AKS (reference only)
 [%collapsible]
@@ -633,7 +668,8 @@ oc adm policy add-role-to-group edit team-a \
   --namespace team-a
 ----
 
-In the developer terminal, the new project is visible:
+In the developer terminal, the new project is visible.
+It can take a minute to appear in the list:
 
 [source,bash]
 ----
@@ -645,6 +681,8 @@ oc get projects
 oc auth can-i create deployments \
   --namespace team-a
 ----
+
+NOTE: *Not validated:* Entra ID group claims.
 
 On ARO you can let Entra ID manage group membership instead: add a `groups` claim to the OAuth resource and the Entra app registration, and the OAuth server creates and updates Groups, named by Entra group object ID, each time a member logs in.
 You still create the RoleBindings yourself.
@@ -702,6 +740,9 @@ az role assignment create \
 == App Teams Will Notice
 
 Developers get a web console with their projects, workloads, logs and metrics, and log in to it with the same account as the CLI.
+NOTE: *Not validated:* turning on the Developer view.
+The ARO validation cluster did show it off by default.
+
 Since OpenShift 4.19 the console's Developer view is off by default.
 To turn it on, run this as an administrator:
 
