@@ -30,6 +30,13 @@ It comes in two images built from the same https://github.com/shpwrck/ocp-cloud-
 Run the exercises on both clusters, in the administrator terminal from xref:module-02-access-and-tenancy.adoc[Access and Tenancy].
 The commands are the same on ROSA and ARO.
 
+.Exercises on this page
+* <<ex-module-02-workload-security-1>>
+* <<ex-module-02-workload-security-2>>
+* <<ex-module-02-workload-security-3>>
+* <<ex-module-02-workload-security-4>>
+
+[#ex-module-02-workload-security-1]
 === Exercise 1: Deploy the sample application as you would on EKS
 
 Create the namespace:
@@ -136,6 +143,7 @@ That rejects this pod outright, because it does not set `runAsNonRoot`, drop cap
 Pod Security Admission checks pods; it never changes them.
 ====
 
+[#ex-module-02-workload-security-2]
 === Exercise 2: See what OpenShift decided
 
 Find the SCC that admitted the pod:
@@ -217,6 +225,7 @@ The ReplicaSet controller creates the pods, so only the SCCs that the pod's serv
 
 image::module-02-pod-failure-tree.svg["Common reasons a pod fails on OpenShift, and their fixes",link=self,window=_blank]
 
+[#ex-module-02-workload-security-3]
 === Exercise 3: Fix it the right way
 
 The fixed image differs from the root image in one Containerfile stage:
@@ -256,6 +265,7 @@ oc logs deployment/sample-app \
 The application starts, still as a user ID from the namespace's range, not as 1001.
 The SCC overrides the image's `USER`.
 
+[#ex-module-02-workload-security-4]
 === Exercise 4: Fix it the wrong way, for comparison
 
 The quick fix you will find in many forum answers is to let the service account run as any user ID, including root:
