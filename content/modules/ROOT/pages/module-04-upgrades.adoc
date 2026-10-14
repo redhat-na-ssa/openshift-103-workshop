@@ -58,6 +58,9 @@ Ask the cluster for its recommendation, including any known risks of the availab
 oc adm upgrade recommend
 ----
 
+A new cluster can report `Upgradeable=False` with the reason `AdminAckRequired`.
+That is an acknowledgment gate, covered in Exercise 4, and it blocks only the next minor version.
+
 The update channel decides which versions are offered.
 Patch releases arrive in the current channel, and a new minor version needs a channel change, which never happens on its own.
 
@@ -144,7 +147,7 @@ oc get clusterversion version -o json \
       | @tsv'
 ----
 
-The newest update is first.
+The newest update is first, and a new cluster can list its install version more than once.
 `Completed` means every Operator reached the new version, and `Partial` means the update did not finish.
 
 Show the conditions the Cluster Version Operator reports:
@@ -322,14 +325,28 @@ oc get clusteroperators -o json \
 No output means no Operator blocks a minor update.
 
 Some minor updates also need an administrator's acknowledgment, for example of an API removal.
-They are kept in a ConfigMap:
+The platform lists these gates in one ConfigMap:
+
+[source,bash]
+----
+oc get configmap admin-gates \
+  --namespace openshift-config-managed \
+  -o json \
+  | jq '.data'
+----
+
+Your acknowledgments go in another, which stays empty until you acknowledge a gate:
 
 [source,bash]
 ----
 oc get configmap admin-acks \
   --namespace openshift-config \
-  -o yaml
+  -o json \
+  | jq '.data'
 ----
+
+A gate that is listed in `admin-gates` and not acknowledged in `admin-acks` blocks the next minor update, even when no Operator does.
+`oc adm upgrade` reports it as `Upgradeable=False` with the reason `AdminAckRequired`.
 
 ==== Removed APIs
 
@@ -357,9 +374,8 @@ oc get apirequestcount <resource>.<version>.<group> \
   | sort -u
 ----
 
-On ROSA HCP the list is empty, whatever your workloads call.
-The API server runs in the hosted control plane and does not publish request counts in the cluster.
-On ROSA, check your manifests against the https://kubernetes.io/docs/reference/using-api/deprecation-guide/[Kubernetes deprecated API migration guide] instead.
+The list can be empty even when workloads call deprecated APIs: it was empty on both a new ROSA HCP cluster and a new ARO cluster when this workshop was tested.
+Treat an empty result as no data, and also check your manifests against the https://kubernetes.io/docs/reference/using-api/deprecation-guide/[Kubernetes deprecated API migration guide].
 
 ==== Pod disruption budgets
 
@@ -465,7 +481,7 @@ Test updates on a non-production cluster first.
 |One tested payload: no add-on version juggling.
 |Newer Kubernetes versions sooner.
 
-|Upgrade-blocking checks, and on ARO API usage counts, catch problems before they start.
+|Upgrade-blocking checks and API usage counts catch problems before they start.
 |AKS maintenance windows and auto-upgrade channels; AKS long-term support for two years.
 
 |SRE watches the upgrade.
@@ -481,7 +497,7 @@ Test updates on a non-production cluster first.
 Applications need at least two replicas and a budget that allows one disruption to stay up.
 * A budget that allows no disruptions holds up the update on ARO, and is overridden after the grace period on ROSA HCP.
 * Each Kubernetes minor version removes some deprecated APIs.
-Manifests and Helm charts that use them fail after the update. On ARO, the API request counts show who still calls them.
+Manifests and Helm charts that use them fail after the update, and the API request counts, when populated, show who still calls them.
 
 == References
 
