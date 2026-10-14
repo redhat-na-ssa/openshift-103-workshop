@@ -19,6 +19,10 @@ ui:
       contents: ./content/supplemental-ui/css/site-extra.css
     - path: partials/head-meta.hbs
       contents: ./content/supplemental-ui/partials/head-meta.hbs
+    - path: partials/footer.hbs
+      contents: ./content/supplemental-ui/partials/footer.hbs
+    - path: partials/build-info.hbs
+      contents: ./content/supplemental-ui/partials/build-info.hbs
     - path: ./content/lib
     - path: .nojekyll
     - path: ui.yml
