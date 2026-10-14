@@ -34,20 +34,23 @@ jobs:
       - name: antora generate
         run: |
           # stamp the footer with the release, commit and build time (partials/build-info.hbs);
-          # Antora camel-cases key names, so build-commit reaches the UI as site.keys.buildCommit
-          keys=(
-            --key "build-repo=$GITHUB_SERVER_URL/$GITHUB_REPOSITORY"
-            --key "build-commit=$(git rev-parse HEAD)"
-            --key "build-short=$(git rev-parse --short=7 HEAD)"
-            --key "build-date=$(date -u '+%Y-%m-%d %H:%M UTC')"
-          )
+          # Antora camel-cases key names, so build-commit reaches the UI as site.keys.buildCommit.
+          # Values are YAML-parsed, so each is double-quoted to keep a short SHA such as
+          # 67713e7 from being read as a number.
+          keys=()
+          key() { keys+=(--key "$1=\"$2\""); }
+          key build-repo "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY"
+          key build-commit "$(git rev-parse HEAD)"
+          key build-short "$(git rev-parse --short=7 HEAD)"
+          key build-date "$(date -u '+%Y-%m-%d %H:%M UTC')"
           release=$(git describe --tags --abbrev=0 2>/dev/null || true)
           if [ -n "$release" ]; then
             ahead=$(git rev-list --count "$release..HEAD")
             version=$release
             if [ "$ahead" -eq 1 ]; then version="$release + 1 commit"; fi
             if [ "$ahead" -gt 1 ]; then version="$release + $ahead commits"; fi
-            keys+=(--key "build-release=$release" --key "build-version=$version")
+            key build-release "$release"
+            key build-version "$version"
           fi
           antora generate default-site.yml --stacktrace "${keys[@]}"
       - name: upload pages artifact
