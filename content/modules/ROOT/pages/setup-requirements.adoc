@@ -16,6 +16,7 @@ Several exercises change cluster-wide settings (identity providers, AdminNetwork
 
 |ROSA
 a|* ROSA with hosted control planes (HCP), in STS mode (the default).
+* Its own OIDC config, not one shared with another attendee's cluster, so that Module 2's trust policies stay scoped to one cluster.
 * OpenShift 4.22 or later, for the Red Hat build of Karpenter in Module 4.
 * A public API and default ingress.
 * At least 2 worker nodes, with Service Quotas that allow the cluster to scale out by at least 3 more nodes in Module 4.
