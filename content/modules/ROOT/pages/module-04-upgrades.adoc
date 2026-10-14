@@ -529,7 +529,8 @@ Each replacement adds a new node before removing an old one, so the pool needs r
 It never happens on its own.
 * Red Hat may apply critical security fixes without waiting for you.
 On ROSA, a cluster left on a version past its end of life has its control plane upgraded automatically.
-* New OpenShift versions reach ARO months after their general availability.
+* Existing ARO clusters can update to a new minor version once an update path reaches the fast channel.
+New clusters can be installed on that version only months after OpenShift's general availability.
 * OpenShift does not support rolling back an upgrade.
 Test updates on a non-production cluster first.
 
