@@ -95,7 +95,7 @@ The pattern: on ROSA and ARO the infrastructure plumbing ships with the cluster,
 == On ROSA and ARO
 
 Run each step on both clusters unless the step names one.
-Log in to the cluster first, as described in the xref:setup-requirements.adoc[Setup Requirements].
+Use the terminals you logged in with in xref:module-01-who-manages-what.adoc#before-you-start[Before You Start].
 
 .Exercises on this page
 * <<ex-module-01-what-ships-1>> +

@@ -48,7 +48,7 @@ Use separate terminals so the two logins don't overwrite each other.
 
 .Exercises on this page
 * <<ex-module-02-access-and-tenancy-1>> +
-Log in to each cluster as the administrator the service gives you.
+Check that you are the administrator the service gives you, and why that login is only for break-glass use.
 * <<ex-module-02-access-and-tenancy-2>> +
 Connect an identity provider so people log in with their own accounts.
 * <<ex-module-02-access-and-tenancy-3>> +
@@ -59,95 +59,12 @@ See that any user can create a project, and give every new project a quota.
 Create a group and give it a project, the way you would onboard a team.
 
 [#ex-module-02-access-and-tenancy-1]
-=== Exercise 1: Log in as the cluster administrator
+=== Exercise 1: Check Your Administrator Login
 
-If you already logged in to both clusters in Module 1, keep those terminals and skip to Exercise 2.
+You logged in to both clusters as the cluster administrator in xref:module-01-who-manages-what.adoc#before-you-start[Before You Start].
+If you opened new terminals since, set the kubeconfig file and variables again, as described there.
 
-[tabs]
-======
-ROSA (AWS)::
-+
---
-Give this terminal its own kubeconfig file:
-
-[source,bash]
-----
-export KUBECONFIG=~/.kube/rosa
-----
-
-Set the cluster name:
-
-[source,bash]
-----
-export CLUSTER=<rosa-cluster-name>
-----
-
-NOTE: *Not validated:* `rosa create admin`, which needs the `rosa` CLI logged in to the cluster's organization.
-Logging in with the credentials it prints was validated.
-
-Create a temporary cluster administrator:
-
-[source,bash]
-----
-rosa create admin \
-  --cluster "$CLUSTER"
-----
-
-The command prints an `oc login` command with a generated password.
-Wait about a minute, then run that command.
---
-ARO (Azure)::
-+
---
-Give this terminal its own kubeconfig file:
-
-[source,bash]
-----
-export KUBECONFIG=~/.kube/aro
-----
-
-Set the cluster name and resource group:
-
-[source,bash]
-----
-export CLUSTER=<aro-cluster-name>
-export RESOURCE_GROUP=<resource-group>
-----
-
-Look up the API server URL:
-
-[source,bash]
-----
-API_URL=$(az aro show \
-  --name "$CLUSTER" \
-  --resource-group "$RESOURCE_GROUP" \
-  --query apiserverProfile.url \
-  --output tsv)
-----
-
-Look up the kubeadmin password:
-
-[source,bash]
-----
-KUBEADMIN_PASSWORD=$(az aro list-credentials \
-  --name "$CLUSTER" \
-  --resource-group "$RESOURCE_GROUP" \
-  --query kubeadminPassword \
-  --output tsv)
-----
-
-Log in:
-
-[source,bash]
-----
-oc login "$API_URL" \
-  --username kubeadmin \
-  --password "$KUBEADMIN_PASSWORD"
-----
---
-======
-
-Check who you are:
+Check who you are, in each terminal:
 
 [source,bash]
 ----

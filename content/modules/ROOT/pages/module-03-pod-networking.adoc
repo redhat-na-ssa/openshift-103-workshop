@@ -91,7 +91,7 @@ NOTE: *Not validated:* `rosa describe cluster`, which needs a `rosa` login to th
 [source,bash]
 ----
 rosa describe cluster \
-  --cluster <cluster-name>
+  --cluster "$CLUSTER"
 ----
 
 Look up both addresses in the VPC.
@@ -117,8 +117,8 @@ Show the cluster's address ranges:
 [source,bash]
 ----
 az aro show \
-  --resource-group <resource-group> \
-  --name <cluster-name> \
+  --resource-group "$RESOURCE_GROUP" \
+  --name "$CLUSTER" \
   --query networkProfile
 ----
 
@@ -127,8 +127,8 @@ Find the cluster's managed resource group, where its virtual machines and networ
 [source,bash]
 ----
 MANAGED_RG=$(az aro show \
-  --resource-group <resource-group> \
-  --name <cluster-name> \
+  --resource-group "$RESOURCE_GROUP" \
+  --name "$CLUSTER" \
   --query clusterProfile.resourceGroupId \
   --output tsv)
 ----

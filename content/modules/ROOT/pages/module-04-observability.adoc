@@ -638,7 +638,7 @@ The token differs: the collector does not use the workload identity webhook's to
 It projects its own service account token with the audience `openshift`, the same audience ROSA uses, so the federated credential must trust that audience.
 
 Work in your ARO terminal.
-The steps use the `CLUSTER` and `RESOURCE_GROUP` variables from Module 2.
+The steps use the `CLUSTER` and `RESOURCE_GROUP` variables from xref:module-01-who-manages-what.adoc#before-you-start[Before You Start].
 If you open a new terminal, set them again:
 
 [source,bash]

@@ -57,9 +57,9 @@ image::module-04-scaling-models.svg[Group autoscaling grows pre-defined groups o
 
 ROSA keeps its machine pools outside your cluster, in OpenShift Cluster Manager, while ARO keeps MachineSets inside it.
 So the steps differ between the two clusters, and they appear in a *ROSA (AWS)* tab and an *ARO (Azure)* tab.
-Run each tab's steps in that cluster's terminal, the ones you set up in Module 2.
+Run each tab's steps in that cluster's terminal, the ones you set up in xref:module-01-who-manages-what.adoc#before-you-start[Before You Start].
 
-The ROSA steps use the `CLUSTER` variable from Module 2.
+The ROSA steps use the `CLUSTER` variable set there.
 If you open a new ROSA terminal, set it again:
 
 [source,bash]

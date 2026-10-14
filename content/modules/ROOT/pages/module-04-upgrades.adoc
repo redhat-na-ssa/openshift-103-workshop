@@ -37,7 +37,7 @@ AKS long-term support keeps a version for two years.
 Run each exercise in both your ROSA and ARO terminals unless it says otherwise.
 Where the steps differ, they appear in a *ROSA (AWS)* tab and an *ARO (Azure)* tab.
 
-The ROSA steps use the `CLUSTER` variable from Module 2.
+The ROSA steps use the `CLUSTER` variable from xref:module-01-who-manages-what.adoc#before-you-start[Before You Start].
 If you open a new ROSA terminal, set it again:
 
 [source,bash]

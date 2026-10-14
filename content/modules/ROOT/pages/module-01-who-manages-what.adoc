@@ -81,6 +81,108 @@ Watch the platform refuse a change to a resource SRE owns.
 * <<ex-module-01-who-manages-what-5>> +
 Learn where to open a support case on each platform and what it covers.
 
+[#before-you-start]
+=== Before You Start
+
+Open two terminals, one for each cluster, and log in to each as the cluster administrator.
+Every exercise in the workshop runs in these terminals and uses the variables you set here.
+If you open a new terminal later, run only the `export` steps in it: the kubeconfig file keeps your login.
+
+[tabs]
+======
+ROSA (AWS)::
++
+--
+Give this terminal its own kubeconfig file:
+
+[source,bash]
+----
+export KUBECONFIG=~/.kube/rosa
+----
+
+Set the cluster name:
+
+[source,bash]
+----
+export CLUSTER=<rosa-cluster-name>
+----
+
+NOTE: *Not validated:* `rosa create admin`, which needs the `rosa` CLI logged in to the cluster's organization.
+Logging in with the credentials it prints was validated.
+
+Create a temporary cluster administrator:
+
+[source,bash]
+----
+rosa create admin \
+  --cluster "$CLUSTER"
+----
+
+The command prints an `oc login` command with a generated password.
+Wait about a minute, then run that command.
+If it says the cluster already has a `cluster-admin` user, your facilitator created it: run the `oc login` command they gave you instead.
+--
+ARO (Azure)::
++
+--
+Give this terminal its own kubeconfig file:
+
+[source,bash]
+----
+export KUBECONFIG=~/.kube/aro
+----
+
+Set the cluster name and resource group:
+
+[source,bash]
+----
+export CLUSTER=<aro-cluster-name>
+export RESOURCE_GROUP=<resource-group>
+----
+
+Look up the API server URL:
+
+[source,bash]
+----
+API_URL=$(az aro show \
+  --name "$CLUSTER" \
+  --resource-group "$RESOURCE_GROUP" \
+  --query apiserverProfile.url \
+  --output tsv)
+----
+
+Look up the kubeadmin password:
+
+[source,bash]
+----
+KUBEADMIN_PASSWORD=$(az aro list-credentials \
+  --name "$CLUSTER" \
+  --resource-group "$RESOURCE_GROUP" \
+  --query kubeadminPassword \
+  --output tsv)
+----
+
+Log in:
+
+[source,bash]
+----
+oc login "$API_URL" \
+  --username kubeadmin \
+  --password "$KUBEADMIN_PASSWORD"
+----
+--
+======
+
+Check who you are, in each terminal:
+
+[source,bash]
+----
+oc whoami
+----
+
+ROSA shows `cluster-admin` and ARO shows `kube:admin`.
+Module 2 replaces these shared logins with people's own.
+
 [#ex-module-01-who-manages-what-1]
 === Exercise 1: Identify the Architecture
 
@@ -94,7 +196,7 @@ Describe the cluster, keeping only its control plane type and version:
 [source,bash]
 ----
 rosa describe cluster \
-  --cluster <cluster-name> \
+  --cluster "$CLUSTER" \
   --output json \
   | jq '{hcp: .hypershift.enabled, version: .version.raw_id}'
 ----
@@ -109,8 +211,8 @@ Show the cluster profile:
 [source,bash]
 ----
 az aro show \
-  --resource-group <resource-group> \
-  --name <cluster-name> \
+  --resource-group "$RESOURCE_GROUP" \
+  --name "$CLUSTER" \
   --query clusterProfile
 ----
 
@@ -171,8 +273,8 @@ Save its ID:
 [source,bash]
 ----
 MANAGED_RG=$(az aro show \
-  --resource-group <resource-group> \
-  --name <cluster-name> \
+  --resource-group "$RESOURCE_GROUP" \
+  --name "$CLUSTER" \
   --query clusterProfile.resourceGroupId \
   --output tsv)
 ----

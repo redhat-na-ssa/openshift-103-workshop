@@ -105,7 +105,7 @@ NOTE: *Not validated:* `rosa list ingresses`, which needs a `rosa` login to the 
 [source,bash]
 ----
 rosa list ingresses \
-  --cluster <cluster-name>
+  --cluster "$CLUSTER"
 ----
 
 On ROSA you change the default ingress with `rosa edit ingress`, not by editing the IngressController object.
@@ -127,8 +127,8 @@ LB_IP=$(oc get service router-default \
 [source,bash]
 ----
 MANAGED_RG=$(az aro show \
-  --resource-group <resource-group> \
-  --name <cluster-name> \
+  --resource-group "$RESOURCE_GROUP" \
+  --name "$CLUSTER" \
   --query clusterProfile.resourceGroupId \
   --output tsv)
 ----
@@ -152,8 +152,8 @@ See the ingress the way the service manages it:
 [source,bash]
 ----
 az aro show \
-  --resource-group <resource-group> \
-  --name <cluster-name> \
+  --resource-group "$RESOURCE_GROUP" \
+  --name "$CLUSTER" \
   --query ingressProfiles
 ----
 --
