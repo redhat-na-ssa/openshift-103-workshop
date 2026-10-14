@@ -47,9 +47,10 @@
 <text x="108.0" y="388.8333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">or the web console</text>
 <line x1="201" y1="376.0" x2="214" y2="376.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="221,376.0 213,371.5 213,380.5" fill="#4d5258"/>
 <rect x="222" y="336" width="184" height="80" rx="6" fill="#fff1f0" stroke="#c9190b" stroke-width="1.5"/>
-<text x="314.0" y="363.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">OpenShift OAuth server,</text>
-<text x="314.0" y="380.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">after you log in to</text>
-<text x="314.0" y="397.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">GitHub, Entra, OIDC ...</text>
+<text x="314.0" y="354.8333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">OpenShift OAuth server,</text>
+<text x="314.0" y="371.8333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">after you log in to</text>
+<text x="314.0" y="388.8333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">htpasswd, GitHub,</text>
+<text x="314.0" y="405.8333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Entra, OIDC ...</text>
 <line x1="407" y1="376.0" x2="420" y2="376.0" stroke="#4d5258" stroke-width="1.6"/><polygon points="427,376.0 419,371.5 419,380.5" fill="#4d5258"/>
 <rect x="428" y="336" width="184" height="80" rx="6" fill="#fff1f0" stroke="#c9190b" stroke-width="1.5"/>
 <text x="520.0" y="363.3333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">OpenShift access token</text>

@@ -95,7 +95,8 @@ az aks get-credentials \
   --name <cluster-name>
 ----
 
-There is no separate login step and no shared administrator password, unless you use the AKS local account, which most teams disable.
+EKS has no static cluster credential.
+AKS Standard keeps a local admin credential (`az aks get-credentials --admin`) by default; disable it with `--disable-local-accounts`, as AKS Automatic does.
 ====
 
 [#ex-module-02-access-and-tenancy-2]
@@ -114,6 +115,7 @@ NOTE: *Not validated:* `rosa create idp`, which needs the `rosa` CLI logged in t
 On ROSA, you add identity providers with the `rosa` CLI, and Red Hat applies them to the cluster.
 This workshop uses an htpasswd provider with one developer account, so you don't need to register an application anywhere.
 Production clusters use `--type openid`, `github`, `gitlab`, `google` or `ldap` instead.
+Red Hat and AWS describe htpasswd on ROSA as a static-user or break-glass option, not a general identity provider; it is used here only so the workshop needs no external app.
 
 Choose a password for the developer.
 ROSA requires at least 14 characters, with upper case, lower case, and digits or symbols:
@@ -336,21 +338,21 @@ NOTE: *Not validated:* this exercise, which needs a working identity provider lo
 Exercises 4 and 5 were validated as the cluster administrator, impersonating the developer.
 
 Open a second terminal for the developer on each cluster.
-Give it its own kubeconfig file, so the administrator's login stays in the first terminal:
-
-[source,bash]
-----
-export KUBECONFIG=~/.kube/rosa-dev
-----
-
-Use `~/.kube/aro-dev` on ARO.
+Give it its own kubeconfig file, so the administrator's login stays in the first terminal.
 
 [tabs]
 ======
 ROSA (AWS)::
 +
 --
-In the developer terminal, set the same variables as in the administrator terminal:
+In the developer terminal, set the kubeconfig file:
+
+[source,bash]
+----
+export KUBECONFIG=~/.kube/rosa-dev
+----
+
+Set the same variables as in the administrator terminal:
 
 [source,bash]
 ----
@@ -380,6 +382,13 @@ oc login "$API_URL" \
 ARO (Azure)::
 +
 --
+In the developer terminal, set the kubeconfig file:
+
+[source,bash]
+----
+export KUBECONFIG=~/.kube/aro-dev
+----
+
 Open the console URL from Exercise 2 in a private browser window.
 Choose *entraID*, sign in with your Entra ID account, and accept the consent prompt.
 
@@ -682,16 +691,18 @@ az role assignment create \
 |Access is managed as cloud role assignments, alongside the rest of your cloud IAM, and audited there.
 
 |Self-service projects that users can list without cluster-wide rights.
-|No shared break-glass password to remove after setup.
+|Every login is a cloud identity; EKS has no static credential, and the AKS one can be turned off.
 |===
 
 == App Teams Will Notice
 
 Developers get a web console with their projects, workloads, logs and metrics, and log in to it with the same account as the CLI.
+
+Since OpenShift 4.19 the console's Developer view is off by default.
+
 NOTE: *Not validated:* turning on the Developer view.
 The ARO validation cluster did show it off by default.
 
-Since OpenShift 4.19 the console's Developer view is off by default.
 To turn it on, run this as an administrator:
 
 [source,bash]
