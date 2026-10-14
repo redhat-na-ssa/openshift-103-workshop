@@ -117,7 +117,7 @@ NOTE: The commands here are copied from the modules, which mark anything that wa
 
 |Upgrade blockers
 |You check for deprecated APIs with your own tools.
-|`oc adm upgrade` and the Upgradeable condition flag blockers, including admin-ack gates. A zero-disruption PodDisruptionBudget stalls node drains on ARO; on ROSA it is overridden after a grace period.
+|`oc adm upgrade` and the Upgradeable condition flag blockers, including admin-ack gates. A zero-disruption PodDisruptionBudget stalls node drains on both, unless a ROSA machine pool sets a node drain grace period.
 
 |Metrics
 |You enable Container Insights or managed Prometheus.
