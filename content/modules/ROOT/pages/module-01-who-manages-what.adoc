@@ -417,7 +417,7 @@ If your ROSA cluster is in limited support, `rosa describe cluster` shows a `Lim
 |Microsoft and Red Hat support engineers together
 
 |What you need
-|At least an AWS Developer Support plan to open ROSA technical cases. Red Hat support is included
+|An AWS support plan that includes technical support cases, to open ROSA cases with AWS. Red Hat support is included
 |An Azure support plan to open cases with Microsoft, and the Red Hat pull secret on the cluster to open them with Red Hat
 |===
 
@@ -620,6 +620,7 @@ The pricing pages in the references have current numbers.
 ** https://docs.aws.amazon.com/rosa/latest/userguide/rosa-architecture-models.html[ROSA architecture models]
 ** https://aws.amazon.com/rosa/pricing/[ROSA pricing]
 ** https://docs.aws.amazon.com/rosa/latest/userguide/rosa-support.html[ROSA support]
+** https://docs.aws.amazon.com/awssupport/latest/user/aws-support-plans.html[AWS support plans]
 ** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/backup_and_restore/oadp-application-backup-and-restore[OADP on ROSA]
 * ARO
 ** https://learn.microsoft.com/azure/openshift/responsibility-matrix[ARO responsibility matrix]
