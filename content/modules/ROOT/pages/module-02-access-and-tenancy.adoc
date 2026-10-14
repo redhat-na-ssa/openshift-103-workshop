@@ -1,38 +1,658 @@
 = Access and Tenancy
 
-NOTE: This section is an outline. Its diagrams and exercises are being written and validated on ROSA and ARO.
+NOTE: The exercises on this page have not been validated on live ROSA and ARO clusters yet.
 
 On EKS and AKS, your cloud identity is your cluster identity.
-On ROSA and ARO, the OpenShift OAuth server sits in between: you add identity providers, users log in to the CLI and web console through it, and groups map them to roles.
+On ROSA and ARO, the OpenShift OAuth server sits in between: you add identity providers, people log in to the CLI and web console through it, and OpenShift keeps its own User, Identity and Group objects.
 Once people can log in, they need somewhere to work, so this section also covers projects, the OpenShift take on namespaces.
 
-// Planned visuals:
-// - Login flow diagram: IAM access entry (EKS), Entra ID + Azure RBAC
-//   (AKS), OAuth server + IdP (ROSA, ARO), external OIDC (ROSA HCP).
-// - Namespace vs project comparison table.
+image::module-02-login-flow.svg["Login flow on EKS, AKS, ROSA and ARO",link=self,window=_blank]
 
 == On EKS and AKS
 
 * EKS: you grant IAM principals access with access entries and access policies. The `aws-auth` ConfigMap is deprecated.
 * AKS: Microsoft Entra ID authenticates users, and Azure RBAC or Kubernetes RBAC authorizes them.
-* Teams get namespaces, RoleBindings and ResourceQuotas that you create yourself, often through infrastructure as code.
+* Teams get namespaces, RoleBindings and ResourceQuotas that you create yourself, often through infrastructure as code. Nobody can create a namespace unless you allow it.
+
+[cols="1,1,1",options="header"]
+|===
+| |EKS and AKS namespace |ROSA and ARO project
+
+|What it is
+|A namespace
+|A namespace, plus a Project view of it that users can list and request
+
+|Who can create one
+|Whoever you grant `create` on namespaces
+|Every logged-in user, by default, through the self-provisioner role
+
+|What a new one contains
+|Nothing, unless your tooling adds it
+|Whatever the project request template says: by default, an admin RoleBinding for the requester
+
+|Security defaults
+|Pod Security Admission labels, if you add them
+|A unique user ID range and SELinux label, assigned automatically
+
+|How users find theirs
+|`kubectl get namespaces` needs cluster-wide list rights
+|`oc get projects` lists only the projects you can access
+|===
 
 == On ROSA and ARO
 
-Outline of the exercise:
+You work as two people on each cluster: a cluster administrator, and a developer who logs in through an identity provider.
+Use separate terminals so the two logins don't overwrite each other.
 
-. Log in with the temporary admin (ROSA) or kubeadmin (ARO) credential.
-. Add an identity provider: GitHub or another OIDC provider on ROSA, Microsoft Entra ID on ARO.
-. Log in as a regular user through the web console and the CLI.
-. Create a group, add the user, and bind the group to a role.
-. Create a project as that user, then see who is allowed to create projects.
-. Change the project template so every new project gets a quota and limits.
+=== Exercise 1: Log in as the cluster administrator
+
+If you already logged in to both clusters in Module 1, keep those terminals and skip to Exercise 2.
+
+==== ROSA
+
+Give this terminal its own kubeconfig file:
+
+[source,bash]
+----
+export KUBECONFIG=~/.kube/rosa
+----
+
+Set the cluster name:
+
+[source,bash]
+----
+export CLUSTER=<rosa-cluster-name>
+----
+
+Create a temporary cluster administrator:
+
+[source,bash]
+----
+rosa create admin \
+  --cluster "$CLUSTER"
+----
+
+The command prints an `oc login` command with a generated password.
+Wait about a minute, then run that command.
+
+==== ARO
+
+Give this terminal its own kubeconfig file:
+
+[source,bash]
+----
+export KUBECONFIG=~/.kube/aro
+----
+
+Set the cluster name and resource group:
+
+[source,bash]
+----
+export CLUSTER=<aro-cluster-name>
+export RESOURCE_GROUP=<resource-group>
+----
+
+Look up the API server URL:
+
+[source,bash]
+----
+API_URL=$(az aro show \
+  --name "$CLUSTER" \
+  --resource-group "$RESOURCE_GROUP" \
+  --query apiserverProfile.url \
+  --output tsv)
+----
+
+Look up the kubeadmin password:
+
+[source,bash]
+----
+KUBEADMIN_PASSWORD=$(az aro list-credentials \
+  --name "$CLUSTER" \
+  --resource-group "$RESOURCE_GROUP" \
+  --query kubeadminPassword \
+  --output tsv)
+----
+
+Log in:
+
+[source,bash]
+----
+oc login "$API_URL" \
+  --username kubeadmin \
+  --password "$KUBEADMIN_PASSWORD"
+----
+
+==== Both clusters
+
+Check who you are:
+
+[source,bash]
+----
+oc whoami
+----
+
+ROSA shows `cluster-admin` and ARO shows `kube:admin`.
+Both are break-glass logins: one shared credential with no link to a real person.
+The rest of this exercise gives people their own logins.
+
+.EKS and AKS (reference only)
+[%collapsible]
+====
+EKS writes a kubeconfig entry that calls `aws eks get-token` with your IAM identity:
+
+[source,bash]
+----
+aws eks update-kubeconfig \
+  --name <cluster-name>
+----
+
+AKS writes a kubeconfig entry, and kubelogin gets an Entra ID token for you:
+
+[source,bash]
+----
+az aks get-credentials \
+  --resource-group <resource-group> \
+  --name <cluster-name>
+----
+
+There is no separate login step and no shared administrator password, unless you use the AKS local account, which most teams disable.
+====
+
+=== Exercise 2: Add an identity provider
+
+==== ROSA
+
+On ROSA, you add identity providers with the `rosa` CLI, and Red Hat applies them to the cluster.
+This workshop uses an htpasswd provider with one developer account, so you don't need to register an application anywhere.
+Production clusters use `--type openid`, `github`, `gitlab`, `google` or `ldap` instead.
+
+Choose a password for the developer.
+ROSA requires at least 14 characters, with upper case, lower case, and digits or symbols:
+
+[source,bash]
+----
+export DEV_USER=dev1
+export DEV_PASSWORD='Workshop-Dev-2026'
+----
+
+Create the identity provider:
+
+[source,bash]
+----
+rosa create idp \
+  --cluster "$CLUSTER" \
+  --type htpasswd \
+  --name workshop-users \
+  --users "$DEV_USER:$DEV_PASSWORD"
+----
+
+The provider is usually ready within two minutes.
+
+==== ARO
+
+On ARO, you configure the cluster's OAuth resource yourself.
+This exercise adds Microsoft Entra ID, the identity provider your AKS users already have.
+
+Look up the console URL:
+
+[source,bash]
+----
+CONSOLE_URL=$(az aro show \
+  --name "$CLUSTER" \
+  --resource-group "$RESOURCE_GROUP" \
+  --query consoleProfile.url \
+  --output tsv)
+----
+
+Build the OAuth callback URL from it.
+The last part, `entraID`, must match the provider name you use below:
+
+[source,bash]
+----
+OAUTH_URL=${CONSOLE_URL/console-openshift-console/oauth-openshift}
+CALLBACK_URL="${OAUTH_URL}oauth2callback/entraID"
+echo "$CALLBACK_URL"
+----
+
+Register an application in Entra ID:
+
+[source,bash]
+----
+APP_ID=$(az ad app create \
+  --display-name "aro-workshop-$CLUSTER" \
+  --web-redirect-uris "$CALLBACK_URL" \
+  --query appId \
+  --output tsv)
+----
+
+Create a client secret for it:
+
+[source,bash]
+----
+CLIENT_SECRET=$(az ad app credential reset \
+  --id "$APP_ID" \
+  --query password \
+  --output tsv)
+----
+
+Ask Entra ID to include the email and UPN claims in its ID tokens:
+
+[source,bash]
+----
+cat > claims.json <<'EOF'
+{
+  "idToken": [
+    {"name": "email", "essential": false},
+    {"name": "upn", "essential": false}
+  ]
+}
+EOF
+----
+
+[source,bash]
+----
+az ad app update \
+  --id "$APP_ID" \
+  --optional-claims @claims.json
+----
+
+Store the client secret in the cluster:
+
+[source,bash]
+----
+oc create secret generic entra-client-secret \
+  --namespace openshift-config \
+  --from-literal=clientSecret="$CLIENT_SECRET"
+----
+
+Look up your tenant ID:
+
+[source,bash]
+----
+TENANT_ID=$(az account show \
+  --query tenantId \
+  --output tsv)
+----
+
+Point the OAuth server at Entra ID:
+
+[source,bash]
+----
+oc apply -f - <<EOF
+apiVersion: config.openshift.io/v1
+kind: OAuth
+metadata:
+  name: cluster
+spec:
+  identityProviders:
+  - name: entraID
+    mappingMethod: claim
+    type: OpenID
+    openID:
+      clientID: $APP_ID
+      clientSecret:
+        name: entra-client-secret
+      extraScopes:
+      - email
+      - profile
+      claims:
+        preferredUsername:
+        - email
+        - upn
+        name:
+        - name
+        email:
+        - email
+      issuer: https://login.microsoftonline.com/$TENANT_ID
+EOF
+----
+
+A warning about a missing `last-applied-configuration` annotation is expected.
+The authentication Operator now rolls out new OAuth server pods.
+Wait until it finishes:
+
+[source,bash]
+----
+oc wait clusteroperator/authentication \
+  --for=condition=Progressing=False \
+  --timeout=10m
+----
+
+Your Entra ID account is the developer in this exercise.
+Set its user name, which is your email address or UPN:
+
+[source,bash]
+----
+export DEV_USER=<your-entra-email>
+----
+
+.EKS and AKS (reference only)
+[%collapsible]
+====
+EKS: grant an IAM role access to the cluster and map it to a Kubernetes group:
+
+[source,bash]
+----
+aws eks create-access-entry \
+  --cluster-name <cluster-name> \
+  --principal-arn <iam-role-arn> \
+  --kubernetes-groups team-a
+----
+
+AKS: Entra ID is built in. Grant a user or group a role on the cluster:
+
+[source,bash]
+----
+az role assignment create \
+  --role "Azure Kubernetes Service RBAC Reader" \
+  --assignee <user-or-group-object-id> \
+  --scope <aks-cluster-resource-id>
+----
+====
+
+=== Exercise 3: Log in as the developer
+
+Open a second terminal for the developer on each cluster.
+Give it its own kubeconfig file, so the administrator's login stays in the first terminal:
+
+[source,bash]
+----
+export KUBECONFIG=~/.kube/rosa-dev
+----
+
+Use `~/.kube/aro-dev` on ARO.
+
+==== ROSA
+
+In the developer terminal, set the same variables as in the administrator terminal:
+
+[source,bash]
+----
+export CLUSTER=<rosa-cluster-name>
+export DEV_USER=dev1
+export DEV_PASSWORD='Workshop-Dev-2026'
+----
+
+Look up the API server URL:
+
+[source,bash]
+----
+API_URL=$(rosa describe cluster \
+  --cluster "$CLUSTER" \
+  --output json | jq -r .api.url)
+----
+
+Log in as the developer:
+
+[source,bash]
+----
+oc login "$API_URL" \
+  --username "$DEV_USER" \
+  --password "$DEV_PASSWORD"
+----
+
+==== ARO
+
+Open the console URL from Exercise 2 in a private browser window.
+Choose *entraID*, sign in with your Entra ID account, and accept the consent prompt.
+
+Then get a CLI token: open the user menu at the top right, choose *Copy login command*, choose *entraID* again, and choose *Display Token*.
+Run the `oc login --token=...` command it shows in the developer terminal.
+
+==== Both clusters
+
+In the developer terminal, check who you are and what you can see:
+
+[source,bash]
+----
+oc whoami
+----
+
+[source,bash]
+----
+oc get projects
+----
+
+The developer can log in but has no projects yet.
+
+In the administrator terminal, look at what the first login created:
+
+[source,bash]
+----
+oc get users
+----
+
+[source,bash]
+----
+oc get identities
+----
+
+OpenShift creates a User for each person and an Identity that links it to the identity provider account.
+EKS and AKS keep no such objects: the user exists only in IAM or Entra ID.
+
+=== Exercise 4: Let the developer create a project
+
+In the developer terminal, create a project:
+
+[source,bash]
+----
+oc new-project dev-sandbox
+----
+
+It works, and the developer is now admin of that project.
+In the administrator terminal, see why:
+
+[source,bash]
+----
+oc describe clusterrolebinding.rbac self-provisioners
+----
+
+The `self-provisioner` role is bound to `system:authenticated:oauth`, which means everyone who logs in through an identity provider.
+
+Now make every new project come with a quota and default limits.
+In the administrator terminal, write a ResourceQuota:
+
+[source,bash]
+----
+oc create quota default-quota \
+  --hard=requests.cpu=2,requests.memory=4Gi,pods=20 \
+  --dry-run=client \
+  --output json > quota.json
+----
+
+Write a LimitRange that gives containers default requests and limits:
+
+[source,bash]
+----
+cat > limits.json <<'EOF'
+{
+  "apiVersion": "v1",
+  "kind": "LimitRange",
+  "metadata": {"name": "default-limits"},
+  "spec": {
+    "limits": [{
+      "type": "Container",
+      "defaultRequest": {"cpu": "50m", "memory": "64Mi"},
+      "default": {"cpu": "500m", "memory": "256Mi"}
+    }]
+  }
+}
+EOF
+----
+
+Generate the default project template, add both objects to it, and store it in `openshift-config`:
+
+[source,bash]
+----
+oc adm create-bootstrap-project-template \
+  --output json \
+  | jq --slurpfile q quota.json \
+       --slurpfile l limits.json \
+       '.objects += $q + $l' \
+  | oc apply --namespace openshift-config -f -
+----
+
+Tell the cluster to use it:
+
+[source,bash]
+----
+oc patch project.config.openshift.io cluster \
+  --type merge \
+  --patch '{"spec":{"projectRequestTemplate":
+    {"name":"project-request"}}}'
+----
+
+The OpenShift API server picks up the change after a minute or two.
+Then, in the developer terminal, create another project:
+
+[source,bash]
+----
+oc new-project dev-team
+----
+
+[source,bash]
+----
+oc describe quota
+----
+
+[source,bash]
+----
+oc describe limitrange
+----
+
+If the project has no quota, the API server had not picked up the template yet.
+Delete the project, wait a minute, and create it again.
+
+Most platform teams decide who gets projects, rather than letting everyone create them.
+In the administrator terminal, remove the self-provisioner binding:
+
+[source,bash]
+----
+oc patch clusterrolebinding.rbac self-provisioners \
+  --patch '{"subjects": null}'
+----
+
+Stop the cluster from restoring it on the next API server restart:
+
+[source,bash]
+----
+oc annotate clusterrolebinding.rbac self-provisioners \
+  rbac.authorization.kubernetes.io/autoupdate=false \
+  --overwrite
+----
+
+In the developer terminal, try again:
+
+[source,bash]
+----
+oc new-project dev-another
+----
+
+The request is refused with `You may not request a new project via this API`.
+
+The template applies only to projects created through a project request (`oc new-project` or the console).
+A Namespace created directly, by `oc create namespace` or by a GitOps tool, gets no quota from the template.
+
+.EKS and AKS (reference only)
+[%collapsible]
+====
+There is no self-service and no template: you create each namespace and its quota yourself, usually from infrastructure as code or a GitOps repository:
+
+[source,bash]
+----
+kubectl create namespace team-a
+----
+
+[source,bash]
+----
+kubectl create quota default-quota \
+  --namespace team-a \
+  --hard=requests.cpu=2,requests.memory=4Gi,pods=20
+----
+
+Tools such as Capsule, the Hierarchical Namespace Controller or a Kyverno generate policy fill the gap that project templates fill on OpenShift.
+====
+
+=== Exercise 5: Give a team a project
+
+In the administrator terminal, create a group and add the developer to it:
+
+[source,bash]
+----
+oc adm groups new team-a
+----
+
+[source,bash]
+----
+oc adm groups add-users team-a "$DEV_USER"
+----
+
+Create a project for the team.
+As an administrator you can still request projects, so it gets the template's quota:
+
+[source,bash]
+----
+oc new-project team-a
+----
+
+Give the group the `edit` role in it:
+
+[source,bash]
+----
+oc adm policy add-role-to-group edit team-a \
+  --namespace team-a
+----
+
+In the developer terminal, the new project is visible:
+
+[source,bash]
+----
+oc get projects
+----
+
+[source,bash]
+----
+oc auth can-i create deployments \
+  --namespace team-a
+----
+
+On ARO you can let Entra ID manage group membership instead: add a `groups` claim to the OAuth resource and the Entra app registration, and the OAuth server creates and updates Groups, named by Entra group object ID, each time a member logs in.
+You still create the RoleBindings yourself.
+
+.EKS and AKS (reference only)
+[%collapsible]
+====
+EKS: scope an access policy to the team's namespace:
+
+[source,bash]
+----
+aws eks associate-access-policy \
+  --cluster-name <cluster-name> \
+  --principal-arn <iam-role-arn> \
+  --policy-arn arn:aws:eks::aws:cluster-access-policy/AmazonEKSEditPolicy \
+  --access-scope type=namespace,namespaces=team-a
+----
+
+AKS: assign an Entra group a role scoped to the namespace:
+
+[source,bash]
+----
+az role assignment create \
+  --role "Azure Kubernetes Service RBAC Writer" \
+  --assignee <entra-group-object-id> \
+  --scope <aks-cluster-resource-id>/namespaces/team-a
+----
+====
 
 == What Matters
 
-* ROSA recommends the `dedicated-admin` role over `cluster-admin` for day-to-day administration. ARO has no `dedicated-admin`; you start from kubeadmin.
-* Every logged-in user can create projects by default, through the self-provisioner role. Most platform teams remove it or replace it with a request process.
-* ROSA HCP can skip the OAuth server and use an external OIDC provider such as Entra directly, which is closer to the EKS and AKS model. It must be chosen when the cluster is created and cannot be reverted. ARO offers external authentication only on its hosted control planes preview.
+* ROSA recommends the `dedicated-admin` role over `cluster-admin` for day-to-day administration: grant it with `rosa grant user dedicated-admin`. It can manage projects, quotas, Operators and network policy, but not privileged workloads or SRE-owned namespaces. ARO has no `dedicated-admin`; you start from kubeadmin and grant `cluster-admin` yourself.
+* Remove the `rosa create admin` user and the kubeadmin user once real administrators can log in, or keep them only as break-glass access.
+* Every logged-in user can create projects by default, through the self-provisioner role. Decide on day one whether to keep that.
+* The project template covers only project requests. If your teams' namespaces come from GitOps or infrastructure as code, put quotas and limits there, as you do on EKS and AKS.
+* Group membership comes from `oc adm groups`, from the identity provider's group claims at login (Entra ID, OIDC), or from LDAP group sync. OpenShift does not read IAM or Azure RBAC.
+* ROSA HCP can skip the OAuth server and use an external OIDC provider such as Entra ID directly, which is closer to the EKS and AKS model. It must be chosen when the cluster is created and cannot be reverted. ARO offers external authentication only on its hosted control planes preview.
 
 == Where Each Wins
 
@@ -40,17 +660,30 @@ Outline of the exercise:
 |===
 |ROSA and ARO win |EKS and AKS win
 
-|Any identity provider, with web console single sign-on.
-|Cloud IAM is the cluster identity: nothing extra to configure.
+|Any identity provider, with web console single sign-on, and several at once.
+|Cloud IAM is the cluster identity: nothing extra to configure or rotate.
 
 |Project templates apply quotas, limits and policies to every new project.
-|Access is managed as cloud role assignments, alongside the rest of your cloud IAM.
+|Access is managed as cloud role assignments, alongside the rest of your cloud IAM, and audited there.
+
+|Self-service projects that users can list without cluster-wide rights.
+|No shared break-glass password to remove after setup.
 |===
 
 == App Teams Will Notice
 
-Developers get a web console with their projects, workloads, logs and metrics.
-Since OpenShift 4.19 the developer view is off by default, and a cluster administrator turns it on.
+Developers get a web console with their projects, workloads, logs and metrics, and log in to it with the same account as the CLI.
+Since OpenShift 4.19 the console's Developer view is off by default.
+To turn it on, run this as an administrator:
+
+[source,bash]
+----
+oc patch console.operator.openshift.io cluster \
+  --type merge \
+  --patch '{"spec":{"customization":{"perspectives":
+    [{"id":"dev","visibility":{"state":"Enabled"}}]}}}'
+----
+
 OpenShift also offers in-cluster builds (Builds for OpenShift, source-to-image) and Pipelines (Tekton).
 Decide whether to offer these, or to keep builds in the CI system your teams already use, as they would on EKS or AKS.
 
@@ -64,12 +697,15 @@ Decide whether to offer these, or to keep builds in the CI system your teams alr
 ** https://learn.microsoft.com/azure/aks/best-practices-multi-tenancy[Multi-tenancy best practices]
 * ROSA
 ** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/authentication_and_authorization/sd-configuring-identity-providers[Configuring identity providers]
+** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/authentication_and_authorization/using-rbac[Granting cluster-admin and dedicated-admin]
 ** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/install_clusters/rosa-hcp-sts-creating-a-cluster-ext-auth[HCP with external authentication]
 ** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/building_applications/projects[Projects on ROSA]
 * ARO
 ** https://learn.microsoft.com/azure/openshift/configure-azure-ad-cli[Configure Entra ID authentication]
 ** https://learn.microsoft.com/azure/openshift/connect-cluster[Connect to an ARO cluster]
+** https://cloud.redhat.com/experts/idp/group-claims/aro/[Entra ID group claims on ARO (Cloud Experts)]
 * OpenShift
 ** https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/authentication_and_authorization/understanding-identity-provider[Understanding identity providers]
 ** https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/authentication_and_authorization/using-rbac[Using RBAC]
+** https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/building_applications/projects[Configuring project creation]
 ** https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/web_console/web-console-overview[Web console overview]
