@@ -17,6 +17,8 @@ image::module-03-packet-path.svg[Pod packet path with the Amazon VPC CNI, Azure 
 
 Do these steps on your ROSA cluster, then repeat them on your ARO cluster.
 Where the two differ, the steps are split under ROSA and ARO headings.
+
+NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026, except the steps marked as not validated. The EKS and AKS reference blocks, Fixed Egress Addresses and Private Clusters are reference only and were not run.
 They use the sample application in the `sample-app` project and the Route you created in xref:module-03-exposing-apps.adoc[Exposing an App].
 
 === Exercise 1: Compare Pod and Node Addresses
@@ -66,6 +68,8 @@ When the pod talks to a database in the same VPC or virtual network, the databas
 
 Show the cluster's address ranges, in the `Machine CIDR`, `Service CIDR` and `Pod CIDR` lines:
 
+CAUTION: Not validated: needs a `rosa` login to the cluster's Red Hat organization.
+
 [source,bash]
 ----
 rosa describe cluster \
@@ -74,6 +78,8 @@ rosa describe cluster \
 
 Look up both addresses in the VPC.
 The pod's address finds nothing, and the node's address finds its network interface:
+
+CAUTION: Not validated: needs AWS credentials for the account that owns the cluster.
 
 [source,bash]
 ----
@@ -468,6 +474,8 @@ Every pod on the cluster shares that address, so an external firewall that allow
 ==== ROSA
 
 Find the NAT gateway addresses in the cluster's VPC:
+
+CAUTION: Not validated: needs AWS credentials for the account that owns the cluster.
 
 [source,bash]
 ----
