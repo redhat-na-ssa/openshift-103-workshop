@@ -399,13 +399,15 @@ curl --silent \
   "http://sample-app.gwapi.$APPS_DOMAIN/healthz"
 ----
 
-The load balancer and DNS record take a minute or two.
-Until then the command prints `000`, so wait and try again.
+On ROSA it prints `200` once the new load balancer is ready, which takes a minute or two.
+Until then it prints `000`, so wait and try again.
 
 [NOTE]
 ====
-On ARO with the default `aroapp.io` domain, the Gateway's DNS record may never be published, because Azure manages that zone.
-If the name still does not resolve, send the request straight to the Gateway's address:
+On ARO with the default `aroapp.io` domain, the command keeps printing `503`.
+Azure manages that DNS zone, so the cluster's DNS configuration names no zone and the Gateway's DNS record is never published.
+The name still resolves through the `*.apps` wildcard, to the default router, which has no Route for it.
+Send the request straight to the Gateway's address instead:
 
 [source,bash]
 ----
@@ -422,6 +424,9 @@ curl --silent \
   --resolve "sample-app.gwapi.$APPS_DOMAIN:80:$GW_IP" \
   "http://sample-app.gwapi.$APPS_DOMAIN/healthz"
 ----
+
+It prints `200`.
+To reach the Gateway by name, create the DNS record in a zone you manage.
 ====
 
 The Gateway serves plain HTTP because nothing gave it a certificate.
