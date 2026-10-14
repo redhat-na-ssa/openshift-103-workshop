@@ -1,6 +1,6 @@
 = Observability
 
-NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026.
+NOTE: Validated on ROSA 4.20 and ARO 4.21 in October 2026.
 Steps and statements that were not checked on a live cluster carry a *Not validated* note.
 The comparison tables and summaries come from vendor documentation.
 
@@ -37,7 +37,7 @@ image::module-04-observability-stack.svg[On EKS and AKS you install collectors a
 
 |Control plane logs
 |A switch on the cluster, to CloudWatch or diagnostic settings
-|ROSA HCP: a log forwarder in OpenShift Cluster Manager. ARO: the API server audit log, through the Logging Operator
+|ROSA: a log forwarder in OpenShift Cluster Manager. ARO: the API server audit log, through the Logging Operator
 |===
 
 == On EKS and AKS
@@ -47,8 +47,19 @@ image::module-04-observability-stack.svg[On EKS and AKS you install collectors a
 
 == On ROSA and ARO
 
-Run each exercise on both clusters unless a step is marked ROSA or ARO.
+Run each exercise on both clusters.
+Where the steps differ, they appear in a *ROSA (AWS)* tab and an *ARO (Azure)* tab.
 
+.Exercises on this page
+* <<ex-module-04-observability-1>>
+* <<ex-module-04-observability-2>>
+* <<ex-module-04-observability-3>>
+* <<ex-module-04-observability-4>>
+* <<ex-module-04-observability-5>>
+* <<ex-module-04-observability-6>>
+* <<ex-module-04-observability-7>>
+
+[#ex-module-04-observability-1]
 === Exercise 1: Look at What Ships
 
 The platform monitoring stack runs in its own namespace:
@@ -113,6 +124,7 @@ az aks enable-addons \
 The alert rules are yours to write, or to import from the recommended sets.
 ====
 
+[#ex-module-04-observability-2]
 === Exercise 2: Turn On User Workload Monitoring
 
 Platform monitoring watches the platform.
@@ -170,6 +182,7 @@ oc get pods \
 
 Press Ctrl+C when the `prometheus-user-workload` and `thanos-ruler-user-workload` pods are `Running`.
 
+[#ex-module-04-observability-3]
 === Exercise 3: Scrape the Sample Application
 
 The sample application serves Prometheus metrics on `/metrics`, on the same port as its API.
@@ -282,6 +295,7 @@ spec:
 ----
 ====
 
+[#ex-module-04-observability-4]
 === Exercise 4: Add an Alert Rule
 
 Alert when the application fails to read from its object store, which uses the credentials from xref:module-02-cloud-credentials.adoc[Pod Cloud Credentials]:
@@ -319,6 +333,7 @@ Without the Module 2 credentials it fires after a minute, which shows it working
 User-defined alerts go to the platform Alertmanager by default.
 Sending them to your team's channels means configuring Alertmanager receivers, which you can delegate to projects with a separate user workload Alertmanager.
 
+[#ex-module-04-observability-5]
 === Exercise 5: Install the Logging Operator
 
 Logging is not part of the platform.
@@ -359,7 +374,7 @@ spec:
 EOF
 ----
 
-On ROSA HCP the `openshift-logging` namespace already exists, and the command only adds the label.
+On ROSA the `openshift-logging` namespace already exists, and the command only adds the label.
 On ARO the command creates it.
 `oc apply` warns that the namespace is missing the `last-applied-configuration` annotation; that warning is harmless.
 
@@ -391,8 +406,16 @@ oc adm policy add-cluster-role-to-user \
   --namespace openshift-logging
 ----
 
-=== Exercise 6: Forward Logs to CloudWatch (ROSA)
+[#ex-module-04-observability-6]
+=== Exercise 6: Forward Application Logs to Your Cloud
 
+The collector sends the sample application's logs to your cloud's log service: CloudWatch from ROSA, Azure Monitor Logs from ARO.
+
+[tabs]
+======
+ROSA (AWS)::
++
+--
 NOTE: *Not validated:* the `rosa` and `aws` steps, and delivery to CloudWatch.
 The log forwarder and its collector were validated with a placeholder IAM role, up to the collector calling AWS STS.
 
@@ -593,35 +616,10 @@ oc logs \
 ----
 
 `InvalidIdentityTokenException` or `AccessDenied` from `AssumeRoleWithWebIdentity` means the role's trust policy does not match the cluster's OIDC provider or the service account name.
-
-.EKS and AKS (reference only)
-[%collapsible]
-====
-On EKS, the CloudWatch Observability add-on from Exercise 1 also ships container logs, with Fluent Bit, to log groups under `/aws/containerinsights/<cluster>/`.
-Its agent uses the node IAM role or an EKS Pod Identity association:
-
-[source,bash]
-----
-aws eks create-pod-identity-association \
-  --cluster-name my-cluster \
-  --namespace amazon-cloudwatch \
-  --service-account cloudwatch-agent \
-  --role-arn arn:aws:iam::111122223333:role/my-cw-role
-----
-
-EKS control plane logs are a cluster setting:
-
-[source,bash]
-----
-aws eks update-cluster-config \
-  --name my-cluster \
-  --logging \
-    '{"clusterLogging":[{"types":["api","audit"],"enabled":true}]}'
-----
-====
-
-=== Exercise 7: Forward Logs to Azure Monitor Logs (ARO)
-
+--
+ARO (Azure)::
++
+--
 NOTE: *Not validated:* this exercise end to end.
 The validation ARO cluster used a service principal, not managed identity, so it has no OIDC issuer for workload identity.
 Only the log forwarder manifest was checked, against the cluster's API schema.
@@ -937,10 +935,34 @@ The `Message` column holds the application's own JSON log line, which you can un
 
 Older guides use the `azureMonitor` output type with a workspace shared key.
 It sends through the HTTP Data Collector API, which Microsoft stopped supporting in September 2026, and the output is deprecated in OpenShift Logging 6.6.
+--
+======
 
 .EKS and AKS (reference only)
 [%collapsible]
 ====
+On EKS, the CloudWatch Observability add-on from Exercise 1 also ships container logs, with Fluent Bit, to log groups under `/aws/containerinsights/<cluster>/`.
+Its agent uses the node IAM role or an EKS Pod Identity association:
+
+[source,bash]
+----
+aws eks create-pod-identity-association \
+  --cluster-name my-cluster \
+  --namespace amazon-cloudwatch \
+  --service-account cloudwatch-agent \
+  --role-arn arn:aws:iam::111122223333:role/my-cw-role
+----
+
+EKS control plane logs are a cluster setting:
+
+[source,bash]
+----
+aws eks update-cluster-config \
+  --name my-cluster \
+  --logging \
+    '{"clusterLogging":[{"types":["api","audit"],"enabled":true}]}'
+----
+
 On AKS, Container Insights from Exercise 1 already sends container logs to the `ContainerLogV2` table in Log Analytics, with no table or rule to write.
 Control plane logs go to Log Analytics through diagnostic settings:
 
@@ -956,7 +978,8 @@ az monitor diagnostic-settings create \
 ARO can get the same Container Insights experience only by connecting the cluster to Azure Arc first.
 ====
 
-=== Exercise 8: Clean Up
+[#ex-module-04-observability-7]
+=== Exercise 7: Clean Up
 
 Delete the log forwarder on both clusters.
 The collector pods stop:
@@ -979,7 +1002,7 @@ User workload monitoring covers your applications, and you may need to turn it o
 * Application logging (Vector, optionally Loki for in-cluster storage) is an optional Operator that you install, upgrade and run.
 * Log forwarding uses the same short-lived credentials as your applications: an IAM role through STS on ROSA, a managed identity through workload identity on ARO.
 * Azure Monitor Container Insights reaches ARO only through Azure Arc.
-* ROSA HCP control plane logs, such as the API server audit log, are not on your nodes.
+* ROSA control plane logs, such as the API server audit log, are not on your nodes.
 You forward them to CloudWatch or S3 with a log forwarder in OpenShift Cluster Manager.
 
 == Where Each Wins
@@ -1015,8 +1038,8 @@ Structured JSON logs make queries in CloudWatch and Log Analytics much easier.
 ** https://learn.microsoft.com/azure/aks/monitor-aks[Monitor AKS]
 * ROSA
 ** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/monitoring/configuring-user-workload-monitoring[User workload monitoring on ROSA]
-** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/logging/rosa-forwarding-control-plane-logs[Forwarding ROSA HCP control plane logs]
-** https://cloud.redhat.com/experts/o11y/openshift-logging6-rosa-hcp/[Logging to CloudWatch on ROSA HCP (Cloud Experts)]
+** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/logging/rosa-forwarding-control-plane-logs[Forwarding ROSA control plane logs]
+** https://cloud.redhat.com/experts/o11y/openshift-logging6-rosa-hcp/[Logging to CloudWatch on ROSA (Cloud Experts)]
 * ARO
 ** https://learn.microsoft.com/azure/azure-monitor/containers/kubernetes-monitoring-enable-arc[Azure Monitor for Arc-enabled clusters]
 ** https://learn.microsoft.com/azure/azure-monitor/logs/custom-logs-migrate[Migrating from the HTTP Data Collector API]
