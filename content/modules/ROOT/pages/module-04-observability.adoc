@@ -1,6 +1,8 @@
 = Observability
 
-NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026, except the steps that use the `rosa`, `aws` or `az` CLI. The CloudWatch forwarder was checked up to the collector assuming its IAM role, and the Azure Monitor forwarder only against the API schema.
+NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026.
+Steps and statements that were not checked on a live cluster carry a *Not validated* note.
+The comparison tables and summaries come from vendor documentation.
 
 On EKS and AKS you choose a monitoring and logging stack and wire it up, usually CloudWatch or Azure Monitor with managed Prometheus.
 ROSA and ARO ship Prometheus, Alertmanager and console dashboards, with platform alerts tuned by SRE.
@@ -70,6 +72,9 @@ oc get prometheusrules \
 
 Well over a hundred rules cover the nodes, the control plane and every platform Operator.
 You did not write or install any of them, and they are updated with each OpenShift release.
+
+NOTE: *Not validated:* the console steps in this exercise.
+The commands above were validated.
 
 In the web console, open *Observe* > *Dashboards* and pick *Kubernetes / Compute Resources / Namespace (Pods)*, then the `sample-app` namespace.
 Then open *Observe* > *Alerting*.
@@ -210,6 +215,9 @@ done
 
 If you skipped xref:module-02-cloud-credentials.adoc[Pod Cloud Credentials], every request to `/` returns `500`, because the application has no bucket or container to read.
 
+NOTE: *Not validated:* the console.
+The queries below were validated through the Thanos Querier, with the command at the end of this exercise.
+
 In the console, open *Observe* > *Metrics* and run this query for the request rate by status code:
 
 [source,promql]
@@ -301,6 +309,9 @@ spec:
 EOF
 ----
 
+NOTE: *Not validated:* the console view.
+The rule itself was validated: it loads and fires, as the `ALERTS` metric shows.
+
 In the console, open *Observe* > *Alerting* > *Alerting rules* and filter on *Source: User*.
 The rule is listed and `Inactive` while the application reads its bucket or container without errors.
 Without the Module 2 credentials it fires after a minute, which shows it working.
@@ -381,6 +392,9 @@ oc adm policy add-cluster-role-to-user \
 ----
 
 === Exercise 6: Forward Logs to CloudWatch (ROSA)
+
+NOTE: *Not validated:* the `rosa` and `aws` steps, and delivery to CloudWatch.
+The log forwarder and its collector were validated with a placeholder IAM role, up to the collector calling AWS STS.
 
 The collector writes to CloudWatch with an IAM role, which it assumes with its service account token.
 This is the same STS pattern as in xref:module-02-cloud-credentials.adoc[Pod Cloud Credentials].
@@ -607,6 +621,10 @@ aws eks update-cluster-config \
 ====
 
 === Exercise 7: Forward Logs to Azure Monitor Logs (ARO)
+
+NOTE: *Not validated:* this exercise end to end.
+The validation ARO cluster used a service principal, not managed identity, so it has no OIDC issuer for workload identity.
+Only the log forwarder manifest was checked, against the cluster's API schema.
 
 The collector writes to a Log Analytics workspace through the Azure Monitor Logs Ingestion API.
 That needs a custom table, a data collection endpoint and a data collection rule, and an identity allowed to send to the rule.
