@@ -39,54 +39,98 @@ NOTE: The commands here are copied from the modules, which mark anything that wa
 
 3+h|Module 2: Access and Workload Security
 
-|Cluster access
-|IAM or Entra ID mapped to Kubernetes RBAC.
-|OpenShift OAuth with an identity provider. On ROSA, `dedicated-admin` for day-to-day administration.
+|Cluster login
+|IAM or Entra ID is your cluster identity, mapped to Kubernetes RBAC.
+|You log in through the OpenShift OAuth server, with an identity provider you add: `rosa create idp` on ROSA, the OAuth `cluster` resource on ARO. OpenShift keeps User, Identity and Group objects. On ROSA, `dedicated-admin` covers day-to-day administration.
 
-|Pod security
+|Namespaces
+|You create every namespace.
+|Any logged-in user can create a project, through the self-provisioner role. Decide on day one whether to keep that. A project request template adds default quotas and limits, but only to project requests, not to namespaces created directly or by GitOps.
+
+|Pod user
+|Pods run as the image's user, often root.
+|Pods run as a random user ID from the namespace's range, in group 0, with every capability dropped (the `restricted-v2` SCC). Make writable paths group-0 writable, and don't set `runAsUser`.
+
+|Pod admission
 |Pod Security Admission labels per namespace.
-|Security context constraints: pods run as a random user ID with no capabilities, by default.
+|Security context constraints decide, granted to service accounts through RBAC. Only the pod's service account counts. Grant `anyuid` only to a dedicated service account, for images you can't change.
 
 |Pod cloud credentials
-|IRSA or EKS Pod Identity, AKS workload identity.
-|ROSA: the IRSA service account annotation. ARO: workload identity, on clusters created with managed identities.
+|EKS Pod Identity or IRSA, AKS workload identity.
+|ROSA: the `eks.amazonaws.com/role-arn` service account annotation, with token audience `openshift`. ARO: workload identity, only on clusters created with managed identities; annotate the service account and label the pod `azure.workload.identity/use: "true"`.
+
+|Private registry
+|`--attach-acr`, or ECR read on the node role.
+|ROSA: attach an ECR read policy to the worker role, which every cluster using those account roles shares. ARO: a pull secret per namespace, linked to the service account.
 
 3+h|Module 3: Networking
 
+|Ingress controller
+|You install the AWS Load Balancer Controller or the app routing add-on.
+|A default router ships behind a cloud load balancer, with a wildcard apps domain and certificate.
+
 |Exposing an app
-|Ingress with the ALB controller or AKS app routing.
-|A Route on the router that ships. An Ingress without a class still becomes a Route.
+|An Ingress per app, plus DNS and certificates.
+|`oc create route edge` gives an HTTPS host name under the apps domain, with no DNS or certificate work. Plain HTTP gets a 503 until you set `insecureEdgeTerminationPolicy` to `Redirect`.
+
+|Existing Ingress manifests
+|Annotated for the ALB controller or NGINX.
+|They work only with no `ingressClassName`, or `openshift-default`. ALB and NGINX annotations are ignored; tune Routes with `haproxy.router.openshift.io/*` annotations.
+
+|Gateway API
+|Through the cloud load balancer controller.
+|The `openshift-default` GatewayClass, for cluster admins. Each Gateway gets its own load balancer and needs its own certificate. On ARO's `aroapp.io` domain, you manage its DNS yourself.
 
 |Pod network
 |Pods take VPC or virtual network addresses.
-|OVN-Kubernetes overlay. Pods never use VPC addresses; outside the cluster you see node addresses.
+|OVN-Kubernetes overlay (`10.128.0.0/14`). Pods never use VPC or virtual network addresses; outside the cluster you see node, NAT or load balancer addresses.
 
 |Network policy
 |You enable a policy engine.
-|Works out of the box. AdminNetworkPolicy adds cluster-wide rules.
+|NetworkPolicy works out of the box. A default-deny also blocks the router and monitoring until you allow namespaces labeled `policy-group.network.openshift.io/ingress` and the `openshift-user-workload-monitoring` namespace.
+
+|Cluster-wide guardrails
+|Through a policy add-on.
+|AdminNetworkPolicy, evaluated before any NetworkPolicy, so project admins can't override it.
+
+|Private cluster
+|You can make the API endpoint private later.
+|A private API and private ingress are choices made when the cluster is created. ROSA workers always reach the hosted control plane over PrivateLink.
 
 3+h|Module 4: Day-2 Operations
 
-|Node scaling
-|Cluster Autoscaler or Karpenter, or node pools.
-|ROSA: machine pools through the `rosa` CLI. ARO: MachineSets in the cluster.
+|Node autoscaling
+|You install and upgrade the Cluster Autoscaler or Karpenter.
+|The cluster autoscaler is built in. ROSA: it runs in the hosted control plane, and you set min and max per machine pool with `rosa`. ARO: you create a ClusterAutoscaler, plus a MachineAutoscaler per MachineSet, with `oc`.
+
+|Instance types
+|One node group per instance type, or Karpenter mixing types and spot.
+|ROSA machine pools and ARO MachineSets each use one instance type. ROSA 4.22 adds the Red Hat build of Karpenter (AutoNode); ARO has no equivalent.
+
+|Node images
+|You build or roll AMIs and node images.
+|There are none to manage. RHCOS is patched with each OpenShift update, so current patch releases are how nodes get OS fixes.
 
 |Upgrades
-|Control plane, then node groups and node images.
-|ROSA: control plane first, then each machine pool. ARO: the whole cluster at once, started by you. No rollback on either.
+|Control plane, then each add-on against a compatibility matrix, then nodes.
+|One release moves Kubernetes, networking, ingress, storage and monitoring together. ROSA: you schedule it, control plane first, then each machine pool, which may trail by up to two minor versions. ARO: you start each update, and workers roll with it. No rollback on either.
+
+|Upgrade blockers
+|You check for deprecated APIs with your own tools.
+|`oc adm upgrade` and the Upgradeable condition flag blockers, including admin-ack gates. A zero-disruption PodDisruptionBudget stalls node drains on ARO; on ROSA it is overridden after a grace period.
 
 |Metrics
-|You install Prometheus or use a managed service.
-|Platform monitoring ships. Turn on user workload monitoring for your apps.
+|You enable Container Insights or managed Prometheus.
+|Platform Prometheus, alerts and dashboards ship ready. Turn on user workload monitoring, then use ServiceMonitor and PrometheusRule in your projects.
 
 |Logs
-|Fluent Bit, the CloudWatch agent or Container insights.
-|The Logging Operator, using the same short-lived cloud credentials as your apps.
+|An add-on ships container logs to CloudWatch or Log Analytics.
+|The Logging Operator and a ClusterLogForwarder, authenticated with STS on ROSA or workload identity on ARO.
 |===
 
 == Commands to Keep
 
-=== On Both Clusters
+=== Cluster Health
 
 Which release the cluster runs, and its update history:
 
@@ -118,6 +162,107 @@ oc get packagemanifests \
   --namespace openshift-marketplace
 ----
 
+=== Workload Security
+
+Which SCC admitted a pod:
+
+[source,bash]
+----
+oc get pods \
+  --namespace <project> \
+  --output yaml \
+  | grep openshift.io/scc
+----
+
+Why no pod appeared:
+
+[source,bash]
+----
+oc get events \
+  --namespace <project> \
+  --field-selector reason=FailedCreate
+----
+
+Which SCC a Deployment's pods would get, before you grant one:
+
+[source,bash]
+----
+oc get deployment <name> \
+  --namespace <project> \
+  --output yaml \
+  | oc adm policy scc-subject-review \
+      --namespace <project> \
+      --serviceaccount <service-account> \
+      --groups system:authenticated \
+      -f -
+----
+
+Let one dedicated service account run images as their own user:
+
+[source,bash]
+----
+oc adm policy add-scc-to-user anyuid \
+  --serviceaccount <service-account> \
+  --namespace <project>
+----
+
+=== Networking
+
+The cluster's apps domain:
+
+[source,bash]
+----
+oc get ingresscontroller default \
+  --namespace openshift-ingress-operator \
+  --output jsonpath='{.status.domain}'
+----
+
+Expose a Service over HTTPS:
+
+[source,bash]
+----
+oc create route edge <name> \
+  --service <service> \
+  --port 8080 \
+  --namespace <project>
+----
+
+Redirect plain HTTP to HTTPS instead of returning 503:
+
+[source,bash]
+----
+oc patch route <name> \
+  --namespace <project> \
+  --type merge \
+  --patch '{"spec":{"tls":{"insecureEdgeTerminationPolicy":"Redirect"}}}'
+----
+
+=== Day-2 Operations
+
+The current version, available updates and anything blocking them:
+
+[source,bash]
+----
+oc adm upgrade
+----
+
+The cluster version's conditions, including Upgradeable:
+
+[source,bash]
+----
+oc get clusterversion version -o json \
+  | jq '.status.conditions'
+----
+
+Whether a log forwarder is ready:
+
+[source,bash]
+----
+oc get clusterlogforwarder <name> \
+  --namespace openshift-logging \
+  -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+----
+
 === Per Cloud
 
 [tabs]
@@ -125,6 +270,8 @@ oc get packagemanifests \
 ROSA (AWS)::
 +
 --
+NOTE: *Not validated:* the `rosa` commands below, which need a `rosa` login to the cluster's Red Hat organization.
+
 Describe the cluster: its control plane, version and IAM roles:
 
 [source,bash]
@@ -133,7 +280,7 @@ rosa describe cluster \
   --cluster <cluster-name>
 ----
 
-List the machine pools that hold your worker nodes:
+List the machine pools that hold your worker nodes, with their autoscaling limits:
 
 [source,bash]
 ----
@@ -176,8 +323,8 @@ oc get machinesets \
 
 * Some cluster settings belong to SRE. Changes to them are refused or reverted, so test cluster-wide automation on a ROSA or ARO cluster first.
 * Catalog Operators such as GitOps and Logging are yours to run: their capacity, configuration and updates.
+* A fixed `runAsUser` outside the namespace's range is rejected at admission, so no pod appears. A root image that needs to write as root is admitted and then crashes.
 * An Ingress that still names the `alb` or AKS app routing class is ignored. Drop the class, or use a Route.
-* A default-deny network policy also blocks the router and monitoring until you allow them.
 * Pod cloud credentials apply only to pods created after you annotate the service account. Restart the workload.
 * ARO workload identity needs a cluster created with managed identities. A service principal cluster cannot be converted.
 * Application backup is always yours. SRE's etcd backups are for their own recovery.

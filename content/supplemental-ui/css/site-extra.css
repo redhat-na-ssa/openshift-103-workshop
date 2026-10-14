@@ -98,3 +98,12 @@ video {
     margin-top: 1.5rem;
     margin-bottom: 1.5rem;
 }
+/* space between a heading and the tab strip under it */
+.doc .tabs {
+    margin-top: 1rem;
+}
+/* make list titles such as "Exercises on this page" stand out */
+.doc .ulist > .title {
+    font-weight: 600;
+    margin-top: 1.5rem;
+}
