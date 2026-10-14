@@ -1,38 +1,455 @@
 = Upgrades
 
-NOTE: This section is an outline. Its diagrams and exercises are being written and validated on ROSA and ARO.
+NOTE: The exercises in this section are written but not yet validated on ROSA and ARO.
 
 On EKS you upgrade the control plane, then each add-on against a compatibility matrix, then the nodes.
 On ROSA and ARO one release moves Kubernetes, the node OS and every platform Operator together, with checks that block an upgrade when something is not ready.
 A real upgrade takes an hour or more, so this section inspects and schedules upgrades without running one.
 
-// Planned visuals:
-// - Upgrade timeline for EKS, AKS, ROSA HCP and ARO: what you run,
-//   in what order, and what happens automatically.
-// - "What moves together" chart: Kubernetes, node OS, CNI, ingress,
-//   CSI, monitoring, per platform.
+== How an Upgrade Runs
+
+The timeline shows what you run on each platform, in order, and what happens without you.
+
+.Upgrade steps per platform
+image::module-04-upgrade-timeline.svg[Upgrade steps on EKS, AKS, ROSA HCP and ARO, colored by whether you run the step or it runs automatically.,width=100%]
+
+The chart shows which parts of the platform move in the same update as the Kubernetes control plane, and which you update separately.
+
+.What moves together
+image::module-04-what-moves-together.svg[Matrix of platform components against EKS, AKS, ROSA HCP and ARO, showing which components move with the control plane.,width=100%]
+
+On ROSA and ARO, the CNI, DNS, ingress, storage drivers and monitoring are platform Operators.
+They are tested together as one OpenShift release, so there is no compatibility matrix to check.
+The difference between the two is the nodes: ROSA HCP updates each machine pool separately, while standard ARO rolls the workers as part of the cluster update.
 
 == On EKS and AKS
 
-* EKS: upgrade the control plane one minor version at a time, update add-ons, then roll node groups or let Auto Mode replace nodes. Extended support is on by default and costs more per hour.
+* EKS: upgrade the control plane one minor version at a time, update add-ons, then roll node groups or let Auto Mode replace nodes.
+Extended support is on by default and costs more per hour.
+EKS can roll the control plane back one minor version within 7 days.
 * AKS: auto-upgrade channels and planned maintenance windows automate the control plane and node images.
+AKS long-term support keeps a version for two years.
 
 == On ROSA and ARO
 
-Outline of the exercise:
+Run each exercise in both your ROSA and ARO terminals unless it says otherwise.
 
-. See the cluster's update channel, current version and available updates.
-. ROSA: schedule an upgrade policy with the `rosa` CLI, then cancel it.
-. ARO: read the ClusterVersion history and conditions.
-. Find what would block an upgrade, and where SRE notifications arrive.
+The ROSA steps use the `CLUSTER` variable from Module 2.
+If you open a new ROSA terminal, set it again:
+
+[source,bash]
+----
+export CLUSTER=<your-rosa-cluster-name>
+----
+
+=== Exercise 1: See Where the Cluster Stands
+
+Show the cluster's version, update channel and available updates:
+
+[source,bash]
+----
+oc adm upgrade
+----
+
+Ask the cluster for its recommendation, including any known risks of the available updates:
+
+[source,bash]
+----
+oc adm upgrade recommend
+----
+
+The update channel decides which versions are offered.
+Patch releases arrive in the current channel, and a new minor version needs a channel change, which never happens on its own.
+
+==== ROSA
+
+On ROSA the channel and the list of updates come from OpenShift Cluster Manager.
+Show the cluster's channel and version:
+
+[source,bash]
+----
+rosa describe cluster \
+  --cluster "$CLUSTER"
+----
+
+List the versions you can upgrade the control plane to:
+
+[source,bash]
+----
+rosa list upgrades \
+  --cluster "$CLUSTER"
+----
+
+Machine pools carry their own version.
+The `VERSION` column shows each pool's version, which can trail the control plane by up to two minor versions:
+
+[source,bash]
+----
+rosa list machinepools \
+  --cluster "$CLUSTER"
+----
+
+You would change the channel with `rosa edit cluster` and its `--channel` flag, not with `oc`.
+
+==== ARO
+
+On ARO the channel is a field of the cluster's ClusterVersion, and it is not set by default.
+If `oc adm upgrade` reported no channel, set it to the stable channel of the cluster's minor version, for example:
+
+[source,bash]
+----
+oc adm upgrade channel stable-4.21
+----
+
+Setting the channel does not start an update.
+ARO supports only the `stable`, `fast` and `eus` channels.
+
+.EKS and AKS (reference only)
+[%collapsible]
+====
+EKS, list the Kubernetes versions the cluster can move to, and the upgrade insights that flag problems first:
+
+[source,bash]
+----
+aws eks describe-cluster-versions \
+  --default-only
+----
+
+[source,bash]
+----
+aws eks list-insights \
+  --cluster-name my-cluster
+----
+
+AKS:
+
+[source,bash]
+----
+az aks get-upgrades \
+  --resource-group my-rg \
+  --name my-cluster \
+  --output table
+----
+====
+
+=== Exercise 2: Read the Update History
+
+ClusterVersion keeps every update the cluster has taken, with its start and end time:
+
+[source,bash]
+----
+oc get clusterversion version -o json \
+  | jq -r '.status.history[]
+      | [.version, .state, .startedTime, .completionTime]
+      | @tsv'
+----
+
+The newest update is first.
+`Completed` means every Operator reached the new version, and `Partial` means the update did not finish.
+
+Show the conditions the Cluster Version Operator reports:
+
+[source,bash]
+----
+oc get clusterversion version -o json \
+  | jq -r '.status.conditions[]
+      | [.type, .status, .reason // ""]
+      | @tsv'
+----
+
+`Progressing` is `True` while an update runs.
+`Upgradeable` is `False` when something blocks the next minor update.
+
+=== Exercise 3: Schedule an Upgrade, Then Cancel It (ROSA Only)
+
+On ROSA you schedule upgrades with the `rosa` CLI or OpenShift Cluster Manager, and Red Hat runs them.
+You schedule one here and cancel it before it starts.
+
+If `rosa list upgrades` showed no available version, read through this exercise without running it.
+
+Pick the first version in the list:
+
+[source,bash]
+----
+TARGET=$(rosa list upgrades \
+  --cluster "$CLUSTER" \
+  | awk 'NR==2 {print $1}')
+echo "$TARGET"
+----
+
+Choose a date a week from now, in UTC.
+On Linux:
+
+[source,bash]
+----
+WHEN=$(date -u -d '+7 days' +%Y-%m-%d)
+----
+
+On macOS:
+
+[source,bash]
+----
+WHEN=$(date -u -v+7d +%Y-%m-%d)
+----
+
+Schedule the control plane upgrade:
+
+[source,bash]
+----
+rosa upgrade cluster \
+  --cluster "$CLUSTER" \
+  --version "$TARGET" \
+  --schedule-date "$WHEN" \
+  --schedule-time 03:00
+----
+
+If the CLI offers to upgrade account or operator roles, decline: that is needed only for a minor version, and you are cancelling anyway.
+
+Show the scheduled upgrade:
+
+[source,bash]
+----
+rosa describe upgrade \
+  --cluster "$CLUSTER"
+----
+
+Cancel it:
+
+[source,bash]
+----
+rosa delete upgrade \
+  --cluster "$CLUSTER"
+----
+
+Run `rosa describe upgrade` again to check that nothing is scheduled.
+
+For a real upgrade you would then upgrade each machine pool, after the control plane finishes:
+
+[source,bash]
+----
+rosa upgrade machinepool \
+  --cluster "$CLUSTER" \
+  --version "$TARGET" \
+  <machinepool-name>
+----
+
+Nodes created by the Red Hat build of Karpenter from the `default` node class follow the control plane version without this step.
+ROSA can also apply patch releases automatically on a recurring schedule, with the `--schedule` flag and a cron expression.
+
+On standard ARO you start the update yourself, with the console, `oc adm upgrade --to`, or an `UpgradeConfig` for the managed upgrade operator, which waits for a time you set:
+
+[source,yaml]
+----
+apiVersion: upgrade.managed.openshift.io/v1alpha1
+kind: UpgradeConfig
+metadata:
+  name: managed-upgrade-config
+  namespace: openshift-managed-upgrade-operator
+spec:
+  type: "ARO"
+  upgradeAt: "2026-11-01T03:00:00Z"
+  PDBForceDrainTimeout: 60
+  desired:
+    channel: "stable-4.21"
+    version: "<target-version>"
+----
+
+Do not create it on your ARO cluster in this workshop: it would start a real update at that time.
+
+.EKS and AKS (reference only)
+[%collapsible]
+====
+EKS upgrades start when you run them; there is no scheduler:
+
+[source,bash]
+----
+aws eks update-cluster-version \
+  --name my-cluster \
+  --kubernetes-version 1.34
+----
+
+Each add-on and node group follows, one command each:
+
+[source,bash]
+----
+aws eks update-addon \
+  --cluster-name my-cluster \
+  --addon-name vpc-cni \
+  --addon-version <version>
+----
+
+AKS, opt in to automatic patch upgrades inside a maintenance window:
+
+[source,bash]
+----
+az aks update \
+  --resource-group my-rg \
+  --name my-cluster \
+  --auto-upgrade-channel patch
+----
+
+[source,bash]
+----
+az aks maintenanceconfiguration add \
+  --resource-group my-rg \
+  --cluster-name my-cluster \
+  --name aksManagedAutoUpgradeSchedule \
+  --schedule-type Weekly \
+  --day-of-week Sunday \
+  --interval-weeks 1 \
+  --start-time 03:00 \
+  --duration 4
+----
+====
+
+=== Exercise 4: Find What Would Block an Upgrade
+
+==== Operators
+
+A platform Operator that cannot move to the next minor version marks itself `Upgradeable=False`.
+List any that do:
+
+[source,bash]
+----
+oc get clusteroperators -o json \
+  | jq -r '.items[]
+      | select(any(.status.conditions[];
+          .type == "Upgradeable"
+          and .status == "False"))
+      | .metadata.name'
+----
+
+No output means no Operator blocks a minor update.
+
+Some minor updates also need an administrator's acknowledgment, for example of an API removal.
+They are kept in a ConfigMap:
+
+[source,bash]
+----
+oc get configmap admin-acks \
+  --namespace openshift-config \
+  -o yaml
+----
+
+==== Removed APIs
+
+OpenShift counts the requests to every API, and flags the APIs that a future Kubernetes version removes.
+List the ones still in use, with the release that removes them:
+
+[source,bash]
+----
+oc get apirequestcounts -o json \
+  | jq -r '.items[]
+      | select(.status.removedInRelease != null)
+      | [.status.removedInRelease, .metadata.name]
+      | @tsv'
+----
+
+To see who calls one of them, look at its users, for example:
+
+[source,bash]
+----
+oc get apirequestcount <resource>.<version>.<group> \
+  -o json \
+  | jq -r '.status.last24h[]?.byNode[]?.byUser[]?
+      | [.username, .userAgent]
+      | @tsv' \
+  | sort -u
+----
+
+==== Pod disruption budgets
+
+Every node drains and reboots during an update.
+A PodDisruptionBudget that allows no disruptions stops the drain.
+Create one for the sample application that does exactly that:
+
+[source,bash]
+----
+cat <<'EOF' | oc apply -f -
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: sample-app
+  namespace: sample-app
+spec:
+  minAvailable: 100%
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sample-app
+EOF
+----
+
+Find every budget in the cluster that currently allows no disruptions:
+
+[source,bash]
+----
+oc get poddisruptionbudgets \
+  --all-namespaces \
+  -o json \
+  | jq -r '.items[]
+      | select(.status.disruptionsAllowed == 0)
+      | .metadata.namespace + "/" + .metadata.name'
+----
+
+The sample application's budget is in the list.
+What happens next depends on the platform:
+
+* ROSA HCP drains each machine pool node for at most the pool's node drain grace period, then removes the node anyway.
+* Standard ARO waits on the node until the budget allows the eviction, so the update stalls on that node.
+With an `UpgradeConfig`, the managed upgrade operator forces the drain after `PDBForceDrainTimeout` minutes.
+* EKS managed node group updates fail with a pod eviction error unless you force them.
+* AKS upgrades fail on a node that cannot drain, unless you set the undrainable node behavior to cordon it and move on.
+
+On ROSA, see the grace period of a pool:
+
+[source,bash]
+----
+rosa describe machinepool \
+  --cluster "$CLUSTER" \
+  --machinepool <machinepool-name>
+----
+
+Replace the budget with one that lets one pod go at a time:
+
+[source,bash]
+----
+oc patch poddisruptionbudget sample-app \
+  --namespace sample-app \
+  --type json \
+  --patch '[{"op":"remove","path":"/spec/minAvailable"},
+    {"op":"add","path":"/spec/maxUnavailable","value":1}]'
+----
+
+Its allowed disruptions are now above zero, as long as at least two replicas are running:
+
+[source,bash]
+----
+oc get poddisruptionbudget sample-app \
+  --namespace sample-app
+----
+
+=== Exercise 5: Know Where Upgrade Notices Arrive
+
+Nothing to run here, but worth setting up before you need it.
+
+* ROSA: notices about scheduled, started, and completed upgrades, and about critical patches Red Hat applies, appear in the cluster's *Cluster history* in the Red Hat Hybrid Cloud Console.
+Only the cluster owner receives them by email by default, so add your team as notification contacts.
+* ARO: Microsoft announces new versions in the ARO release notes.
+In extreme cases you get 72 hours to apply a critical security patch, after which ARO SRE may apply it and notify you.
+* Both: Red Hat SRE watches the cluster during an update, and the console shows its progress under *Administration* > *Cluster Settings*.
 
 == What Matters
 
-* ROSA HCP upgrades the control plane and each machine pool separately. Machine pools can trail the control plane by up to two minor versions.
-* Standard ARO upgrades the control plane and workers together, and you start minor upgrades yourself.
+* ROSA HCP upgrades the control plane and each machine pool separately.
+Machine pools can trail the control plane by up to two minor versions, so you choose when nodes reboot.
+* Standard ARO upgrades the control plane and workers together, and you start every update yourself.
+* A new minor version needs a channel change and sometimes an administrator acknowledgment.
+It never happens on its own.
 * Red Hat may apply critical security fixes without waiting for you.
+On ROSA, a cluster left on a version past its end of life has its control plane upgraded automatically.
 * New OpenShift versions reach ARO months after their general availability.
 * OpenShift does not support rolling back an upgrade.
+Test updates on a non-production cluster first.
 
 == Where Each Wins
 
@@ -43,25 +460,39 @@ Outline of the exercise:
 |One tested payload: no add-on version juggling.
 |Newer Kubernetes versions sooner.
 
-|Upgrade-blocking checks catch problems before they start.
-|AKS maintenance windows and auto-upgrade channels; AKS long-term support.
+|Upgrade-blocking checks and API usage counts catch problems before they start.
+|AKS maintenance windows and auto-upgrade channels; AKS long-term support for two years.
 
 |SRE watches the upgrade.
-|EKS supports rolling back a control plane upgrade.
+|EKS can roll the control plane back one minor version within 7 days.
+
+|ROSA schedules and runs upgrades for you, and ROSA HCP lets nodes trail the control plane.
+|EKS upgrade insights and AKS also flag deprecated API use before an upgrade.
 |===
+
+== App Teams Will Notice
+
+* Every node drains and reboots during an update, so every pod restarts at least once.
+Applications need at least two replicas and a budget that allows one disruption to stay up.
+* A budget that allows no disruptions holds up the update on ARO, and is overridden after the grace period on ROSA HCP.
+* Each Kubernetes minor version removes some deprecated APIs.
+Manifests and Helm charts that use them fail after the update, and the API request counts show who still calls them.
 
 == References
 
 * EKS
 ** https://docs.aws.amazon.com/eks/latest/userguide/update-cluster.html[Update an EKS cluster]
+** https://docs.aws.amazon.com/eks/latest/userguide/rollback-cluster.html[Roll back an EKS cluster version]
 ** https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html[Kubernetes version lifecycle on EKS]
 * AKS
 ** https://learn.microsoft.com/azure/aks/auto-upgrade-cluster[Auto-upgrade channels]
 ** https://learn.microsoft.com/azure/aks/planned-maintenance[Planned maintenance]
 * ROSA
 ** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/upgrading/rosa-hcp-upgrading[Upgrading ROSA HCP]
+** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/introduction_to_rosa/policies-and-service-definition[ROSA service definition]
 * ARO
 ** https://learn.microsoft.com/azure/openshift/howto-upgrade[Upgrade an ARO cluster]
 ** https://learn.microsoft.com/azure/openshift/support-lifecycle[ARO support lifecycle]
 * OpenShift
 ** https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/updating_clusters/understanding-openshift-updates-1[Understanding OpenShift updates]
+** https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/updating_clusters/performing-a-cluster-update[Performing a cluster update]

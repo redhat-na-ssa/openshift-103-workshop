@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="384" viewBox="0 0 960 384" font-family="Red Hat Text, Helvetica, Arial, sans-serif">
+<rect x="0" y="0" width="960" height="384" fill="#ffffff"/>
+<text x="319.0" y="28" font-size="15" text-anchor="middle" font-weight="bold" fill="#1f2933">EKS</text>
+<text x="501.0" y="28" font-size="15" text-anchor="middle" font-weight="bold" fill="#1f2933">AKS</text>
+<text x="683.0" y="28" font-size="15" text-anchor="middle" font-weight="bold" fill="#1f2933">ROSA HCP</text>
+<text x="865.0" y="28" font-size="15" text-anchor="middle" font-weight="bold" fill="#1f2933">ARO</text>
+<text x="16" y="68.0" font-size="13.5" text-anchor="start" font-weight="bold" fill="#1f2933">Kubernetes control plane</text>
+<rect x="230" y="47" width="178" height="34" rx="4" fill="#e6f4ea" stroke="#2e7d4f"/>
+<text x="319.0" y="68.0" font-size="12" text-anchor="middle" font-weight="normal" fill="#1f2933">Control plane update</text>
+<rect x="412" y="47" width="178" height="34" rx="4" fill="#e6f4ea" stroke="#2e7d4f"/>
+<text x="501.0" y="68.0" font-size="12" text-anchor="middle" font-weight="normal" fill="#1f2933">Cluster upgrade</text>
+<rect x="594" y="47" width="178" height="34" rx="4" fill="#e6f4ea" stroke="#2e7d4f"/>
+<text x="683.0" y="68.0" font-size="12" text-anchor="middle" font-weight="normal" fill="#1f2933">Control plane update</text>
+<rect x="776" y="47" width="178" height="34" rx="4" fill="#e6f4ea" stroke="#2e7d4f"/>
+<text x="865.0" y="68.0" font-size="12" text-anchor="middle" font-weight="normal" fill="#1f2933">Cluster update</text>
+<text x="16" y="108.0" font-size="13.5" text-anchor="start" font-weight="bold" fill="#1f2933">CNI, cluster DNS, kube-proxy</text>
+<rect x="230" y="87" width="178" height="34" rx="4" fill="#fff4e0" stroke="#b26b00"/>
+<text x="319.0" y="108.0" font-size="12" text-anchor="middle" font-weight="normal" fill="#1f2933">Add-on update, each</text>
+<rect x="412" y="87" width="178" height="34" rx="4" fill="#e6f4ea" stroke="#2e7d4f"/>
+<text x="501.0" y="108.0" font-size="12" text-anchor="middle" font-weight="normal" fill="#1f2933">With the cluster</text>
+<rect x="594" y="87" width="178" height="34" rx="4" fill="#e6f4ea" stroke="#2e7d4f"/>
+<text x="683.0" y="108.0" font-size="12" text-anchor="middle" font-weight="normal" fill="#1f2933">With the control plane</text>
+<rect x="776" y="87" width="178" height="34" rx="4" fill="#e6f4ea" stroke="#2e7d4f"/>
+<text x="865.0" y="108.0" font-size="12" text-anchor="middle" font-weight="normal" fill="#1f2933">With the cluster</text>
+<text x="16" y="148.0" font-size="13.5" text-anchor="start" font-weight="bold" fill="#1f2933">Ingress controller</text>
+<rect x="230" y="127" width="178" height="34" rx="4" fill="#fff4e0" stroke="#b26b00"/>
+<text x="319.0" y="148.0" font-size="12" text-anchor="middle" font-weight="normal" fill="#1f2933">Helm upgrade (LB controller)</text>
+<rect x="412" y="127" width="178" height="34" rx="4" fill="#e6f4ea" stroke="#2e7d4f"/>
+<text x="501.0" y="148.0" font-size="12" text-anchor="middle" font-weight="normal" fill="#1f2933">With the cluster (app routing)</text>
+<rect x="594" y="127" width="178" height="34" rx="4" fill="#e6f4ea" stroke="#2e7d4f"/>
+<text x="683.0" y="148.0" font-size="12" text-anchor="middle" font-weight="normal" fill="#1f2933">With the control plane</text>
+<rect x="776" y="127" width="178" height="34" rx="4" fill="#e6f4ea" stroke="#2e7d4f"/>
+<text x="865.0" y="148.0" font-size="12" text-anchor="middle" font-weight="normal" fill="#1f2933">With the cluster</text>
+<text x="16" y="188.0" font-size="13.5" text-anchor="start" font-weight="bold" fill="#1f2933">Storage CSI drivers</text>
+<rect x="230" y="167" width="178" height="34" rx="4" fill="#fff4e0" stroke="#b26b00"/>
+<text x="319.0" y="188.0" font-size="12" text-anchor="middle" font-weight="normal" fill="#1f2933">Add-on update, each</text>
+<rect x="412" y="167" width="178" height="34" rx="4" fill="#e6f4ea" stroke="#2e7d4f"/>
+<text x="501.0" y="188.0" font-size="12" text-anchor="middle" font-weight="normal" fill="#1f2933">With the cluster</text>
+<rect x="594" y="167" width="178" height="34" rx="4" fill="#e6f4ea" stroke="#2e7d4f"/>
+<text x="683.0" y="188.0" font-size="12" text-anchor="middle" font-weight="normal" fill="#1f2933">With the control plane</text>
+<rect x="776" y="167" width="178" height="34" rx="4" fill="#e6f4ea" stroke="#2e7d4f"/>
+<text x="865.0" y="188.0" font-size="12" text-anchor="middle" font-weight="normal" fill="#1f2933">With the cluster</text>
+<text x="16" y="228.0" font-size="13.5" text-anchor="start" font-weight="bold" fill="#1f2933">Monitoring stack</text>
+<rect x="230" y="207" width="178" height="34" rx="4" fill="#fff4e0" stroke="#b26b00"/>
+<text x="319.0" y="228.0" font-size="12" text-anchor="middle" font-weight="normal" fill="#1f2933">Add-on or Helm upgrade</text>
+<rect x="412" y="207" width="178" height="34" rx="4" fill="#eef0f3" stroke="#7b8794"/>
+<text x="501.0" y="228.0" font-size="12" text-anchor="middle" font-weight="normal" fill="#1f2933">Azure updates the agent</text>
+<rect x="594" y="207" width="178" height="34" rx="4" fill="#e6f4ea" stroke="#2e7d4f"/>
+<text x="683.0" y="228.0" font-size="12" text-anchor="middle" font-weight="normal" fill="#1f2933">With the control plane</text>
+<rect x="776" y="207" width="178" height="34" rx="4" fill="#e6f4ea" stroke="#2e7d4f"/>
+<text x="865.0" y="228.0" font-size="12" text-anchor="middle" font-weight="normal" fill="#1f2933">With the cluster</text>
+<text x="16" y="268.0" font-size="13.5" text-anchor="start" font-weight="bold" fill="#1f2933">Node kubelet</text>
+<rect x="230" y="247" width="178" height="34" rx="4" fill="#fff4e0" stroke="#b26b00"/>
+<text x="319.0" y="268.0" font-size="12" text-anchor="middle" font-weight="normal" fill="#1f2933">Node group update</text>
+<rect x="412" y="247" width="178" height="34" rx="4" fill="#e6f4ea" stroke="#2e7d4f"/>
+<text x="501.0" y="268.0" font-size="12" text-anchor="middle" font-weight="normal" fill="#1f2933">With the cluster</text>
+<rect x="594" y="247" width="178" height="34" rx="4" fill="#fff4e0" stroke="#b26b00"/>
+<text x="683.0" y="268.0" font-size="12" text-anchor="middle" font-weight="normal" fill="#1f2933">Machine pool update</text>
+<rect x="776" y="247" width="178" height="34" rx="4" fill="#e6f4ea" stroke="#2e7d4f"/>
+<text x="865.0" y="268.0" font-size="12" text-anchor="middle" font-weight="normal" fill="#1f2933">With the cluster</text>
+<text x="16" y="308.0" font-size="13.5" text-anchor="start" font-weight="bold" fill="#1f2933">Node OS image</text>
+<rect x="230" y="287" width="178" height="34" rx="4" fill="#fff4e0" stroke="#b26b00"/>
+<text x="319.0" y="308.0" font-size="12" text-anchor="middle" font-weight="normal" fill="#1f2933">Node group update (AMI)</text>
+<rect x="412" y="287" width="178" height="34" rx="4" fill="#fff4e0" stroke="#b26b00"/>
+<text x="501.0" y="308.0" font-size="12" text-anchor="middle" font-weight="normal" fill="#1f2933">Node OS channel</text>
+<rect x="594" y="287" width="178" height="34" rx="4" fill="#fff4e0" stroke="#b26b00"/>
+<text x="683.0" y="308.0" font-size="12" text-anchor="middle" font-weight="normal" fill="#1f2933">Machine pool update</text>
+<rect x="776" y="287" width="178" height="34" rx="4" fill="#e6f4ea" stroke="#2e7d4f"/>
+<text x="865.0" y="308.0" font-size="12" text-anchor="middle" font-weight="normal" fill="#1f2933">With the cluster</text>
+<rect x="16" y="346" width="22" height="16" rx="3" fill="#e6f4ea" stroke="#2e7d4f"/>
+<text x="46" y="359" font-size="13" text-anchor="start" font-weight="normal" fill="#1f2933">Moves in the same update as the Kubernetes control plane</text>
+<rect x="436" y="346" width="22" height="16" rx="3" fill="#fff4e0" stroke="#b26b00"/>
+<text x="466" y="359" font-size="13" text-anchor="start" font-weight="normal" fill="#1f2933">A separate update you run or schedule</text>
+<rect x="706" y="346" width="22" height="16" rx="3" fill="#eef0f3" stroke="#7b8794"/>
+<text x="736" y="359" font-size="13" text-anchor="start" font-weight="normal" fill="#1f2933">Managed separately by the cloud</text>
+</svg>

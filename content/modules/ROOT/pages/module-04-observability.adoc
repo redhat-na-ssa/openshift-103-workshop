@@ -1,16 +1,42 @@
 = Observability
 
-NOTE: This section is an outline. Its diagrams and exercises are being written and validated on ROSA and ARO.
+NOTE: The exercises in this section are written but not yet validated on ROSA and ARO.
 
 On EKS and AKS you choose a monitoring and logging stack and wire it up, usually CloudWatch or Azure Monitor with managed Prometheus.
 ROSA and ARO ship Prometheus, Alertmanager and console dashboards, with platform alerts tuned by SRE.
 Getting application logs into CloudWatch or Azure Monitor is your job, and this section does it.
 
-// Planned visual:
-// - Stack diagram: what you build on EKS and AKS (agents, managed
-//   Prometheus, Grafana, log shipping) vs what ships on ROSA and ARO
-//   (platform monitoring, user workload monitoring) and what you add
-//   (Logging Operator, ClusterLogForwarder, Arc for Azure Monitor).
+In this section you look at what monitoring ships, add the sample application's metrics and an alert rule, then forward its logs to CloudWatch from ROSA and to Azure Monitor Logs from ARO.
+
+== What You Build and What Ships
+
+.Observability stacks
+image::module-04-observability-stack.svg[On EKS and AKS you install collectors and agents that send to managed cloud services. On ROSA and ARO, monitoring ships in the cluster and you add the Logging Operator to send logs to CloudWatch or Log Analytics.,width=100%]
+
+[cols="2,3,3",options="header"]
+|===
+|Signal |EKS and AKS |ROSA and ARO
+
+|Platform metrics and alerts
+|Container Insights or managed Prometheus, as an add-on you enable
+|Ship with the cluster, with platform alerts and dashboards
+
+|Application metrics
+|Managed Prometheus scrape configuration, or your own Prometheus
+|User workload monitoring, with `ServiceMonitor` and `PrometheusRule` objects
+
+|Dashboards
+|Amazon or Azure Managed Grafana, or the cloud console
+|The OpenShift console, *Observe* menu
+
+|Application logs
+|Container Insights agent, or Fluent Bit you run
+|Logging Operator and a `ClusterLogForwarder`, which you install and run
+
+|Control plane logs
+|A switch on the cluster, to CloudWatch or diagnostic settings
+|ROSA HCP: a log forwarder in OpenShift Cluster Manager. ARO: the API server audit log, through the Logging Operator
+|===
 
 == On EKS and AKS
 
@@ -19,19 +45,901 @@ Getting application logs into CloudWatch or Azure Monitor is your job, and this 
 
 == On ROSA and ARO
 
-Outline of the exercise:
+Run each exercise on both clusters unless a step is marked ROSA or ARO.
 
-. Browse the built-in dashboards and the platform alerts.
-. Check that user workload monitoring is on; turn it on where it is not.
-. Add a ServiceMonitor for the sample application and query its metrics in the console.
-. Install the Logging Operator and forward application logs: to CloudWatch on ROSA, using an IAM role as in xref:module-02-cloud-credentials.adoc[Pod Cloud Credentials], and to Azure Monitor Logs on ARO.
+=== Exercise 1: Look at What Ships
+
+The platform monitoring stack runs in its own namespace:
+
+[source,bash]
+----
+oc get pods \
+  --namespace openshift-monitoring
+----
+
+Count the alert rules that come with the platform:
+
+[source,bash]
+----
+oc get prometheusrules \
+  --all-namespaces \
+  -o json \
+  | jq '[.items[].spec.groups[].rules[]
+      | select(.alert)] | length'
+----
+
+Several hundred rules cover the nodes, the control plane and every platform Operator.
+You did not write or install any of them, and they are updated with each OpenShift release.
+
+In the web console, open *Observe* > *Dashboards* and pick *Kubernetes / Compute Resources / Namespace (Pods)*, then the `sample-app` namespace.
+Then open *Observe* > *Alerting*.
+The `Watchdog` alert always fires: it proves that alerting works end to end.
+
+.EKS and AKS (reference only)
+[%collapsible]
+====
+EKS, turn on Container Insights with the CloudWatch Observability add-on:
+
+[source,bash]
+----
+aws eks create-addon \
+  --cluster-name my-cluster \
+  --addon-name amazon-cloudwatch-observability
+----
+
+AKS, turn on managed Prometheus and Container Insights:
+
+[source,bash]
+----
+az aks update \
+  --resource-group my-rg \
+  --name my-cluster \
+  --enable-azure-monitor-metrics
+----
+
+[source,bash]
+----
+az aks enable-addons \
+  --resource-group my-rg \
+  --name my-cluster \
+  --addons monitoring
+----
+
+The alert rules are yours to write, or to import from the recommended sets.
+====
+
+=== Exercise 2: Turn On User Workload Monitoring
+
+Platform monitoring watches the platform.
+Your applications' metrics need user workload monitoring, a second Prometheus that reads `ServiceMonitor` and `PrometheusRule` objects in your projects.
+
+Check whether it runs:
+
+[source,bash]
+----
+oc get pods \
+  --namespace openshift-user-workload-monitoring
+----
+
+If pods are listed, skip to the next exercise.
+If not, check whether the monitoring ConfigMap exists:
+
+[source,bash]
+----
+oc get configmap cluster-monitoring-config \
+  --namespace openshift-monitoring
+----
+
+If it does not exist, create it:
+
+[source,bash]
+----
+cat <<'EOF' | oc apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-monitoring-config
+  namespace: openshift-monitoring
+data:
+  config.yaml: |
+    enableUserWorkload: true
+EOF
+----
+
+If it exists, add the line `enableUserWorkload: true` at the top level of its `config.yaml` key:
+
+[source,bash]
+----
+oc edit configmap cluster-monitoring-config \
+  --namespace openshift-monitoring
+----
+
+Wait for the user workload Prometheus to start:
+
+[source,bash]
+----
+oc get pods \
+  --namespace openshift-user-workload-monitoring \
+  -w
+----
+
+Press Ctrl+C when the `prometheus-user-workload` and `thanos-ruler-user-workload` pods are `Running`.
+
+=== Exercise 3: Scrape the Sample Application
+
+The sample application serves Prometheus metrics on `/metrics`, on the same port as its API.
+Tell user workload monitoring to scrape it:
+
+[source,bash]
+----
+cat <<'EOF' | oc apply -f -
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: sample-app
+  namespace: sample-app
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sample-app
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+EOF
+----
+
+The network policy from xref:module-03-pod-networking.adoc[Pod Networking and Policy] already lets user workload monitoring reach the application.
+
+Send some requests through the application's route:
+
+[source,bash]
+----
+APP_HOST=$(oc get route sample-app \
+  --namespace sample-app \
+  -o jsonpath='{.spec.host}')
+----
+
+[source,bash]
+----
+for i in $(seq 1 100); do
+  curl -s -o /dev/null "https://${APP_HOST}/"
+done
+----
+
+In the console, open *Observe* > *Metrics* and run this query for the request rate by status code:
+
+[source,promql]
+----
+sum by (code) (
+  rate(sample_app_requests_total{namespace="sample-app"}[5m])
+)
+----
+
+And this one for the 95th percentile latency:
+
+[source,promql]
+----
+histogram_quantile(0.95,
+  sum by (le) (
+    rate(sample_app_request_duration_seconds_bucket{
+      namespace="sample-app"}[5m])
+  )
+)
+----
+
+The same queries work from the command line, through the Thanos Querier route that both clusters expose:
+
+[source,bash]
+----
+THANOS_HOST=$(oc get route thanos-querier \
+  --namespace openshift-monitoring \
+  -o jsonpath='{.spec.host}')
+----
+
+[source,bash]
+----
+curl -sG "https://${THANOS_HOST}/api/v1/query" \
+  -H "Authorization: Bearer $(oc whoami -t)" \
+  --data-urlencode \
+    'query=sum(sample_app_requests_total{namespace="sample-app"})' \
+  | jq '.data.result'
+----
+
+.EKS and AKS (reference only)
+[%collapsible]
+====
+With the Amazon Managed Service for Prometheus managed collector, scrape targets live in the scraper's Prometheus configuration, not in `ServiceMonitor` objects.
+With the Prometheus Operator installed yourself, the `ServiceMonitor` above works as is.
+
+Azure Monitor managed Prometheus reads its own copy of the CRD, in a different API group:
+
+[source,yaml]
+----
+apiVersion: azmonitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: sample-app
+  namespace: sample-app
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: sample-app
+  endpoints:
+  - port: http
+    path: /metrics
+----
+====
+
+=== Exercise 4: Add an Alert Rule
+
+Alert when the application fails to read from its object store, which uses the credentials from xref:module-02-cloud-credentials.adoc[Pod Cloud Credentials]:
+
+[source,bash]
+----
+cat <<'EOF' | oc apply -f -
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: sample-app
+  namespace: sample-app
+spec:
+  groups:
+  - name: sample-app
+    rules:
+    - alert: SampleAppObjectStoreErrors
+      expr: |
+        increase(sample_app_object_store_errors_total[5m]) > 0
+      for: 1m
+      labels:
+        severity: warning
+      annotations:
+        summary: The sample app cannot read its object store.
+EOF
+----
+
+In the console, open *Observe* > *Alerting* > *Alerting rules* and filter on *Source: User*.
+The rule is listed and `Inactive` while the application reads its bucket or container without errors.
+
+User-defined alerts go to the platform Alertmanager by default.
+Sending them to your team's channels means configuring Alertmanager receivers, which you can delegate to projects with a separate user workload Alertmanager.
+
+=== Exercise 5: Install the Logging Operator
+
+Logging is not part of the platform.
+You install the Red Hat OpenShift Logging Operator, which runs a Vector collector on every node, and tell it where to send logs.
+This workshop forwards only the sample application's logs, which keeps the cost low.
+
+Create the namespace, OperatorGroup and Subscription:
+
+[source,bash]
+----
+cat <<'EOF' | oc apply -f -
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: openshift-logging
+  labels:
+    openshift.io/cluster-monitoring: "true"
+---
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: cluster-logging
+  namespace: openshift-logging
+spec:
+  upgradeStrategy: Default
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: cluster-logging
+  namespace: openshift-logging
+spec:
+  channel: stable-6.6
+  installPlanApproval: Automatic
+  name: cluster-logging
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+EOF
+----
+
+On ROSA HCP the `openshift-logging` namespace already exists, and the command only adds the label.
+
+Wait for the Operator to install:
+
+[source,bash]
+----
+oc get csv \
+  --namespace openshift-logging \
+  -w
+----
+
+Press Ctrl+C when the `cluster-logging` ClusterServiceVersion shows `Succeeded`.
+
+The collector runs under a service account that you grant permission to read application logs.
+Create both before you create a log forwarder:
+
+[source,bash]
+----
+oc create serviceaccount logging-collector \
+  --namespace openshift-logging
+----
+
+[source,bash]
+----
+oc adm policy add-cluster-role-to-user \
+  collect-application-logs \
+  --serviceaccount logging-collector \
+  --namespace openshift-logging
+----
+
+=== Exercise 6: Forward Logs to CloudWatch (ROSA)
+
+The collector writes to CloudWatch with an IAM role, which it assumes with its service account token.
+This is the same STS pattern as in xref:module-02-cloud-credentials.adoc[Pod Cloud Credentials].
+
+Work in your ROSA terminal.
+Collect the values you need; they are the same as in Module 2:
+
+[source,bash]
+----
+AWS_REGION=$(rosa describe cluster \
+  --cluster "$CLUSTER" \
+  --output json \
+  | jq -r '.region.id')
+----
+
+[source,bash]
+----
+OIDC_PROVIDER=$(oc get authentication.config.openshift.io \
+  cluster \
+  -o jsonpath='{.spec.serviceAccountIssuer}' \
+  | sed 's|^https://||')
+----
+
+[source,bash]
+----
+ACCOUNT_ID=$(aws sts get-caller-identity \
+  --query Account \
+  --output text)
+----
+
+Write a trust policy for the collector's service account:
+
+[source,bash]
+----
+cat > logging-trust.json <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {
+      "Federated":
+        "arn:aws:iam::${ACCOUNT_ID}:oidc-provider/${OIDC_PROVIDER}"
+    },
+    "Action": "sts:AssumeRoleWithWebIdentity",
+    "Condition": {
+      "StringEquals": {
+        "${OIDC_PROVIDER}:sub":
+          "system:serviceaccount:openshift-logging:logging-collector"
+      }
+    }
+  }]
+}
+EOF
+----
+
+Write a permissions policy that only allows log groups named after your cluster:
+
+[source,bash]
+----
+LOG_GROUPS="arn:aws:logs:${AWS_REGION}:${ACCOUNT_ID}:log-group"
+----
+
+[source,bash]
+----
+cat > logging-policy.json <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:DescribeLogGroups",
+      "logs:DescribeLogStreams",
+      "logs:PutLogEvents",
+      "logs:PutRetentionPolicy"
+    ],
+    "Resource": "${LOG_GROUPS}:workshop-${CLUSTER}*"
+  }]
+}
+EOF
+----
+
+Create the role and attach the policy:
+
+[source,bash]
+----
+aws iam create-role \
+  --role-name "${CLUSTER}-logging" \
+  --assume-role-policy-document file://logging-trust.json
+----
+
+[source,bash]
+----
+aws iam put-role-policy \
+  --role-name "${CLUSTER}-logging" \
+  --policy-name cloudwatch-logs \
+  --policy-document file://logging-policy.json
+----
+
+Store the role's ARN in a secret that the log forwarder reads:
+
+[source,bash]
+----
+LOGGING_ROLE_ARN=$(aws iam get-role \
+  --role-name "${CLUSTER}-logging" \
+  --query Role.Arn \
+  --output text)
+----
+
+[source,bash]
+----
+oc create secret generic cloudwatch-role \
+  --namespace openshift-logging \
+  --from-literal role_arn="$LOGGING_ROLE_ARN"
+----
+
+Create the log forwarder.
+It reads only the `sample-app` namespace and writes to a log group named `workshop-<cluster>.application`:
+
+[source,bash]
+----
+cat <<EOF | oc apply -f -
+apiVersion: observability.openshift.io/v1
+kind: ClusterLogForwarder
+metadata:
+  name: workshop
+  namespace: openshift-logging
+spec:
+  serviceAccount:
+    name: logging-collector
+  inputs:
+  - name: sample-app
+    type: application
+    application:
+      includes:
+      - namespace: sample-app
+  outputs:
+  - name: cloudwatch
+    type: cloudwatch
+    cloudwatch:
+      region: ${AWS_REGION}
+      groupName: 'workshop-${CLUSTER}.{.log_type||"none"}'
+      authentication:
+        type: iamRole
+        iamRole:
+          roleARN:
+            secretName: cloudwatch-role
+            key: role_arn
+          token:
+            from: serviceAccount
+  pipelines:
+  - name: sample-app-to-cloudwatch
+    inputRefs:
+    - sample-app
+    outputRefs:
+    - cloudwatch
+EOF
+----
+
+Check that the forwarder is ready and its collector pods run:
+
+[source,bash]
+----
+oc get clusterlogforwarder workshop \
+  --namespace openshift-logging \
+  -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+----
+
+[source,bash]
+----
+oc get pods \
+  --namespace openshift-logging
+----
+
+Send a few requests to the application, as in Exercise 3, then read the log group:
+
+[source,bash]
+----
+aws logs tail "workshop-${CLUSTER}.application" \
+  --region "$AWS_REGION" \
+  --since 10m
+----
+
+Each event is a JSON document with the log line in `message` and the pod's metadata in `kubernetes`.
+
+.EKS and AKS (reference only)
+[%collapsible]
+====
+On EKS, the CloudWatch Observability add-on from Exercise 1 also ships container logs, with Fluent Bit, to log groups under `/aws/containerinsights/<cluster>/`.
+Its agent uses the node IAM role or an EKS Pod Identity association:
+
+[source,bash]
+----
+aws eks create-pod-identity-association \
+  --cluster-name my-cluster \
+  --namespace amazon-cloudwatch \
+  --service-account cloudwatch-agent \
+  --role-arn arn:aws:iam::111122223333:role/my-cw-role
+----
+
+EKS control plane logs are a cluster setting:
+
+[source,bash]
+----
+aws eks update-cluster-config \
+  --name my-cluster \
+  --logging \
+    '{"clusterLogging":[{"types":["api","audit"],"enabled":true}]}'
+----
+====
+
+=== Exercise 7: Forward Logs to Azure Monitor Logs (ARO)
+
+The collector writes to a Log Analytics workspace through the Azure Monitor Logs Ingestion API.
+That needs a custom table, a data collection endpoint and a data collection rule, and an identity allowed to send to the rule.
+The identity is a user-assigned managed identity that trusts the collector's service account, the same workload identity pattern as in xref:module-02-cloud-credentials.adoc[Pod Cloud Credentials].
+
+Work in your ARO terminal.
+The steps use the `CLUSTER` and `RESOURCE_GROUP` variables from Module 2.
+If you open a new terminal, set them again:
+
+[source,bash]
+----
+export CLUSTER=<your-aro-cluster-name>
+export RESOURCE_GROUP=<your-resource-group>
+----
+
+Look up the cluster's region and OIDC issuer:
+
+[source,bash]
+----
+LOCATION=$(az aro show \
+  --resource-group "$RESOURCE_GROUP" \
+  --name "$CLUSTER" \
+  --query location \
+  --output tsv)
+----
+
+[source,bash]
+----
+OIDC_ISSUER=$(oc get authentication.config.openshift.io \
+  cluster \
+  -o jsonpath='{.spec.serviceAccountIssuer}')
+----
+
+Create a Log Analytics workspace and a custom table for the application's logs:
+
+[source,bash]
+----
+az monitor log-analytics workspace create \
+  --resource-group "$RESOURCE_GROUP" \
+  --workspace-name sample-app-logs \
+  --location "$LOCATION"
+----
+
+[source,bash]
+----
+az monitor log-analytics workspace table create \
+  --resource-group "$RESOURCE_GROUP" \
+  --workspace-name sample-app-logs \
+  --name SampleAppLogs_CL \
+  --columns \
+    TimeGenerated=datetime \
+    Message=string \
+    Level=string \
+    Namespace=string \
+    Pod=string
+----
+
+Create a data collection endpoint, which is the URL the collector sends to:
+
+[source,bash]
+----
+az monitor data-collection endpoint create \
+  --resource-group "$RESOURCE_GROUP" \
+  --name sample-app-dce \
+  --location "$LOCATION" \
+  --public-network-access Enabled
+----
+
+Collect the IDs the rule needs:
+
+[source,bash]
+----
+DCE_ID=$(az monitor data-collection endpoint show \
+  --resource-group "$RESOURCE_GROUP" \
+  --name sample-app-dce \
+  --query id \
+  --output tsv)
+----
+
+[source,bash]
+----
+WORKSPACE_ID=$(az monitor log-analytics workspace show \
+  --resource-group "$RESOURCE_GROUP" \
+  --workspace-name sample-app-logs \
+  --query id \
+  --output tsv)
+----
+
+Write the data collection rule.
+It declares the fields the collector sends, and a transformation that maps them to the table's columns.
+Set the transformation first:
+
+[source,bash]
+----
+TRANSFORM="source | project TimeGenerated,\
+ Message = message, Level = level,\
+ Namespace = tostring(kubernetes.namespace_name),\
+ Pod = tostring(kubernetes.pod_name)"
+----
+
+Then write the rule:
+
+[source,bash]
+----
+cat > sample-app-dcr.json <<EOF
+{
+  "location": "${LOCATION}",
+  "properties": {
+    "dataCollectionEndpointId": "${DCE_ID}",
+    "streamDeclarations": {
+      "Custom-SampleAppLogs_CL": {
+        "columns": [
+          {"name": "TimeGenerated", "type": "datetime"},
+          {"name": "message", "type": "string"},
+          {"name": "level", "type": "string"},
+          {"name": "kubernetes", "type": "dynamic"}
+        ]
+      }
+    },
+    "destinations": {
+      "logAnalytics": [{
+        "name": "workspace",
+        "workspaceResourceId": "${WORKSPACE_ID}"
+      }]
+    },
+    "dataFlows": [{
+      "streams": ["Custom-SampleAppLogs_CL"],
+      "destinations": ["workspace"],
+      "outputStream": "Custom-SampleAppLogs_CL",
+      "transformKql": "${TRANSFORM}"
+    }]
+  }
+}
+EOF
+----
+
+Create the rule:
+
+[source,bash]
+----
+az monitor data-collection rule create \
+  --resource-group "$RESOURCE_GROUP" \
+  --name sample-app-dcr \
+  --location "$LOCATION" \
+  --rule-file sample-app-dcr.json
+----
+
+Create the managed identity and let it trust the collector's service account:
+
+[source,bash]
+----
+az identity create \
+  --resource-group "$RESOURCE_GROUP" \
+  --name sample-app-logging
+----
+
+[source,bash]
+----
+az identity federated-credential create \
+  --resource-group "$RESOURCE_GROUP" \
+  --identity-name sample-app-logging \
+  --name logging-collector \
+  --issuer "$OIDC_ISSUER" \
+  --subject \
+    system:serviceaccount:openshift-logging:logging-collector \
+  --audiences api://AzureADTokenExchange
+----
+
+Allow the identity to send to the rule:
+
+[source,bash]
+----
+DCR_ID=$(az monitor data-collection rule show \
+  --resource-group "$RESOURCE_GROUP" \
+  --name sample-app-dcr \
+  --query id \
+  --output tsv)
+----
+
+[source,bash]
+----
+PRINCIPAL_ID=$(az identity show \
+  --resource-group "$RESOURCE_GROUP" \
+  --name sample-app-logging \
+  --query principalId \
+  --output tsv)
+----
+
+[source,bash]
+----
+az role assignment create \
+  --assignee-object-id "$PRINCIPAL_ID" \
+  --assignee-principal-type ServicePrincipal \
+  --role "Monitoring Metrics Publisher" \
+  --scope "$DCR_ID"
+----
+
+Collect the values the log forwarder needs:
+
+[source,bash]
+----
+DCE_URL=$(az monitor data-collection endpoint show \
+  --resource-group "$RESOURCE_GROUP" \
+  --name sample-app-dce \
+  --query logsIngestion.endpoint \
+  --output tsv)
+----
+
+[source,bash]
+----
+DCR_IMMUTABLE_ID=$(az monitor data-collection rule show \
+  --resource-group "$RESOURCE_GROUP" \
+  --name sample-app-dcr \
+  --query immutableId \
+  --output tsv)
+----
+
+[source,bash]
+----
+CLIENT_ID=$(az identity show \
+  --resource-group "$RESOURCE_GROUP" \
+  --name sample-app-logging \
+  --query clientId \
+  --output tsv)
+TENANT_ID=$(az account show \
+  --query tenantId \
+  --output tsv)
+----
+
+Create the log forwarder:
+
+[source,bash]
+----
+cat <<EOF | oc apply -f -
+apiVersion: observability.openshift.io/v1
+kind: ClusterLogForwarder
+metadata:
+  name: workshop
+  namespace: openshift-logging
+spec:
+  serviceAccount:
+    name: logging-collector
+  inputs:
+  - name: sample-app
+    type: application
+    application:
+      includes:
+      - namespace: sample-app
+  outputs:
+  - name: log-analytics
+    type: azureLogsIngestion
+    url: ${DCE_URL}
+    azureLogsIngestion:
+      dcrImmutableId: ${DCR_IMMUTABLE_ID}
+      streamName: Custom-SampleAppLogs_CL
+      authentication:
+        type: workloadIdentity
+        workloadIdentity:
+          tenantId: ${TENANT_ID}
+          clientId: ${CLIENT_ID}
+  pipelines:
+  - name: sample-app-to-log-analytics
+    inputRefs:
+    - sample-app
+    outputRefs:
+    - log-analytics
+EOF
+----
+
+Check that the forwarder is ready and its collector pods run:
+
+[source,bash]
+----
+oc get clusterlogforwarder workshop \
+  --namespace openshift-logging \
+  -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+----
+
+[source,bash]
+----
+oc get pods \
+  --namespace openshift-logging
+----
+
+Send a few requests to the application, as in Exercise 3.
+The first records can take several minutes to appear in a new table.
+Then query the table:
+
+[source,bash]
+----
+WORKSPACE_GUID=$(az monitor log-analytics workspace show \
+  --resource-group "$RESOURCE_GROUP" \
+  --workspace-name sample-app-logs \
+  --query customerId \
+  --output tsv)
+----
+
+[source,bash]
+----
+az monitor log-analytics query \
+  --workspace "$WORKSPACE_GUID" \
+  --analytics-query \
+    'SampleAppLogs_CL | sort by TimeGenerated desc | take 10' \
+  --output table
+----
+
+The `Message` column holds the application's own JSON log line, which you can unpack in a query with `parse_json`.
+
+Older guides use the `azureMonitor` output type with a workspace shared key.
+It sends through the HTTP Data Collector API, which Microsoft stopped supporting in September 2026, and the output is deprecated in OpenShift Logging 6.6.
+
+.EKS and AKS (reference only)
+[%collapsible]
+====
+On AKS, Container Insights from Exercise 1 already sends container logs to the `ContainerLogV2` table in Log Analytics, with no table or rule to write.
+Control plane logs go to Log Analytics through diagnostic settings:
+
+[source,bash]
+----
+az monitor diagnostic-settings create \
+  --name aks-control-plane \
+  --resource <aks-cluster-resource-id> \
+  --workspace <workspace-resource-id> \
+  --logs '[{"category":"kube-audit-admin","enabled":true}]'
+----
+
+ARO can get the same Container Insights experience only by connecting the cluster to Azure Arc first.
+====
+
+=== Exercise 8: Clean Up
+
+Delete the log forwarder on both clusters.
+The collector pods stop:
+
+[source,bash]
+----
+oc delete clusterlogforwarder workshop \
+  --namespace openshift-logging
+----
+
+Keep the ServiceMonitor and the alert rule; they cost nothing.
+The cloud resources (the IAM role and log group on AWS, the workspace, rule, endpoint and identity on Azure) are listed in the cleanup part of the xref:setup-requirements.adoc[Setup Requirements].
 
 == What Matters
 
-* Platform monitoring is preconfigured and SRE-owned. User workload monitoring covers your applications.
-* Application logging (Vector, optionally Loki) is an optional Operator that you install and run.
+* Platform monitoring is preconfigured and managed by Red Hat.
+User workload monitoring covers your applications, and you may need to turn it on.
+* Application logging (Vector, optionally Loki for in-cluster storage) is an optional Operator that you install, upgrade and run.
+* Log forwarding uses the same short-lived credentials as your applications: an IAM role through STS on ROSA, a managed identity through workload identity on ARO.
 * Azure Monitor Container Insights reaches ARO only through Azure Arc.
-* ROSA HCP control plane logs can be forwarded to CloudWatch.
+* ROSA HCP control plane logs, such as the API server audit log, are not on your nodes.
+You forward them to CloudWatch or S3 with a log forwarder in OpenShift Cluster Manager.
 
 == Where Each Wins
 
@@ -42,9 +950,20 @@ Outline of the exercise:
 |Useful metrics, dashboards and platform alerts from the first minute.
 |One-click managed backends with long-term storage and nothing in the cluster to run.
 
-|The same monitoring stack on both clouds.
-|Native cloud console integration; on ARO, Azure Monitor needs Arc.
+|The same monitoring and logging stack, and the same `ServiceMonitor` objects, on both clouds.
+|Native cloud console integration; on ARO, Azure Monitor needs Arc or a log forwarder you build.
+
+|Platform alert rules are written and updated by Red Hat with each release.
+|Container logs reach CloudWatch or Log Analytics without a table, rule or forwarder to write.
 |===
+
+== App Teams Will Notice
+
+* App teams write their own `ServiceMonitor` and `PrometheusRule` objects in their projects.
+Grant them the `monitoring-edit` role in their projects so they can.
+* Logs arrive with the application's line as a string field next to Kubernetes metadata.
+Structured JSON logs make queries in CloudWatch and Log Analytics much easier.
+* A default-deny network policy must allow user workload monitoring, or scraping stops.
 
 == References
 
@@ -59,7 +978,8 @@ Outline of the exercise:
 ** https://cloud.redhat.com/experts/o11y/openshift-logging6-rosa-hcp/[Logging to CloudWatch on ROSA HCP (Cloud Experts)]
 * ARO
 ** https://learn.microsoft.com/azure/azure-monitor/containers/kubernetes-monitoring-enable-arc[Azure Monitor for Arc-enabled clusters]
-** https://cloud.redhat.com/experts/aro/clf-to-azure/[Forwarding logs to Azure Monitor (Cloud Experts)]
+** https://learn.microsoft.com/azure/azure-monitor/logs/custom-logs-migrate[Migrating from the HTTP Data Collector API]
 * OpenShift
 ** https://docs.redhat.com/en/documentation/monitoring_stack_for_red_hat_openshift/4.21/html/about_monitoring/about-ocp-monitoring[About OpenShift monitoring]
-** https://docs.redhat.com/en/documentation/red_hat_openshift_logging/6.5/html/configuring_logging/configuring-log-forwarding[Configuring log forwarding]
+** https://docs.redhat.com/en/documentation/red_hat_openshift_logging/6.6/html/integrate/forwarding-to-azure[Forwarding logs to Azure Monitor Logs]
+** https://docs.redhat.com/en/documentation/red_hat_openshift_logging/6.6/html-single/integrate/index[Forwarding logs to CloudWatch]
