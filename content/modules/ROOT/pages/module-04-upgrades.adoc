@@ -78,7 +78,7 @@ A new cluster can report `Upgradeable=False` with the reason `AdminAckRequired`.
 That is an acknowledgment gate, covered in Exercise 4, and it blocks only the next minor version.
 
 The update channel decides which versions are offered.
-Patch releases arrive in the current channel, and a new minor version needs a channel change, which never happens on its own.
+Patch releases arrive in the current channel, and a new minor version needs a channel change, which you make, apart from the exceptions in <<upgrades-without-you,When the platform upgrades without you>>.
 
 [tabs]
 ======
@@ -526,9 +526,9 @@ Machine pools can trail the control plane by up to two minor versions, so you ch
 Each replacement adds a new node before removing an old one, so the pool needs room in your EC2 quota and subnet.
 * Standard ARO upgrades the control plane and workers together, and you start every update yourself.
 * A new minor version needs a channel change and sometimes an administrator acknowledgment.
-It never happens on its own.
-* Red Hat may apply critical security fixes without waiting for you.
-On ROSA, a cluster left on a version past its end of life has its control plane upgraded automatically.
+* [[upgrades-without-you]]*When the platform upgrades without you:* on both services, Red Hat may apply a critical security fix, on ARO after a 72-hour notice.
+On ROSA, a control plane past its end of life is moved to the next supported minor version; EKS does the same at the end of extended support.
+Otherwise a minor version never moves on its own.
 * Existing ARO clusters can update to a new minor version once an update path reaches the fast channel.
 New clusters can be installed on that version only months after OpenShift's general availability.
 * OpenShift does not support rolling back an upgrade.
