@@ -1,5 +1,9 @@
 = Who Manages What
 
+NOTE: Validated on ROSA HCP 4.20 and 4.21 and ARO 4.21 in October 2026.
+Steps and statements that were not checked on a live cluster carry a *Not validated* note.
+The comparison tables and summaries come from vendor documentation.
+
 On EKS and AKS, the cloud provider runs the control plane and you run almost everything else.
 On ROSA and ARO, Red Hat site reliability engineers (SRE) and the cloud provider also run the worker operating system and the platform components, and some settings you are used to changing are no longer yours.
 This section draws that line for all four platforms, and covers support, cost and backup, because they follow from the same line.
@@ -276,6 +280,9 @@ ARO protects its platform through the deny assignment on the Azure side and its 
 
 On both, changes the service does not support can take the cluster out of support.
 ROSA calls this _limited support_: SRE stops proactive monitoring and the SLA no longer applies until the cause is fixed.
+
+NOTE: *Not validated:* the `Limited Support` section, because the workshop's ROSA cluster was not in limited support.
+
 If your ROSA cluster is in limited support, `rosa describe cluster` shows a `Limited Support` section with the reasons.
 
 === Exercise 5: Know Your Support Path
@@ -340,6 +347,8 @@ On ROSA and ARO you install the OpenShift API for Data Protection (OADP) Operato
 
 OADP is configured with one DataProtectionApplication resource.
 These samples show its shape on each cloud; this workshop does not run them.
+
+NOTE: *Not validated:* the two OADP samples below, which were not applied to a cluster.
 
 .Sample OADP configuration for ROSA
 [%collapsible]

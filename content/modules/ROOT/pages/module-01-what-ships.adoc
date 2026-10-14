@@ -1,6 +1,8 @@
 = What Ships and How You Extend It
 
-NOTE: The exercise on this page has not yet been run end to end on the workshop's ROSA and ARO clusters. Expect small differences in command output until it has been validated.
+NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026.
+Steps and statements that were not checked on a live cluster carry a *Not validated* note.
+The comparison tables and summaries come from vendor documentation.
 
 A new EKS cluster comes with a CNI, kube-proxy and CoreDNS, and you add the rest.
 A new ROSA or ARO cluster comes with dozens of platform components, each run by an Operator, tested together and upgraded with the cluster.
@@ -267,6 +269,8 @@ kubectl get storageclass
 
 === Exercise 5: Browse the Software Catalog
 
+NOTE: *Not validated:* where the Software Catalog appears in the web console, because the console was not opened during validation.
+
 The Software Catalog lists Operators from catalog sources.
 In the web console it is under *Ecosystem*, and it was called OperatorHub in earlier releases.
 
@@ -440,6 +444,9 @@ oc get route openshift-gitops-server \
   --namespace openshift-gitops \
   -o jsonpath='{.spec.host}{"\n"}'
 ----
+
+NOTE: *Not validated:* the console login itself.
+The route answered and Argo CD offered the OpenShift login, but nobody signed in through a browser.
 
 Log in with *Log in via OpenShift*, using your cluster credentials.
 
