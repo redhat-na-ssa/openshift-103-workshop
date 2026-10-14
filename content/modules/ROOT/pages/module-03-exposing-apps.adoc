@@ -105,10 +105,11 @@ NOTE: *Not validated:* `rosa list ingresses`, which needs a `rosa` login to the 
 [source,bash]
 ----
 rosa list ingresses \
-  --cluster <cluster-name>
+  --cluster "$CLUSTER"
 ----
 
-On ROSA you change the default ingress with `rosa edit ingress`, not by editing the IngressController object.
+On ROSA, SRE manages the default ingress controller, and `rosa edit ingress` changes only its visibility and component routes.
+For anything else, such as sharding, a wildcard or namespace ownership policy, or another load balancer type, you add your own IngressController, or use the AWS Load Balancer Operator for ALBs.
 
 NOTE: *Not validated:* changing the default ingress with `rosa edit ingress`, which comes from the ROSA documentation.
 --
@@ -127,8 +128,8 @@ LB_IP=$(oc get service router-default \
 [source,bash]
 ----
 MANAGED_RG=$(az aro show \
-  --resource-group <resource-group> \
-  --name <cluster-name> \
+  --resource-group "$RESOURCE_GROUP" \
+  --name "$CLUSTER" \
   --query clusterProfile.resourceGroupId \
   --output tsv)
 ----
@@ -152,8 +153,8 @@ See the ingress the way the service manages it:
 [source,bash]
 ----
 az aro show \
-  --resource-group <resource-group> \
-  --name <cluster-name> \
+  --resource-group "$RESOURCE_GROUP" \
+  --name "$CLUSTER" \
   --query ingressProfiles
 ----
 --
@@ -497,7 +498,7 @@ The load balancer type was read from its host name and annotations, not checked 
 * A Route is OpenShift's own resource, with edge, re-encrypt and passthrough TLS. Ingress objects still work and become Routes.
 * OpenShift only turns an Ingress into a Route when it has no `ingressClassName` or uses `openshift-default`. An Ingress that still says `alb` or `webapprouting.kubernetes.azure.com` is silently ignored.
 * ALB and NGINX annotations do nothing here. Route behavior is set with `haproxy.router.openshift.io/*` annotations instead, for example timeouts and rewrites.
-* On ROSA, SRE owns the default ingress controller's settings, and you change them with `rosa edit ingress`. For other needs you add another ingress controller, or the AWS Load Balancer Operator for ALBs.
+* On ROSA, SRE owns the default ingress controller's settings, and `rosa edit ingress` changes only its visibility and component routes. For other needs you add another ingress controller, or the AWS Load Balancer Operator for ALBs.
 * OpenShift supports the Gateway API from 4.19. Each Gateway gets its own load balancer and needs its own certificate. On ROSA that load balancer is a Classic Load Balancer, not a Network Load Balancer like the router's. The ROSA and ARO documentation do not cover it yet, it needs `cluster-admin` (not `dedicated-admin` on ROSA), and on ARO's default domain you manage its DNS yourself, so check it on your clusters before you rely on it.
 
 == Where Each Wins

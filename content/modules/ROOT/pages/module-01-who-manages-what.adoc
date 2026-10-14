@@ -60,8 +60,8 @@ image::module-01-responsibility.svg[Who is responsible for each area on EKS, AKS
 Read the chart by row:
 
 * *Control plane and etcd*: always someone else's job. On ROSA and ARO, Red Hat SRE is part of that team.
-* *Node operating system and platform components*: this is the real difference. On EKS, AWS publishes patched AMIs and add-on versions, and you roll each of them out. On AKS, the default node OS channel applies Microsoft's node images for you. On ROSA and ARO the worker OS (Red Hat Enterprise Linux CoreOS) and every platform Operator are patched together, in the same upgrade as the cluster, and SRE monitors and repairs them.
-* *Cluster upgrades*: shared everywhere. On ROSA you schedule upgrades, or opt into automatic ones, and SRE monitors them; the control plane and each machine pool upgrade separately, control plane first. On ARO you start the upgrade yourself, and it updates the whole cluster at once. Neither service upgrades your cluster without you, except for a critical CVE. Module 4 covers both.
+* *Node operating system and platform components*: this is the real difference. On EKS, AWS publishes patched AMIs and add-on versions, and you roll each of them out. On AKS, the default node OS channel applies Microsoft's node images for you. On ROSA and ARO, Red Hat ships the worker OS (Red Hat Enterprise Linux CoreOS) and every platform Operator in the OpenShift release, so there is no node image to track, and SRE monitors and repairs them. On ARO they all move in one cluster update. On ROSA the platform Operators move with the control plane, and the worker OS moves only when you upgrade each machine pool.
+* *Cluster upgrades*: shared everywhere. On ROSA you schedule upgrades, or opt into automatic patch upgrades, and SRE monitors them; the control plane and each machine pool upgrade separately, control plane first. On ARO you start the upgrade yourself, and it updates the whole cluster at once. Neither service upgrades your cluster without you, except for a critical security fix and, on ROSA, a control plane past its end of life (see xref:module-04-upgrades.adoc#upgrades-without-you[When the platform upgrades without you]). Module 4 covers both.
 * *Node capacity, identity, backup and workloads*: yours on every platform.
 
 The cells are simplified.
@@ -81,6 +81,112 @@ Watch the platform refuse a change to a resource SRE owns.
 * <<ex-module-01-who-manages-what-5>> +
 Learn where to open a support case on each platform and what it covers.
 
+[#before-you-start]
+=== Before You Start
+
+Open two terminals, one for each cluster, and log in to each as the cluster administrator.
+Every exercise in the workshop runs in these terminals and uses the variables you set here.
+If you open a new terminal later, run only the `export` steps in it: the kubeconfig file keeps your login.
+
+[tabs]
+======
+ROSA (AWS)::
++
+--
+Give this terminal its own kubeconfig file:
+
+[source,bash]
+----
+export KUBECONFIG=~/.kube/rosa
+----
+
+Set the cluster name:
+
+[source,bash]
+----
+export CLUSTER=<rosa-cluster-name>
+----
+
+NOTE: *Not validated:* `rosa create admin`, which needs the `rosa` CLI logged in to the cluster's organization.
+Logging in with the credentials it prints was validated.
+
+Create a temporary cluster administrator:
+
+[source,bash]
+----
+rosa create admin \
+  --cluster "$CLUSTER"
+----
+
+The command prints an `oc login` command with a generated password.
+Wait about a minute, then run that command.
+If it says the cluster already has a `cluster-admin` user, your facilitator created it: run the `oc login` command they gave you instead.
+--
+ARO (Azure)::
++
+--
+Give this terminal its own kubeconfig file:
+
+[source,bash]
+----
+export KUBECONFIG=~/.kube/aro
+----
+
+Set the cluster name and resource group:
+
+[source,bash]
+----
+export CLUSTER=<aro-cluster-name>
+----
+
+[source,bash]
+----
+export RESOURCE_GROUP=<resource-group>
+----
+
+Look up the API server URL:
+
+[source,bash]
+----
+API_URL=$(az aro show \
+  --name "$CLUSTER" \
+  --resource-group "$RESOURCE_GROUP" \
+  --query apiserverProfile.url \
+  --output tsv)
+----
+
+Look up the kubeadmin password:
+
+[source,bash]
+----
+KUBEADMIN_PASSWORD=$(az aro list-credentials \
+  --name "$CLUSTER" \
+  --resource-group "$RESOURCE_GROUP" \
+  --query kubeadminPassword \
+  --output tsv)
+----
+
+Log in:
+
+[source,bash]
+----
+oc login "$API_URL" \
+  --username kubeadmin \
+  --password "$KUBEADMIN_PASSWORD"
+----
+--
+======
+
+Check who you are, in each terminal:
+
+[source,bash]
+----
+oc whoami
+----
+
+ROSA shows `cluster-admin` and ARO shows `kube:admin`.
+Module 2 replaces these shared logins with people's own.
+
 [#ex-module-01-who-manages-what-1]
 === Exercise 1: Identify the Architecture
 
@@ -94,7 +200,7 @@ Describe the cluster, keeping only its control plane type and version:
 [source,bash]
 ----
 rosa describe cluster \
-  --cluster <cluster-name> \
+  --cluster "$CLUSTER" \
   --output json \
   | jq '{hcp: .hypershift.enabled, version: .version.raw_id}'
 ----
@@ -109,8 +215,8 @@ Show the cluster profile:
 [source,bash]
 ----
 az aro show \
-  --resource-group <resource-group> \
-  --name <cluster-name> \
+  --resource-group "$RESOURCE_GROUP" \
+  --name "$CLUSTER" \
   --query clusterProfile
 ----
 
@@ -171,8 +277,8 @@ Save its ID:
 [source,bash]
 ----
 MANAGED_RG=$(az aro show \
-  --resource-group <resource-group> \
-  --name <cluster-name> \
+  --resource-group "$RESOURCE_GROUP" \
+  --name "$CLUSTER" \
   --query clusterProfile.resourceGroupId \
   --output tsv)
 ----
@@ -315,7 +421,7 @@ If your ROSA cluster is in limited support, `rosa describe cluster` shows a `Lim
 |Microsoft and Red Hat support engineers together
 
 |What you need
-|At least an AWS Developer Support plan to open ROSA technical cases. Red Hat support is included
+|An AWS support plan that includes technical support cases, to open ROSA cases with AWS. Red Hat support is included
 |An Azure support plan to open cases with Microsoft, and the Red Hat pull secret on the cluster to open them with Red Hat
 |===
 
@@ -483,7 +589,7 @@ The pricing pages in the references have current numbers.
 |===
 |ROSA and ARO win |EKS and AKS win
 
-|SRE runs the node OS, the platform components and their upgrades, around the clock.
+|SRE monitors and repairs the node OS and platform components around the clock, and watches the upgrades you start or schedule.
 |Full control: any add-on, any version, any configuration.
 
 |One support case covers the cloud and the platform.
@@ -514,10 +620,11 @@ The pricing pages in the references have current numbers.
 ** https://learn.microsoft.com/azure/aks/free-standard-pricing-tiers[AKS pricing tiers]
 ** https://learn.microsoft.com/azure/backup/azure-kubernetes-service-backup-overview[Azure Backup for AKS]
 * ROSA
-** https://docs.openshift.com/rosa/rosa_policy/rosa-policy-responsibility-matrix.html[ROSA responsibility matrix]
+** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/introduction_to_rosa/policies-and-service-definition#rosa-policy-responsibility-matrix[ROSA responsibility matrix]
 ** https://docs.aws.amazon.com/rosa/latest/userguide/rosa-architecture-models.html[ROSA architecture models]
 ** https://aws.amazon.com/rosa/pricing/[ROSA pricing]
 ** https://docs.aws.amazon.com/rosa/latest/userguide/rosa-support.html[ROSA support]
+** https://docs.aws.amazon.com/awssupport/latest/user/aws-support-plans.html[AWS support plans]
 ** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/backup_and_restore/oadp-application-backup-and-restore[OADP on ROSA]
 * ARO
 ** https://learn.microsoft.com/azure/openshift/responsibility-matrix[ARO responsibility matrix]

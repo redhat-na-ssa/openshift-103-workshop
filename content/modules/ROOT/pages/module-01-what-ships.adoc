@@ -19,11 +19,11 @@ This section tours what ships, then shows how you add more through the Software 
 On ROSA and ARO, every capability a production cluster needs arrives in one of three ways.
 The diagram sorts them; the names in code font are the cluster Operators or resources you look up in the exercises.
 
-image::module-01-what-ships.svg[How platform capabilities arrive on ROSA and ARO: shipped and kept current by SRE, shipped and configured by you, or added from the Software Catalog]
+image::module-01-what-ships.svg[How platform capabilities arrive on ROSA and ARO: shipped and upgraded with the cluster, shipped and configured by you, or added from the Software Catalog]
 
-=== Ships, Kept Current by SRE
+=== Ships, Upgraded with the Cluster
 
-These are installed with the cluster and upgraded with it.
+These are installed with the cluster, upgraded with it and monitored by SRE.
 On EKS and AKS, most of them are add-ons you choose, install and keep compatible yourself.
 
 Pod network (`network`)::
@@ -63,7 +63,9 @@ A setting on a ROSA machine pool, or a MachineAutoscaler on ARO (Module 4).
 On EKS you install Cluster Autoscaler or Karpenter, unless you use Auto Mode; on AKS it is a cluster setting or node auto-provisioning.
 
 Ingress settings::
-Changed through the IngressController resource, never by editing the router Deployment.
+On ARO, changed through the IngressController resource, never by editing the router Deployment.
+On ROSA, SRE manages the default IngressController: you can read it but not edit it.
+`rosa edit ingress` changes only its visibility and component routes; for anything else you add a second IngressController (Module 3).
 
 Identity providers::
 Configured through OpenShift OAuth (Module 2).
@@ -90,12 +92,12 @@ Backup::
 The OADP Operator, covered in xref:module-01-who-manages-what.adoc#_backup_and_restore[Backup and Restore].
 On EKS and AKS, AWS Backup and Azure Backup are managed services.
 
-The pattern: on ROSA and ARO the infrastructure plumbing ships and is kept current by SRE, while application-facing tools such as GitOps, logging and service mesh come from the Software Catalog and are yours to run.
+The pattern: on ROSA and ARO the infrastructure plumbing ships with the cluster, is upgraded with it and is watched by SRE, while application-facing tools such as GitOps, logging and service mesh come from the Software Catalog and are yours to run.
 
 == On ROSA and ARO
 
 Run each step on both clusters unless the step names one.
-Log in to the cluster first, as described in the xref:setup-requirements.adoc[Setup Requirements].
+Use the terminals you logged in with in xref:module-01-who-manages-what.adoc#before-you-start[Before You Start].
 
 .Exercises on this page
 * <<ex-module-01-what-ships-1>> +
@@ -143,7 +145,8 @@ oc get clusterversion version \
 ----
 
 On EKS and AKS the Kubernetes version is a property of the cluster resource in the cloud API.
-On OpenShift the version covers the whole platform: Kubernetes, the node operating system and every cluster Operator move together.
+On OpenShift the version covers the whole platform: Kubernetes and every cluster Operator move together.
+On ARO the node operating system moves in the same update; on ROSA it moves when you upgrade each machine pool.
 Module 4 covers how that changes upgrades.
 
 .EKS and AKS (reference only)
@@ -183,7 +186,21 @@ Read the three status columns:
 * `DEGRADED`: the component is not in the state it should be in.
 
 On a healthy cluster every Operator shows `True`, `False`, `False`.
-This one command replaces checking each add-on's Deployment and version on EKS or AKS.
+This one command covers every platform component that ships with the cluster, where EKS and AKS have you check each add-on's Deployment and version.
+Operators you add from the Software Catalog, such as GitOps, Logging or OADP, are not in this list.
+
+NOTE: *Not validated:* this listing, which is read-only.
+
+Their ClusterServiceVersions report their health instead; the selector skips the copies that OLM places in every namespace:
+
+[source,bash]
+----
+oc get clusterserviceversions \
+  --all-namespaces \
+  --selector '!olm.copiedFrom'
+----
+
+The `PHASE` column shows `Succeeded` for a healthy Operator.
 
 Count the Operators on each cluster:
 
@@ -247,6 +264,8 @@ For the ingress Operator that resource is the IngressController:
 oc get ingresscontrollers \
   --namespace openshift-ingress-operator
 ----
+
+On ROSA, read the default IngressController but don't edit it: SRE manages it.
 
 Repeat for two more Operators from the diagram above, such as `storage` and `monitoring`.
 
@@ -432,7 +451,8 @@ oc label namespace gitops-hello \
   argocd.argoproj.io/managed-by=openshift-gitops
 ----
 
-Create an Argo CD Application that points at this workshop's repository:
+Create an Argo CD Application that points at this workshop's repository.
+Its finalizer makes deleting the Application also delete what it deployed; without it, the deployed resources stay behind:
 
 [source,bash]
 ----
@@ -442,6 +462,8 @@ kind: Application
 metadata:
   name: gitops-hello
   namespace: openshift-gitops
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
@@ -489,6 +511,8 @@ Log in with *Log in via OpenShift*, using your cluster credentials.
 
 === Clean Up
 
+NOTE: *Not validated:* the cascading delete through the finalizer.
+
 Delete the application, which also removes what it deployed:
 
 [source,bash]
@@ -507,7 +531,7 @@ Keep the OpenShift GitOps Operator installed; later modules do not depend on it,
 == What Matters
 
 * Platform components are owned by Operators. Editing their resources directly is reverted; you change them through the Operator's configuration resource, such as the IngressController, and only where SRE allows it.
-* One health view: `oc get clusteroperators` replaces checking each add-on. A `DEGRADED` platform Operator is SRE's to fix, but you will see it first.
+* One health view for the platform: `oc get clusteroperators` covers every component that ships with the cluster, and catalog Operators report through their ClusterServiceVersions. SRE is alerted when a platform Operator degrades, but if your own configuration caused it, such as an identity provider, a webhook or a PodDisruptionBudget, the fix is yours.
 * Storage: ROSA ships the EBS CSI driver with a default gp3 StorageClass. Shared (RWX) storage needs the EFS CSI Driver Operator and an IAM role. ARO ships Azure Disk as the default; Azure Files ships on clusters created with a service principal and is disabled by default on clusters created with managed identities.
 * ARO needs a Red Hat pull secret before it can install Operators from the Software Catalog.
 * On ROSA, the `dedicated-admin` role can install Operators into `openshift-operators` and into projects you create, so you do not need `cluster-admin` to extend the platform. It cannot create other `openshift-` namespaces, such as the one Exercise 6 uses.
@@ -526,7 +550,7 @@ Keep the OpenShift GitOps Operator installed; later modules do not depend on it,
 |No add-on version matrix: components upgrade with the cluster.
 |Freedom to swap components, such as Cilium or a different ingress.
 
-|One catalog and lifecycle model (Operators) for platform add-ons, with one health view.
+|One catalog and lifecycle model (Operators) for platform add-ons, with one health view for the components that ship with the cluster.
 |Managed GitOps: the EKS Argo CD capability and the AKS Flux extension run without an in-cluster Argo CD to operate.
 
 |

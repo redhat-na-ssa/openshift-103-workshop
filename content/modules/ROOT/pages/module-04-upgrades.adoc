@@ -37,7 +37,7 @@ AKS long-term support keeps a version for two years.
 Run each exercise in both your ROSA and ARO terminals unless it says otherwise.
 Where the steps differ, they appear in a *ROSA (AWS)* tab and an *ARO (Azure)* tab.
 
-The ROSA steps use the `CLUSTER` variable from Module 2.
+The ROSA steps use the `CLUSTER` variable from xref:module-01-who-manages-what.adoc#before-you-start[Before You Start].
 If you open a new ROSA terminal, set it again:
 
 [source,bash]
@@ -78,7 +78,7 @@ A new cluster can report `Upgradeable=False` with the reason `AdminAckRequired`.
 That is an acknowledgment gate, covered in Exercise 4, and it blocks only the next minor version.
 
 The update channel decides which versions are offered.
-Patch releases arrive in the current channel, and a new minor version needs a channel change, which never happens on its own.
+Patch releases arrive in the current channel, and a new minor version needs a channel change, which you make, apart from the exceptions in <<upgrades-without-you,When the platform upgrades without you>>.
 
 [tabs]
 ======
@@ -395,8 +395,11 @@ oc get apirequestcounts -o json \
       | @tsv'
 ----
 
-NOTE: *Not validated:* this command.
-Both validation clusters had no request counts, so it had nothing to show.
+The list is often empty, and that is a real answer.
+OpenShift flags only the APIs it has scheduled for removal in a coming release, and on 4.20 and 4.21 every API scheduled so far has already been removed.
+An empty list means nothing on the cluster calls an API that is about to disappear; it fills in when a future release schedules more removals.
+
+NOTE: *Not validated:* a non-empty result. The command returned nothing on both validation clusters, as expected on 4.20 and 4.21.
 
 To see who calls one of them, look at its users, for example:
 
@@ -410,12 +413,12 @@ oc get apirequestcount <resource>.<version>.<group> \
   | sort -u
 ----
 
-The list can be empty even when workloads call deprecated APIs: it was empty on both a new ROSA cluster and a new ARO cluster when this workshop was tested.
-Treat an empty result as no data, and also check your manifests against the https://kubernetes.io/docs/reference/using-api/deprecation-guide/[Kubernetes deprecated API migration guide].
+Request counts show only what has already called an API, so a workload that runs rarely, or is not deployed yet, does not appear.
+Also check your manifests and Helm charts against the https://kubernetes.io/docs/reference/using-api/deprecation-guide/[Kubernetes deprecated API migration guide].
 
 ==== Pod disruption budgets
 
-Every node drains and reboots during an update.
+Every node drains during an update: ROSA replaces each machine pool node with a new one, and ARO reboots nodes in place.
 A PodDisruptionBudget that allows no disruptions stops the drain.
 Create one for the sample application that does exactly that:
 
@@ -455,21 +458,33 @@ No upgrade was run.
 
 What happens next depends on the platform:
 
-* ROSA drains each machine pool node for at most the pool's node drain grace period, then removes the node anyway.
+* ROSA waits on the budget with no time limit, unless the machine pool has a node drain grace period.
+After that period it evicts the remaining pods and replaces the node.
 * Standard ARO waits on the node until the budget allows the eviction, so the update stalls on that node.
 With an `UpgradeConfig`, the managed upgrade operator forces the drain after `PDBForceDrainTimeout` minutes.
 * EKS managed node group updates fail with a pod eviction error unless you force them.
 * AKS upgrades fail on a node that cannot drain, unless you set the undrainable node behavior to cordon it and move on.
 
-NOTE: *Not validated:* `rosa describe machinepool`, which needs the `rosa` CLI.
+NOTE: *Not validated:* `rosa describe machinepool` and `rosa edit machinepool`, which need the `rosa` CLI.
 
-On ROSA, see the grace period of a pool:
+On ROSA, check the pool's node drain grace period and its `Management upgrade` settings.
+By default the grace period is empty, which means no time limit, and nodes are replaced one extra node at a time (max surge 1, max unavailable 0):
 
 [source,bash]
 ----
 rosa describe machinepool \
   --cluster "$CLUSTER" \
   --machinepool <machinepool-name>
+----
+
+To have ROSA evict pods that a budget still protects after an hour, you would set a grace period on the pool:
+
+[source,bash]
+----
+rosa edit machinepool \
+  --cluster "$CLUSTER" \
+  --node-drain-grace-period "1 hour" \
+  <machinepool-name>
 ----
 
 Replace the budget with one that lets one pod go at a time:
@@ -507,13 +522,15 @@ In extreme cases you get 72 hours to apply a critical security patch, after whic
 == What Matters
 
 * ROSA upgrades the control plane and each machine pool separately.
-Machine pools can trail the control plane by up to two minor versions, so you choose when nodes reboot.
+Machine pools can trail the control plane by up to two minor versions, so you choose when nodes are replaced.
+Each replacement adds a new node before removing an old one, so the pool needs room in your EC2 quota and subnet.
 * Standard ARO upgrades the control plane and workers together, and you start every update yourself.
 * A new minor version needs a channel change and sometimes an administrator acknowledgment.
-It never happens on its own.
-* Red Hat may apply critical security fixes without waiting for you.
-On ROSA, a cluster left on a version past its end of life has its control plane upgraded automatically.
-* New OpenShift versions reach ARO months after their general availability.
+* [[upgrades-without-you]]*When the platform upgrades without you:* on both services, Red Hat may apply a critical security fix, on ARO after a 72-hour notice.
+On ROSA, a control plane past its end of life is moved to the next supported minor version; EKS does the same at the end of extended support.
+Otherwise a minor version never moves on its own.
+* Existing ARO clusters can update to a new minor version once an update path reaches the fast channel.
+New clusters can be installed on that version only months after OpenShift's general availability.
 * OpenShift does not support rolling back an upgrade.
 Test updates on a non-production cluster first.
 
@@ -538,11 +555,11 @@ Test updates on a non-production cluster first.
 
 == App Teams Will Notice
 
-* Every node drains and reboots during an update, so every pod restarts at least once.
+* Every node drains during an update, and ROSA replaces it while ARO reboots it, so every pod restarts at least once.
 Applications need at least two replicas and a budget that allows one disruption to stay up.
-* A budget that allows no disruptions holds up the update on ARO, and is overridden after the grace period on ROSA.
+* A budget that allows no disruptions holds up the update on both, unless a ROSA machine pool has a node drain grace period.
 * Each Kubernetes minor version removes some deprecated APIs.
-Manifests and Helm charts that use them fail after the update, and the API request counts, when populated, show who still calls them.
+Manifests and Helm charts that use them fail after the update, and the API request counts show who still calls them.
 
 == References
 

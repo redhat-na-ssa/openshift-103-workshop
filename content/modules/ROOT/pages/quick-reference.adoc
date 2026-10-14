@@ -19,7 +19,7 @@ NOTE: The commands here are copied from the modules, which mark anything that wa
 
 |Node OS and platform components
 |You roll out node images and every add-on version.
-|SRE patches them together, in the same upgrade as the cluster.
+|ARO: one cluster update moves them all. ROSA: the control plane upgrade, then each machine pool. You start or schedule them; SRE monitors.
 
 |Add-ons
 |You pick, install and version each one.
@@ -27,7 +27,7 @@ NOTE: The commands here are copied from the modules, which mark anything that wa
 
 |Platform health
 |You check each add-on.
-|One view: the cluster Operators.
+|One view for the components that ship with the cluster: the cluster Operators. Catalog Operators report through their ClusterServiceVersions.
 
 |Backup
 |AWS Backup or Azure Backup, as a managed service.
@@ -117,7 +117,7 @@ NOTE: The commands here are copied from the modules, which mark anything that wa
 
 |Upgrade blockers
 |You check for deprecated APIs with your own tools.
-|`oc adm upgrade` and the Upgradeable condition flag blockers, including admin-ack gates. A zero-disruption PodDisruptionBudget stalls node drains on ARO; on ROSA it is overridden after a grace period.
+|`oc adm upgrade` and the Upgradeable condition flag blockers, including admin-ack gates. A zero-disruption PodDisruptionBudget stalls node drains on both, unless a ROSA machine pool sets a node drain grace period.
 
 |Metrics
 |You enable Container Insights or managed Prometheus.
@@ -288,7 +288,7 @@ rosa list machinepools \
   --cluster <cluster-name>
 ----
 
-Show the default ingress settings, which you change through `rosa`, not in the cluster:
+Show the default ingress settings. SRE manages them, and `rosa edit ingress` changes only their visibility and component routes:
 
 [source,bash]
 ----

@@ -38,7 +38,7 @@ image::module-04-scaling-models.svg[Group autoscaling grows pre-defined groups o
 |Machine pools with the cluster autoscaler, both run by Red Hat outside your cluster
 |Red Hat build of Karpenter, from 4.22
 |OpenShift Cluster Manager, `rosa`
-|Red Hat, with each OpenShift update
+|Red Hat builds it; you roll it out to each machine pool
 
 |ARO
 |MachineSets with the cluster autoscaler, inside your cluster
@@ -57,9 +57,9 @@ image::module-04-scaling-models.svg[Group autoscaling grows pre-defined groups o
 
 ROSA keeps its machine pools outside your cluster, in OpenShift Cluster Manager, while ARO keeps MachineSets inside it.
 So the steps differ between the two clusters, and they appear in a *ROSA (AWS)* tab and an *ARO (Azure)* tab.
-Run each tab's steps in that cluster's terminal, the ones you set up in Module 2.
+Run each tab's steps in that cluster's terminal, the ones you set up in xref:module-01-who-manages-what.adoc#before-you-start[Before You Start].
 
-The ROSA steps use the `CLUSTER` variable from Module 2.
+The ROSA steps use the `CLUSTER` variable set there.
 If you open a new ROSA terminal, set it again:
 
 [source,bash]
@@ -473,7 +473,7 @@ What is happening:
 It raises the machine pool's node count, and the HyperShift node pool controller creates EC2 instances in your account.
 * On ARO, the cluster autoscaler and the Machine API run in your cluster.
 The autoscaler raises the MachineSet's replica count, and the Machine API creates Azure VMs.
-* In both cases the new node boots Red Hat Enterprise Linux CoreOS at the exact version that matches the cluster's OpenShift release.
+* In both cases the new node boots Red Hat Enterprise Linux CoreOS at the exact version that matches an OpenShift release: the cluster's on ARO, its machine pool's on ROSA.
 There is no node image for you to choose.
 
 .EKS and AKS (reference only)
@@ -693,7 +693,10 @@ List the nodes with their OS image and kernel, on both clusters:
 oc get nodes -o wide
 ----
 
-Every node runs Red Hat Enterprise Linux CoreOS at the version that belongs to the cluster's OpenShift release:
+Every node runs Red Hat Enterprise Linux CoreOS at the version that belongs to an OpenShift release.
+On ARO that is the cluster's release.
+On ROSA it is the release of the node's machine pool, which can trail the control plane.
+Compare the OS image above with the cluster version:
 
 [source,bash]
 ----
@@ -833,7 +836,7 @@ To offer two instance types, or spot and on-demand, you create two groups.
 * The Red Hat build of Karpenter requires ROSA 4.22.
 ARO with hosted control planes has its own autoscaling, in preview.
 * Red Hat owns the node OS image.
-The node OS changes only when the cluster takes an OpenShift update, so staying current on patch releases is how nodes get kernel and OS fixes.
+The node OS changes only when the cluster (ARO) or each machine pool (ROSA) takes an OpenShift update, so staying current on patch releases is how nodes get kernel and OS fixes.
 There is no separate node image channel to follow, and no custom AMI or node image to build.
 
 == Where Each Wins
@@ -842,7 +845,7 @@ There is no separate node image channel to follow, and no custom AMI or node ima
 |===
 |ROSA and ARO win |EKS and AKS win
 
-|No node images to build or roll: Red Hat patches the OS with each update.
+|No node images to build: Red Hat ships the patched OS in each OpenShift update.
 |Karpenter, Auto Mode and node auto-provisioning are mature, flexible and bin-pack well.
 
 |The cluster autoscaler is part of the platform, so there is nothing to install or keep in step with the Kubernetes version.
@@ -871,7 +874,7 @@ A PodDisruptionBudget that allows no disruptions, or a pod with local storage, k
 * ROSA
 ** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/cluster_administration/managing-compute-nodes-using-machine-pools[Managing compute nodes with machine pools]
 ** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/cluster_administration/rosa-cluster-autoscaling-hcp[Cluster autoscaling on ROSA]
-** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/cluster_administration/rosa-nodes-autonode-managing[Red Hat build of Karpenter on ROSA]
+** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/cluster_administration/managing-compute-nodes-using-red-hat-build-of-karpenter[Red Hat build of Karpenter on ROSA]
 ** https://www.redhat.com/en/blog/introducing-red-hat-build-karpenter[Introducing the Red Hat build of Karpenter]
 * ARO
 ** https://learn.microsoft.com/azure/openshift/howto-infrastructure-nodes[MachineSets on ARO]

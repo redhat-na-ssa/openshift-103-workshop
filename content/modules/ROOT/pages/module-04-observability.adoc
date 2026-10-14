@@ -633,10 +633,12 @@ Only the log forwarder manifest was checked, against the cluster's API schema.
 
 The collector writes to a Log Analytics workspace through the Azure Monitor Logs Ingestion API.
 That needs a custom table, a data collection endpoint and a data collection rule, and an identity allowed to send to the rule.
-The identity is a user-assigned managed identity that trusts the collector's service account, the same workload identity pattern as in xref:module-02-cloud-credentials.adoc[Pod Cloud Credentials].
+The identity is a user-assigned managed identity that trusts the collector's service account, the same trust idea as in xref:module-02-cloud-credentials.adoc[Pod Cloud Credentials].
+The token differs: the collector does not use the workload identity webhook's token, whose audience is `api://AzureADTokenExchange`.
+It projects its own service account token with the audience `openshift`, the same audience ROSA uses, so the federated credential must trust that audience.
 
 Work in your ARO terminal.
-The steps use the `CLUSTER` and `RESOURCE_GROUP` variables from Module 2.
+The steps use the `CLUSTER` and `RESOURCE_GROUP` variables from xref:module-01-who-manages-what.adoc#before-you-start[Before You Start].
 If you open a new terminal, set them again:
 
 [source,bash]
@@ -795,7 +797,7 @@ az identity federated-credential create \
   --issuer "$OIDC_ISSUER" \
   --subject \
     system:serviceaccount:openshift-logging:logging-collector \
-  --audiences api://AzureADTokenExchange
+  --audiences openshift
 ----
 
 Allow the identity to send to the rule:
@@ -939,6 +941,19 @@ az monitor log-analytics query \
 ----
 
 The `Message` column holds the application's own JSON log line, which you can unpack in a query with `parse_json`.
+
+If the forwarder is ready but nothing arrives, read the collector's log:
+
+[source,bash]
+----
+oc logs \
+  --namespace openshift-logging \
+  daemonset/workshop \
+  | grep -E 'WARN|ERROR' \
+  | tail -5
+----
+
+`AADSTS700211` or `AADSTS700213`, no matching federated identity record, means the federated credential's issuer, subject or audience does not match the collector's token.
 
 Older guides use the `azureMonitor` output type with a workspace shared key.
 It sends through the HTTP Data Collector API, which Microsoft stopped supporting in September 2026, and the output is deprecated in OpenShift Logging 6.6.
