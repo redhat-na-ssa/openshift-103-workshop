@@ -12,6 +12,8 @@ endif::[]
 == How the Workshop Works
 
 You do the hands-on work on a ROSA cluster and an ARO cluster.
+In this workshop, ROSA always means ROSA with hosted control planes (HCP), the architecture for new ROSA clusters.
+Where the steps differ between the two, they appear in tabs: pick *ROSA (AWS)* or *ARO (Azure)* once, and every page follows your choice.
 Each step also shows how you would do the same task on EKS or AKS, as a reference block you read but do not run.
 No EKS or AKS cluster is needed.
 
@@ -26,14 +28,14 @@ Every section follows the same pattern:
 * *Where each wins*: what ROSA and ARO take off your plate, and where EKS and AKS are better.
 * *App teams will notice*: differences your application teams will ask you about, where there are any.
 
-Sections with little hands-on work rely on diagrams and comparison tables instead.
-
 == Modules
 
 . *The Service Model*: who manages what on each platform, what it costs, and what a cluster ships with.
 . *Access and Workload Security*: logging in, onboarding teams, pod security defaults and cloud credentials for pods.
 . *Networking*: exposing applications, pod networking and network policy.
 . *Day-2 Operations*: scaling nodes, upgrades and observability.
+
+The xref:quick-reference.adoc[Quick Reference] after Module 4 sums up the workshop on one page.
 
 == Prerequisites
 

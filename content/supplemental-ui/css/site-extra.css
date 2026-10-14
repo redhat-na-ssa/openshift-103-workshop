@@ -63,3 +63,38 @@ video {
 .build-info-sep {
     margin: 0 0.4rem;
 }
+/* provider tabs (@asciidoctor/tabs, css/tabs.css): the theme still styles an older
+   ".tabs ul/li" markup, so undo that inside panels and restyle the tab strip */
+.doc .tabs .tabpanel ul {
+    display: block;
+    list-style: disc;
+    margin: 0;
+    padding: 0 0 0 1.5rem;
+}
+.doc .tabs .tabpanel li {
+    display: list-item;
+    border: 0;
+    height: auto;
+    padding: 0;
+    margin: 0.5rem 0 0;
+    font-weight: inherit;
+    line-height: inherit;
+    cursor: auto;
+}
+.doc .tabs .tabpanel li::after {
+    content: none;
+}
+.doc .tabs .tablist li {
+    height: auto;
+    padding: 0.5rem 1.25rem;
+    border: 1px solid #c1c1c1;
+    border-bottom: 0;
+}
+.doc .tabs .tablist li.is-selected {
+    border-top: 3px solid #ee0000;
+}
+/* keep collapsible reference blocks apart from the content around them */
+.doc details {
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+}

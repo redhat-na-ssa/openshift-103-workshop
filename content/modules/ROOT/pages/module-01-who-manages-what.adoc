@@ -43,12 +43,11 @@ az aks show \
 
 The diagram shows where the control plane and the nodes of each platform run, and who operates them.
 
-image::module-01-architecture.svg[Where the control plane and nodes run on EKS, AKS, ROSA HCP, ROSA classic and ARO]
+image::module-01-architecture.svg[Where the control plane and nodes run on EKS, AKS, ROSA and ARO]
 
-Three things stand out:
+Two things stand out:
 
-* On ROSA with hosted control planes (HCP), the control plane runs in a Red Hat-owned AWS account, like EKS runs it in an AWS-owned one. Your account holds only the worker nodes, reached over AWS PrivateLink.
-* On ROSA classic, everything runs in your AWS account, including three control plane nodes and the infra nodes, and SRE reaches in through an IAM role you created.
+* On ROSA, the control plane runs in a Red Hat-owned AWS account, like EKS runs it in an AWS-owned one. Your account holds only the worker nodes, reached over AWS PrivateLink. This architecture is called ROSA with hosted control planes (HCP), and it is the one this workshop uses.
 * On ARO, the control plane and worker VMs run in your subscription, but in a managed resource group that a deny assignment locks against changes, even by subscription owners.
 
 ARO also offers hosted control planes, in preview.
@@ -56,13 +55,13 @@ This workshop uses standard ARO.
 
 == The Responsibility Line
 
-image::module-01-responsibility.svg[Who is responsible for each area on EKS, AKS, ROSA HCP and ARO]
+image::module-01-responsibility.svg[Who is responsible for each area on EKS, AKS, ROSA and ARO]
 
 Read the chart by row:
 
 * *Control plane and etcd*: always someone else's job. On ROSA and ARO, Red Hat SRE is part of that team.
 * *Node operating system and platform components*: this is the real difference. On EKS, AWS publishes patched AMIs and add-on versions, and you roll each of them out. On AKS, the default node OS channel applies Microsoft's node images for you. On ROSA and ARO the worker OS (Red Hat Enterprise Linux CoreOS) and every platform Operator are patched together, in the same upgrade as the cluster, and SRE monitors and repairs them.
-* *Cluster upgrades*: shared everywhere. On ROSA you schedule upgrades, or opt into automatic ones, and SRE monitors them; on HCP the control plane and each machine pool upgrade separately, control plane first. On ARO you start the upgrade yourself, and it updates the whole cluster at once. Neither service upgrades your cluster without you, except for a critical CVE. Module 4 covers both.
+* *Cluster upgrades*: shared everywhere. On ROSA you schedule upgrades, or opt into automatic ones, and SRE monitors them; the control plane and each machine pool upgrade separately, control plane first. On ARO you start the upgrade yourself, and it updates the whole cluster at once. Neither service upgrades your cluster without you, except for a critical CVE. Module 4 covers both.
 * *Node capacity, identity, backup and workloads*: yours on every platform.
 
 The cells are simplified.
@@ -70,10 +69,21 @@ The responsibility matrices in the references list each task in detail.
 
 == On ROSA and ARO
 
+.Exercises on this page
+* <<ex-module-01-who-manages-what-1>>
+* <<ex-module-01-who-manages-what-2>>
+* <<ex-module-01-who-manages-what-3>>
+* <<ex-module-01-who-manages-what-4>>
+* <<ex-module-01-who-manages-what-5>>
+
+[#ex-module-01-who-manages-what-1]
 === Exercise 1: Identify the Architecture
 
-==== ROSA
-
+[tabs]
+======
+ROSA (AWS)::
++
+--
 Describe the cluster:
 
 [source,bash]
@@ -84,7 +94,7 @@ rosa describe cluster \
 
 Look for these lines:
 
-* `Control Plane`: `ROSA Service Hosted` on HCP, `Customer Hosted` on classic.
+* `Control Plane`: `ROSA Service Hosted`, because the control plane runs in Red Hat's account.
 * `OpenShift Version`.
 * The operator IAM roles, used in Exercise 2.
 
@@ -97,9 +107,10 @@ rosa describe cluster \
   --output json \
   | jq '{hcp: .hypershift.enabled, version: .version.raw_id}'
 ----
-
-==== ARO
-
+--
+ARO (Azure)::
++
+--
 Show the cluster profile:
 
 [source,bash]
@@ -111,8 +122,9 @@ az aro show \
 ----
 
 The `resourceGroupId` field is the managed resource group that holds the cluster's VMs.
+--
+======
 
-==== Both Clusters
 
 You can read the same fact from inside the cluster, without cloud credentials.
 The Infrastructure resource records where the control plane runs:
@@ -123,8 +135,8 @@ oc get infrastructure cluster \
   -o jsonpath='{.status.controlPlaneTopology}{"\n"}'
 ----
 
-ROSA HCP shows `External`, because the control plane runs outside the cluster.
-ARO and ROSA classic show `HighlyAvailable`: three control plane nodes in your own account or subscription.
+ROSA shows `External`, because the control plane runs outside the cluster.
+ARO shows `HighlyAvailable`: three control plane nodes in your own subscription.
 
 List the nodes on each cluster:
 
@@ -133,14 +145,18 @@ List the nodes on each cluster:
 oc get nodes
 ----
 
-The ROSA HCP cluster shows only worker nodes, because its control plane is not in your account.
+The ROSA cluster shows only worker nodes, because its control plane is not in your account.
 The ARO cluster also shows three control plane nodes with the `master` role.
-On EKS and AKS, like on ROSA HCP, you never see the control plane as nodes.
+On EKS and AKS, like on ROSA, you never see the control plane as nodes.
 
+[#ex-module-01-who-manages-what-2]
 === Exercise 2: See How the Service Reaches Your Account
 
-==== ROSA
-
+[tabs]
+======
+ROSA (AWS)::
++
+--
 Red Hat acts in your AWS account only through IAM roles you created when you set up ROSA.
 List the account-wide roles:
 
@@ -152,9 +168,10 @@ rosa list account-roles
 The `Support` role is the one Red Hat SRE assumes to troubleshoot your cluster's AWS resources.
 The `Installer` and `Worker` roles create the cluster and run its nodes.
 The cluster's operator roles, shown by `rosa describe cluster`, give individual platform Operators, such as the ingress and storage Operators, just the AWS permissions they need.
-
-==== ARO
-
+--
+ARO (Azure)::
++
+--
 The cluster's resources live in the managed resource group shown in Exercise 1.
 Save its ID:
 
@@ -216,7 +233,10 @@ az rest \
 
 The deny assignment blocks every write by everyone else, including subscription owners.
 Only the exempt principals, such as the ARO resource provider, may change the resources.
+--
+======
 
+[#ex-module-01-who-manages-what-3]
 === Exercise 3: Find What SRE Owns in the Cluster
 
 Platform namespaces start with `openshift-`.
@@ -239,7 +259,7 @@ oc get namespaces \
 ----
 
 These namespaces hold the role bindings that give SRE and Red Hat support teams access to the cluster through backplane, Red Hat's support access path.
-On ROSA HCP they hold almost no pods: the SRE agents that monitor the cluster and apply managed configuration run with the hosted control plane in Red Hat's account.
+On ROSA they hold almost no pods: the SRE agents that monitor the cluster and apply managed configuration run with the hosted control plane in Red Hat's account.
 What runs on your nodes is the connection back to that control plane, the `konnectivity-agent` pods:
 
 [source,bash]
@@ -258,8 +278,9 @@ oc get validatingwebhookconfigurations \
   | grep '^sre-'
 ----
 
-On ROSA HCP the webhook server itself also runs in the hosted control plane, so you see its configuration but not its pods.
+On ROSA the webhook server itself also runs in the hosted control plane, so you see its configuration but not its pods.
 
+[#ex-module-01-who-manages-what-4]
 === Exercise 4: Try to Change a Managed Resource
 
 Try to add a label to the ClusterVersion, the resource that controls upgrades.
@@ -285,6 +306,7 @@ NOTE: *Not validated:* the `Limited Support` section, because the workshop's ROS
 
 If your ROSA cluster is in limited support, `rosa describe cluster` shows a `Limited Support` section with the reasons.
 
+[#ex-module-01-who-manages-what-5]
 === Exercise 5: Know Your Support Path
 
 [cols="1,2,2",options="header"]
@@ -309,8 +331,7 @@ On ROSA and ARO, the platform components are part of the service, so one case co
 
 == What Matters
 
-* ROSA comes in two architectures. With HCP, the control plane runs in a Red Hat account and is reached over AWS PrivateLink. With classic, it runs in your account. HCP is the default for new clusters.
-* ARO now has two architectures too: standard, and hosted control planes in preview.
+* On ROSA, the control plane runs in a Red Hat account and is reached over AWS PrivateLink, like EKS. On ARO it runs in your subscription, locked by a deny assignment.
 * Some cluster settings are SRE-owned. Changes to them are refused or reverted, so automation that worked on EKS or AKS may fail here. Test cluster-wide automation against a ROSA or ARO cluster before rolling it out.
 * Application backup is yours on every platform. SRE backs up etcd for its own disaster recovery, not for restores you request, and never your volumes.
 
@@ -426,12 +447,42 @@ spec:
 
 === Cost and Support
 
-image::module-01-cost.svg[Monthly platform cost on top of worker compute for EKS, AKS, ROSA HCP and ARO]
+Each platform bills a different mix of the same parts.
+Prices change often, so this section compares what you pay for, not how much.
+The pricing pages in the references have current numbers.
 
-* EKS charges a control plane fee per cluster. AKS has a free tier without an SLA, and paid tiers with one.
-* ROSA HCP charges a control plane fee per cluster plus an OpenShift fee per worker vCPU. ARO charges the OpenShift fee per worker vCPU, and standard ARO also bills its three control plane VMs.
-* Worker compute costs about the same on every platform and is left out of the chart. On larger clusters the per-vCPU OpenShift fee dominates, so one- and three-year commitments on that fee matter more than the control plane fee.
-* ROSA and ARO both carry a 99.95% SLA and joint support: one case reaches both the cloud provider and Red Hat.
+[cols="3,1,1,1,1",options="header"]
+|===
+|What you pay for |EKS |AKS |ROSA |ARO
+
+|A control plane fee per cluster
+|Yes
+|Yes
+|Yes
+|No
+
+|Control plane VMs in your subscription
+|No
+|No
+|No
+|Yes, three
+
+|An OpenShift fee per worker vCPU
+|No
+|No
+|Yes
+|Yes
+
+|Worker compute, storage and networking
+|Yes
+|Yes
+|Yes
+|Yes
+|===
+
+* The AKS column is a paid tier. The free tier has no uptime SLA, so it is not a fair comparison for production.
+* Worker compute costs about the same on every platform. The OpenShift fee grows with every worker vCPU, so on larger clusters it outweighs the control plane fee, and commitments on that fee matter more than anything else on the bill.
+* ROSA and ARO both carry a financially backed SLA and joint support: one case reaches both the cloud provider and Red Hat.
 
 == Where Each Wins
 
@@ -443,7 +494,7 @@ image::module-01-cost.svg[Monthly platform cost on top of worker compute for EKS
 |Full control: any add-on, any version, any configuration.
 
 |One support case covers the cloud and the platform.
-|Much lower platform cost, and a free tier on AKS.
+|Lower platform cost, with no per-vCPU OpenShift fee.
 
 |A tested, integrated stack instead of an add-on matrix you maintain.
 |Managed backup services with policies and vaults.
@@ -471,7 +522,7 @@ image::module-01-cost.svg[Monthly platform cost on top of worker compute for EKS
 ** https://learn.microsoft.com/azure/backup/azure-kubernetes-service-backup-overview[Azure Backup for AKS]
 * ROSA
 ** https://docs.openshift.com/rosa/rosa_policy/rosa-policy-responsibility-matrix.html[ROSA responsibility matrix]
-** https://docs.aws.amazon.com/rosa/latest/userguide/rosa-architecture-models.html[ROSA architecture models (HCP and classic)]
+** https://docs.aws.amazon.com/rosa/latest/userguide/rosa-architecture-models.html[ROSA architecture models]
 ** https://aws.amazon.com/rosa/pricing/[ROSA pricing]
 ** https://docs.aws.amazon.com/rosa/latest/userguide/rosa-support.html[ROSA support]
 ** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/backup_and_restore/oadp-application-backup-and-restore[OADP on ROSA]
