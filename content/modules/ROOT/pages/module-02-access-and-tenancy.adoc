@@ -47,11 +47,16 @@ You work as two people on each cluster: a cluster administrator, and a developer
 Use separate terminals so the two logins don't overwrite each other.
 
 .Exercises on this page
-* <<ex-module-02-access-and-tenancy-1>>
-* <<ex-module-02-access-and-tenancy-2>>
-* <<ex-module-02-access-and-tenancy-3>>
-* <<ex-module-02-access-and-tenancy-4>>
-* <<ex-module-02-access-and-tenancy-5>>
+* <<ex-module-02-access-and-tenancy-1>> +
+Log in to each cluster as the administrator the service gives you.
+* <<ex-module-02-access-and-tenancy-2>> +
+Connect an identity provider so people log in with their own accounts.
+* <<ex-module-02-access-and-tenancy-3>> +
+Log in as a regular user, in a terminal of its own.
+* <<ex-module-02-access-and-tenancy-4>> +
+See that any user can create a project, and give every new project a quota.
+* <<ex-module-02-access-and-tenancy-5>> +
+Create a group and give it a project, the way you would onboard a team.
 
 [#ex-module-02-access-and-tenancy-1]
 === Exercise 1: Log in as the cluster administrator

@@ -98,13 +98,20 @@ Run each step on both clusters unless the step names one.
 Log in to the cluster first, as described in the xref:setup-requirements.adoc[Setup Requirements].
 
 .Exercises on this page
-* <<ex-module-01-what-ships-1>>
-* <<ex-module-01-what-ships-2>>
-* <<ex-module-01-what-ships-3>>
-* <<ex-module-01-what-ships-4>>
-* <<ex-module-01-what-ships-5>>
-* <<ex-module-01-what-ships-6>>
-* <<ex-module-01-what-ships-7>>
+* <<ex-module-01-what-ships-1>> +
+Read which release the cluster runs, its update channel and its update history.
+* <<ex-module-01-what-ships-2>> +
+Check the health of every platform component in one list.
+* <<ex-module-01-what-ships-3>> +
+Match an add-on you install on EKS or AKS to the cluster Operator that ships it.
+* <<ex-module-01-what-ships-4>> +
+See which storage the cluster gives you without installing a CSI driver.
+* <<ex-module-01-what-ships-5>> +
+Browse the Operators you can install, and see that you run them once installed.
+* <<ex-module-01-what-ships-6>> +
+Install an Operator from the Software Catalog the way you will in production.
+* <<ex-module-01-what-ships-7>> +
+Deploy an application from Git with the GitOps instance you installed, then remove it.
 
 [#ex-module-01-what-ships-1]
 === Exercise 1: Read the Cluster Version

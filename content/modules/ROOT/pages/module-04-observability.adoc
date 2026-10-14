@@ -51,13 +51,20 @@ Run each exercise on both clusters.
 Where the steps differ, they appear in a *ROSA (AWS)* tab and an *ARO (Azure)* tab.
 
 .Exercises on this page
-* <<ex-module-04-observability-1>>
-* <<ex-module-04-observability-2>>
-* <<ex-module-04-observability-3>>
-* <<ex-module-04-observability-4>>
-* <<ex-module-04-observability-5>>
-* <<ex-module-04-observability-6>>
-* <<ex-module-04-observability-7>>
+* <<ex-module-04-observability-1>> +
+Look at the monitoring stack, alerts and dashboards that ship with the platform.
+* <<ex-module-04-observability-2>> +
+Turn on the Prometheus that watches your own projects.
+* <<ex-module-04-observability-3>> +
+Scrape the sample application's metrics with a ServiceMonitor.
+* <<ex-module-04-observability-4>> +
+Alert when the application cannot reach its object store.
+* <<ex-module-04-observability-5>> +
+Install the Logging Operator, which is not part of the platform.
+* <<ex-module-04-observability-6>> +
+Send the sample application's logs to CloudWatch or Azure Monitor Logs.
+* <<ex-module-04-observability-7>> +
+Delete the log forwarder so the collectors stop, and keep the rest.
 
 [#ex-module-04-observability-1]
 === Exercise 1: Look at What Ships

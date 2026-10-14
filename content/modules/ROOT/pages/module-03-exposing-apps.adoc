@@ -25,10 +25,14 @@ The sample application from Module 2 runs in the `sample-app` project, behind a 
 Its `/healthz` path always answers `200`, so the checks below use it.
 
 .Exercises on this page
-* <<ex-module-03-exposing-apps-1>>
-* <<ex-module-03-exposing-apps-2>>
-* <<ex-module-03-exposing-apps-3>>
-* <<ex-module-03-exposing-apps-4>>
+* <<ex-module-03-exposing-apps-1>> +
+Find the router and wildcard domain that every cluster ships with.
+* <<ex-module-03-exposing-apps-2>> +
+Expose the sample application over HTTPS with no DNS or certificate work.
+* <<ex-module-03-exposing-apps-3>> +
+Apply an Ingress written for EKS or AKS and see what OpenShift makes of it.
+* <<ex-module-03-exposing-apps-4>> +
+Expose the application through a Gateway, with its own load balancer.
 
 [#ex-module-03-exposing-apps-1]
 === Exercise 1: Find the Default Ingress Controller
