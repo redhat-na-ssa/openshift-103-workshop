@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="700" height="262" viewBox="0 0 700 262"><title>Order in which OVN-Kubernetes evaluates network policy tiers</title><rect x="0" y="0" width="700" height="262" fill="#ffffff"/>
+<rect x="4" y="36" width="70" height="112" rx="6" fill="#ffffff" stroke="#8a8d90" stroke-width="1.5"/>
+<text x="39.0" y="89.25" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="bold" fill="#151515" text-anchor="middle">Traffic</text>
+<text x="39.0" y="107.25" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#151515" text-anchor="middle">to a pod</text>
+<rect x="92" y="36" width="160" height="112" rx="6" fill="#f2f0fc" stroke="#5e40be" stroke-width="1.5"/>
+<text x="172.0" y="61.25" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="bold" fill="#2a1a6b" text-anchor="middle">Admin policy</text>
+<text x="172.0" y="79.25" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#2a1a6b" text-anchor="middle">AdminNetworkPolicy;</text>
+<text x="172.0" y="93.25" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#2a1a6b" text-anchor="middle">cluster admins; priority</text>
+<text x="172.0" y="107.25" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#2a1a6b" text-anchor="middle">0 to 99, lowest first;</text>
+<text x="172.0" y="121.25" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#2a1a6b" text-anchor="middle">Allow or Deny is final,</text>
+<text x="172.0" y="135.25" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#2a1a6b" text-anchor="middle">Pass moves on</text>
+<rect x="270" y="36" width="160" height="112" rx="6" fill="#e7f1fa" stroke="#0066cc" stroke-width="1.5"/>
+<text x="350.0" y="68.25" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="bold" fill="#002952" text-anchor="middle">NetworkPolicy</text>
+<text x="350.0" y="86.25" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#002952" text-anchor="middle">project admins; pods a</text>
+<text x="350.0" y="100.25" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#002952" text-anchor="middle">policy selects accept</text>
+<text x="350.0" y="114.25" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#002952" text-anchor="middle">only what some policy</text>
+<text x="350.0" y="128.25" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#002952" text-anchor="middle">allows</text>
+<rect x="448" y="36" width="160" height="112" rx="6" fill="#fdf7e7" stroke="#c58c00" stroke-width="1.5"/>
+<text x="528.0" y="75.25" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="bold" fill="#5c4000" text-anchor="middle">Baseline policy</text>
+<text x="528.0" y="93.25" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#5c4000" text-anchor="middle">BaselineAdminNetworkPolicy;</text>
+<text x="528.0" y="107.25" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#5c4000" text-anchor="middle">cluster admins; one</text>
+<text x="528.0" y="121.25" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#5c4000" text-anchor="middle">object named default</text>
+<rect x="626" y="36" width="70" height="112" rx="6" fill="#f3faf2" stroke="#3e8635" stroke-width="1.5"/>
+<text x="661.0" y="82.25" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="bold" fill="#1e4f18" text-anchor="middle">Allowed</text>
+<text x="661.0" y="100.25" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#1e4f18" text-anchor="middle">nothing</text>
+<text x="661.0" y="114.25" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#1e4f18" text-anchor="middle">matched</text>
+<line x1="76" y1="92.0" x2="82.0" y2="92.0" stroke="#6a6e73" stroke-width="2"/>
+<polygon points="90,92.0 82.0,96.0 82.0,88.0" fill="#6a6e73"/>
+<line x1="254" y1="92.0" x2="260.0" y2="92.0" stroke="#6a6e73" stroke-width="2"/>
+<polygon points="268,92.0 260.0,96.0 260.0,88.0" fill="#6a6e73"/>
+<line x1="432" y1="92.0" x2="438.0" y2="92.0" stroke="#6a6e73" stroke-width="2"/>
+<polygon points="446,92.0 438.0,96.0 438.0,88.0" fill="#6a6e73"/>
+<line x1="610" y1="92.0" x2="616.0" y2="92.0" stroke="#6a6e73" stroke-width="2"/>
+<polygon points="624,92.0 616.0,96.0 616.0,88.0" fill="#6a6e73"/>
+<text x="172" y="24" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="bold" fill="#4d5258" text-anchor="middle">Tier 1</text>
+<text x="350" y="24" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="bold" fill="#4d5258" text-anchor="middle">Tier 2</text>
+<text x="528" y="24" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="bold" fill="#4d5258" text-anchor="middle">Tier 3</text>
+<line x1="92" y1="172" x2="252" y2="172" stroke="#5e40be" stroke-width="2.5"/>
+<line x1="92" y1="164" x2="92" y2="172" stroke="#5e40be" stroke-width="2.5"/>
+<line x1="252" y1="164" x2="252" y2="172" stroke="#5e40be" stroke-width="2.5"/>
+<text x="172.0" y="192" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="bold" fill="#5e40be" text-anchor="middle">Project admins cannot override</text>
+<line x1="448" y1="172" x2="608" y2="172" stroke="#c58c00" stroke-width="2.5"/>
+<line x1="448" y1="164" x2="448" y2="172" stroke="#c58c00" stroke-width="2.5"/>
+<line x1="608" y1="164" x2="608" y2="172" stroke="#c58c00" stroke-width="2.5"/>
+<text x="528.0" y="192" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="bold" fill="#c58c00" text-anchor="middle">Project NetworkPolicy overrides it</text>
+<text x="350" y="232" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#4d5258" text-anchor="middle">An arrow means this tier did not decide: no rule matched,</text>
+<text x="350" y="249" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#4d5258" text-anchor="middle">a rule said Pass, or no NetworkPolicy selects the pod.</text>
+</svg>

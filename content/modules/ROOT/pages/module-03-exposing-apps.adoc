@@ -1,36 +1,430 @@
 = Exposing an App
 
-NOTE: This section is an outline. Its diagrams and exercises are being written and validated on ROSA and ARO.
-
 On EKS and AKS you install or enable an ingress controller before anything can be reached from outside.
 ROSA and ARO arrive with a default ingress controller behind a cloud load balancer, a wildcard DNS name for applications and a certificate for it, so the sample application gets an HTTPS address in one step.
 This section exposes the sample application three ways: an OpenShift Route, a standard Kubernetes Ingress, and the Gateway API.
 
-// Planned visual:
-// - Request path for all four: client, cloud load balancer, ingress
-//   (ALB target, app routing NGINX or Gateway, OpenShift router),
-//   service, pod.
+.How a request reaches a pod on each platform
+image::module-03-request-path.svg[Request path from client to pod on EKS, AKS, ROSA and ARO,width=100%]
 
 == On EKS and AKS
 
 * EKS: install the AWS Load Balancer Controller, then each Ingress creates or joins an Application Load Balancer. The controller also supports the Gateway API.
 * AKS: enable the application routing add-on. Its managed NGINX loses Azure support after November 2026, and its Gateway API mode is the path forward.
-* You bring DNS (for example ExternalDNS) and certificates (for example cert-manager).
+* You bring DNS (for example ExternalDNS) and certificates (for example cert-manager, AWS Certificate Manager or Azure Key Vault).
 
 == On ROSA and ARO
 
-Outline of the exercise:
+Do these steps on your ROSA cluster, then repeat them on your ARO cluster.
+Where the two differ, the steps are split under ROSA and ARO headings.
+The sample application from Module 2 runs in the `sample-app` project, behind a Service named `sample-app` on port `8080`.
+Its `/healthz` path always answers `200`, so the checks below use it.
 
-. Find the default ingress controller, its load balancer in the AWS or Azure console, and the cluster's application domain.
-. Expose the sample application with an edge-terminated Route and open it over HTTPS.
-. Create a standard Ingress for it, and look at the Route OpenShift generates from it.
-. Expose it through the Gateway API with an HTTPRoute.
+=== Exercise 1: Find the Default Ingress Controller
+
+Every cluster has an IngressController named `default`.
+Save the application domain it serves:
+
+[source,bash]
+----
+APPS_DOMAIN=$(oc get ingresscontroller default \
+  --namespace openshift-ingress-operator \
+  --output jsonpath='{.status.domain}')
+----
+
+[source,bash]
+----
+echo "$APPS_DOMAIN"
+----
+
+The router pods sit behind a Service of type `LoadBalancer`:
+
+[source,bash]
+----
+oc get service router-default \
+  --namespace openshift-ingress
+----
+
+The `EXTERNAL-IP` column holds a host name on ROSA and an IP address on ARO.
+That is the cloud load balancer the cluster created at install time.
+
+==== ROSA
+
+Find the load balancer in AWS:
+
+[source,bash]
+----
+LB_HOST=$(oc get service router-default \
+  --namespace openshift-ingress \
+  --output jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+----
+
+[source,bash]
+----
+aws elbv2 describe-load-balancers \
+  --query "LoadBalancers[?DNSName=='$LB_HOST'].[Type,Scheme]" \
+  --output text
+----
+
+See the ingress the way the service manages it:
+
+[source,bash]
+----
+rosa list ingresses \
+  --cluster <cluster-name>
+----
+
+On ROSA you change the default ingress with `rosa edit ingress`, not by editing the IngressController object.
+
+==== ARO
+
+Find the load balancer's public IP in Azure:
+
+[source,bash]
+----
+LB_IP=$(oc get service router-default \
+  --namespace openshift-ingress \
+  --output jsonpath='{.status.loadBalancer.ingress[0].ip}')
+----
+
+[source,bash]
+----
+MANAGED_RG=$(az aro show \
+  --resource-group <resource-group> \
+  --name <cluster-name> \
+  --query clusterProfile.resourceGroupId \
+  --output tsv)
+----
+
+[source,bash]
+----
+az network public-ip list \
+  --resource-group "${MANAGED_RG##*/}" \
+  --query "[?ipAddress=='$LB_IP'].name" \
+  --output tsv
+----
+
+The public IP lives in the cluster's managed resource group.
+A deny assignment there lets you read it but not change it.
+
+See the ingress the way the service manages it:
+
+[source,bash]
+----
+az aro show \
+  --resource-group <resource-group> \
+  --name <cluster-name> \
+  --query ingressProfiles
+----
+
+=== Exercise 2: Expose the App with a Route
+
+Create an edge-terminated Route: the router terminates TLS with the cluster's wildcard certificate and forwards plain HTTP to the pods.
+
+[source,bash]
+----
+oc create route edge sample-app \
+  --service sample-app \
+  --port 8080 \
+  --namespace sample-app
+----
+
+OpenShift picks the host name `<route>-<project>.<apps domain>`:
+
+[source,bash]
+----
+ROUTE_HOST=$(oc get route sample-app \
+  --namespace sample-app \
+  --output jsonpath='{.spec.host}')
+----
+
+[source,bash]
+----
+curl --silent \
+  --output /dev/null \
+  --write-out '%{http_code}\n' \
+  "https://$ROUTE_HOST/healthz"
+----
+
+It prints `200`: the app answers over HTTPS with a trusted certificate, and you created no DNS record or certificate.
+
+Plain HTTP still reaches the app.
+Tell the router to redirect it to HTTPS:
+
+[source,bash]
+----
+oc patch route sample-app \
+  --namespace sample-app \
+  --type merge \
+  --patch '{"spec":{"tls":{"insecureEdgeTerminationPolicy":"Redirect"}}}'
+----
+
+[source,bash]
+----
+curl --silent \
+  --output /dev/null \
+  --write-out '%{http_code}\n' \
+  "http://$ROUTE_HOST/healthz"
+----
+
+It now prints `302`, a redirect to the HTTPS address.
+
+.EKS and AKS (reference only)
+[%collapsible]
+====
+EKS: install the AWS Load Balancer Controller, after creating its IAM role.
+
+[source,bash]
+----
+helm install aws-load-balancer-controller \
+  eks/aws-load-balancer-controller \
+  --namespace kube-system \
+  --set clusterName=<cluster-name> \
+  --set serviceAccount.create=false \
+  --set serviceAccount.name=aws-load-balancer-controller
+----
+
+EKS: an Ingress that creates an internet-facing ALB.
+
+[source,yaml]
+----
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sample-app
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/certificate-arn: <certificate-arn>
+spec:
+  ingressClassName: alb
+  rules:
+  - host: sample-app.example.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: sample-app
+            port:
+              number: 8080
+----
+
+AKS: enable application routing.
+
+[source,bash]
+----
+az aks approuting enable \
+  --resource-group <resource-group> \
+  --name <cluster-name>
+----
+
+On AKS the same Ingress uses `ingressClassName: webapprouting.kubernetes.azure.com` and no ALB annotations.
+====
+
+=== Exercise 3: Use a Standard Ingress
+
+Manifests written for EKS or AKS use Ingress, and OpenShift accepts it.
+The annotation asks for an edge-terminated Route:
+
+[source,bash]
+----
+oc apply --filename - <<EOF
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sample-app-ingress
+  namespace: sample-app
+  annotations:
+    route.openshift.io/termination: edge
+spec:
+  rules:
+  - host: sample-app-ingress.${APPS_DOMAIN}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: sample-app
+            port:
+              number: 8080
+EOF
+----
+
+OpenShift generated a Route from it:
+
+[source,bash]
+----
+oc get routes \
+  --namespace sample-app
+----
+
+The new Route has a generated name that starts with `sample-app-ingress-`.
+Its owner is the Ingress, so OpenShift reverts any edit you make to the Route itself.
+Change the Ingress instead.
+
+[source,bash]
+----
+curl --silent \
+  --output /dev/null \
+  --write-out '%{http_code}\n' \
+  "https://sample-app-ingress.$APPS_DOMAIN/healthz"
+----
+
+=== Exercise 4: Use the Gateway API
+
+OpenShift implements the Gateway API with an Envoy-based gateway that the Ingress Operator manages.
+Creating the GatewayClass installs what the gateway needs, including OpenShift Service Mesh, so it takes a few minutes.
+
+[source,bash]
+----
+oc apply --filename - <<EOF
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: openshift-default
+spec:
+  controllerName: openshift.io/gateway-controller/v1
+EOF
+----
+
+[source,bash]
+----
+oc wait gatewayclass/openshift-default \
+  --for=condition=Accepted \
+  --timeout=600s
+----
+
+Create a Gateway with an HTTP listener for a new wildcard under the application domain.
+Gateways live in the `openshift-ingress` namespace and accept routes from any namespace here:
+
+[source,bash]
+----
+oc apply --filename - <<EOF
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: workshop
+  namespace: openshift-ingress
+spec:
+  gatewayClassName: openshift-default
+  listeners:
+  - name: http
+    protocol: HTTP
+    port: 80
+    hostname: "*.gwapi.${APPS_DOMAIN}"
+    allowedRoutes:
+      namespaces:
+        from: All
+EOF
+----
+
+[source,bash]
+----
+oc wait gateway/workshop \
+  --namespace openshift-ingress \
+  --for=condition=Programmed \
+  --timeout=600s
+----
+
+The Gateway got its own load balancer and DNS record, next to the router's:
+
+[source,bash]
+----
+oc get service \
+  --namespace openshift-ingress
+----
+
+[source,bash]
+----
+oc get dnsrecords \
+  --namespace openshift-ingress
+----
+
+Attach the sample application with an HTTPRoute in its own project:
+
+[source,bash]
+----
+oc apply --filename - <<EOF
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: sample-app
+  namespace: sample-app
+spec:
+  parentRefs:
+  - name: workshop
+    namespace: openshift-ingress
+  hostnames:
+  - "sample-app.gwapi.${APPS_DOMAIN}"
+  rules:
+  - backendRefs:
+    - name: sample-app
+      port: 8080
+EOF
+----
+
+[source,bash]
+----
+curl --silent \
+  --output /dev/null \
+  --write-out '%{http_code}\n' \
+  "http://sample-app.gwapi.$APPS_DOMAIN/healthz"
+----
+
+If the name does not resolve yet, wait a minute for the new DNS record and try again.
+
+[NOTE]
+====
+On ARO with the default `aroapp.io` domain, the Gateway's DNS record may never be published, because Azure manages that zone.
+If the name still does not resolve, send the request straight to the Gateway's address:
+
+[source,bash]
+----
+GW_IP=$(oc get gateway workshop \
+  --namespace openshift-ingress \
+  --output jsonpath='{.status.addresses[0].value}')
+----
+
+[source,bash]
+----
+curl --silent \
+  --output /dev/null \
+  --write-out '%{http_code}\n' \
+  --resolve "sample-app.gwapi.$APPS_DOMAIN:80:$GW_IP" \
+  "http://sample-app.gwapi.$APPS_DOMAIN/healthz"
+----
+====
+
+The Gateway serves plain HTTP because nothing gave it a certificate.
+Unlike a Route, a Gateway listener needs a certificate that you provide, for example from cert-manager.
+
+Each Gateway costs a cloud load balancer, so remove this one:
+
+[source,bash]
+----
+oc delete httproute sample-app \
+  --namespace sample-app
+----
+
+[source,bash]
+----
+oc delete gateway workshop \
+  --namespace openshift-ingress
+----
+
+The Route from Step 2 stays.
+The next section applies network policy to it.
 
 == What Matters
 
 * A Route is OpenShift's own resource, with edge, re-encrypt and passthrough TLS. Ingress objects still work and become Routes.
-* On ROSA, SRE owns the default ingress controller's settings. For other needs you add another ingress controller, or the AWS Load Balancer Operator for ALBs.
-* OpenShift supports the Gateway API from 4.19. The ROSA and ARO documentation do not cover it yet, so check it on your clusters before you rely on it.
+* OpenShift only turns an Ingress into a Route when it has no `ingressClassName` or uses `openshift-default`. An Ingress that still says `alb` or `webapprouting.kubernetes.azure.com` is silently ignored.
+* ALB and NGINX annotations do nothing here. Route behavior is set with `haproxy.router.openshift.io/*` annotations instead, for example timeouts and rewrites.
+* On ROSA, SRE owns the default ingress controller's settings, and you change them with `rosa edit ingress`. For other needs you add another ingress controller, or the AWS Load Balancer Operator for ALBs.
+* OpenShift supports the Gateway API from 4.19. Each Gateway gets its own load balancer and needs its own certificate. The ROSA and ARO documentation do not cover it yet, it needs `cluster-admin` (not `dedicated-admin` on ROSA), and on ARO's default domain you manage its DNS yourself, so check it on your clusters before you rely on it.
 
 == Where Each Wins
 
@@ -39,11 +433,24 @@ Outline of the exercise:
 |ROSA and ARO win |EKS and AKS win
 
 |Nothing to install: HTTPS on a wildcard domain on day one.
-|Deep cloud integration: ALB target groups, WAF and authentication on EKS, Application Gateway on AKS.
+|Deep cloud integration: ALB target groups, AWS WAF and Cognito or OIDC authentication on EKS, Application Gateway on AKS.
 
-|Routes cover TLS modes that Ingress cannot express.
+|One shared load balancer carries every Route, so a new app adds no cloud cost.
+|Traffic goes straight from the ALB to pod IPs, with no in-cluster proxy hop on EKS.
+
+|Routes cover TLS modes that Ingress cannot express, such as re-encrypt.
 |Gateway API maps straight onto cloud load balancers.
+
+|The router is upgraded and monitored with the cluster.
+|You pick and tune the controller, including its version.
 |===
+
+== App Teams Will Notice
+
+* Their app gets a host name like `sample-app-sample-app.apps...` without asking for DNS. They can still set a custom host name, which then needs DNS and a certificate.
+* The router's default timeout is 30 seconds. Long requests need the `haproxy.router.openshift.io/timeout` annotation on the Route.
+* The first namespace to claim a host name owns it. Another project cannot take over the same host.
+* Ingress manifests from EKS or AKS need their class and annotations reviewed, not just applied.
 
 == References
 

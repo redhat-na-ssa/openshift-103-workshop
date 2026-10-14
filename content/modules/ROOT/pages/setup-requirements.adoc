@@ -71,6 +71,10 @@ Attendees install these Operators during the exercises:
 |Red Hat OpenShift Logging
 |4
 |Forwards application logs to CloudWatch and Azure Monitor Logs.
+
+|Red Hat OpenShift Service Mesh 3
+|3
+|Installed by the Ingress Operator when the Gateway API exercise creates a GatewayClass. It needs the Red Hat catalog and registry, so ARO needs its pull secret. The cluster must not already have an OpenShift Service Mesh 2 subscription.
 |===
 
 The default ingress controller, OVN-Kubernetes, the CSI drivers and platform monitoring come with every ROSA and ARO cluster.
@@ -98,6 +102,8 @@ a|Permission to create:
 * ECR repositories (Module 2)
 * CloudWatch log groups (Module 4)
 
+Read access to EC2 and Elastic Load Balancing, to look up the cluster's load balancer, network interfaces and NAT gateways (Module 3).
+
 |Azure subscription
 a|Permission to create, in a resource group:
 
@@ -105,6 +111,8 @@ a|Permission to create, in a resource group:
 * Storage accounts, and role assignments on them, which need Owner or User Access Administrator on the resource group (Module 2)
 * Container registries (Module 2)
 * Log Analytics workspaces (Module 4)
+
+`Reader` on the cluster's managed resource group (the `aro-...` group the cluster creates), to look up its load balancer, public IPs and network interfaces (Module 3).
 
 In Microsoft Entra ID: permission to create an app registration for the ARO identity provider (Module 2).
 |===
@@ -155,6 +163,8 @@ Clusters need outbound access to:
 
 * quay.io
 * registry.redhat.io
+* registry.access.redhat.com (UBI images for the test pods in Module 3)
+* checkip.amazonaws.com (the egress address check in Module 3)
 * ghcr.io, for the sample application's image (Module 2)
 * the attendee's ECR and ACR registries
 
