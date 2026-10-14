@@ -95,6 +95,7 @@ On their Red Hat account, permission to manage the cluster in OpenShift Cluster 
 
 |ARO cluster
 |The kubeadmin credential, and `Contributor` on the cluster's resource group.
+`Contributor` lets the attendee read the kubeadmin password and the admin kubeconfig from the cluster resource, so it makes them cluster administrator through Azure.
 `Reader` on the subscription, so Module 1 can list the resources and the deny assignment in the cluster's managed resource group, which holds its VMs.
 
 |AWS account
@@ -172,6 +173,7 @@ Clusters need outbound access to:
 * registry.access.redhat.com (UBI images for the test pods in Module 3)
 * checkip.amazonaws.com (the egress address check in Module 3)
 * ghcr.io, for the sample application's image (Modules 2 and 3)
+* api.openshift.com, for the update information the upgrade exercises read (Module 4)
 * the attendee's ECR and ACR registries
 
 == Verification Checklist
