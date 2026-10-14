@@ -349,6 +349,9 @@ oc get clusterserviceversions \
   --watch
 ----
 
+Operators installed for all namespaces, such as the Logging Operator, also list their ClusterServiceVersions here.
+Look for the one that starts with `openshift-gitops-operator`.
+
 The Operator creates a default Argo CD instance in the `openshift-gitops` namespace.
 Check that its pods are running:
 
