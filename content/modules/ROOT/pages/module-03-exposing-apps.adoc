@@ -284,6 +284,7 @@ oc get routes \
 ----
 
 The new Route has a generated name that starts with `sample-app-ingress-`.
+Its termination shows `edge/Redirect`: a Route generated from an Ingress redirects HTTP to HTTPS without being asked.
 Its owner is the Ingress, so OpenShift reverts any edit you make to the Route itself.
 Change the Ingress instead.
 
