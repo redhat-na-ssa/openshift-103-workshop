@@ -1,19 +1,10 @@
 = Who Manages What
 
-NOTE: This section is an outline. Its diagrams and exercises are being written and validated on ROSA and ARO.
+NOTE: The exercise on this page has not yet been run end to end on the workshop's ROSA and ARO clusters. Expect small differences in command output until it has been validated.
 
 On EKS and AKS, the cloud provider runs the control plane and you run almost everything else.
 On ROSA and ARO, Red Hat site reliability engineers (SRE) and the cloud provider also run the worker operating system and the platform components, and some settings you are used to changing are no longer yours.
 This section draws that line for all four platforms, and covers support, cost and backup, because they follow from the same line.
-
-// Planned visuals:
-// - Responsibility chart: rows (control plane, etcd, node OS, CNI,
-//   ingress, monitoring, upgrades, app backup, app data), one column
-//   per platform, cells "provider", "Red Hat SRE", "you", "shared".
-// - Architecture diagram: EKS, AKS, ROSA HCP, ROSA classic, ARO,
-//   showing where the control plane runs and how SRE reaches it.
-// - Cost model chart: control plane fee and per-worker fee per
-//   platform for the same 3-worker pool.
 
 == On EKS and AKS
 
@@ -22,23 +13,278 @@ This section draws that line for all four platforms, and covers support, cost an
 * You patch or replace nodes, or hand that to EKS Auto Mode or AKS node OS auto-upgrade.
 * You open support cases with AWS or Microsoft, and with each vendor whose add-on you run.
 
+.EKS and AKS (reference only)
+[%collapsible]
+====
+On EKS, the node group's AMI release is yours to move forward:
+
+[source,bash]
+----
+aws eks describe-nodegroup \
+  --cluster-name <cluster-name> \
+  --nodegroup-name <nodegroup-name> \
+  --query nodegroup.releaseVersion
+----
+
+On AKS, the tier and the upgrade channels show what Microsoft does for you:
+
+[source,bash]
+----
+az aks show \
+  --resource-group <resource-group> \
+  --name <cluster-name> \
+  --query "{tier: sku.tier, upgrades: autoUpgradeProfile}"
+----
+====
+
+== Where Each Platform Runs
+
+The diagram shows where the control plane and the nodes of each platform run, and who operates them.
+
+image::module-01-architecture.svg[Where the control plane and nodes run on EKS, AKS, ROSA HCP, ROSA classic and ARO]
+
+Three things stand out:
+
+* On ROSA with hosted control planes (HCP), the control plane runs in a Red Hat-owned AWS account, like EKS runs it in an AWS-owned one. Your account holds only the worker nodes, reached over AWS PrivateLink.
+* On ROSA classic, everything runs in your AWS account, including three control plane nodes and the infra nodes, and SRE reaches in through an IAM role you created.
+* On ARO, the control plane and worker VMs run in your subscription, but in a managed resource group that a deny assignment locks against changes, even by subscription owners.
+
+ARO also offers hosted control planes, in preview.
+This workshop uses standard ARO.
+
+== The Responsibility Line
+
+image::module-01-responsibility.svg[Who is responsible for each area on EKS, AKS, ROSA HCP and ARO]
+
+Read the chart by row:
+
+* *Control plane and etcd*: always someone else's job. On ROSA and ARO, Red Hat SRE is part of that team.
+* *Node operating system and platform components*: this is the real difference. On EKS, AWS publishes patched AMIs and add-on versions, and you roll each of them out. On AKS, the default node OS channel applies Microsoft's node images for you. On ROSA and ARO the worker OS (Red Hat Enterprise Linux CoreOS) and every platform Operator are patched together, in the same upgrade as the cluster, and SRE monitors and repairs them.
+* *Cluster upgrades*: shared everywhere. On ROSA you schedule upgrades, or opt into automatic ones, and SRE monitors them; on HCP the control plane and each machine pool upgrade separately, control plane first. On ARO you start the upgrade yourself, and it updates the whole cluster at once. Neither service upgrades your cluster without you, except for a critical CVE. Module 4 covers both.
+* *Node capacity, identity, backup and workloads*: yours on every platform.
+
+The cells are simplified.
+The responsibility matrices in the references list each task in detail.
+
 == On ROSA and ARO
 
-Outline of the exercise:
+=== Exercise 1: Identify the Architecture
 
-. Read the cluster's service details.
-** ROSA: describe the cluster with the `rosa` CLI, including whether it is ROSA with hosted control planes (HCP) or classic.
-** ARO: show the cluster with the `az aro` CLI.
-. List the namespaces SRE owns and the components they run.
-. Try to change a managed resource, and see the change refused or reverted.
-. Find the support path: how to open a case and who answers it.
+==== ROSA
+
+Describe the cluster:
+
+[source,bash]
+----
+rosa describe cluster \
+  --cluster <cluster-name>
+----
+
+Look for these lines:
+
+* `Control Plane`: `ROSA Service Hosted` on HCP, `Customer Hosted` on classic.
+* `OpenShift Version`.
+* The operator IAM roles, used in Exercise 2.
+
+Get the same facts as JSON:
+
+[source,bash]
+----
+rosa describe cluster \
+  --cluster <cluster-name> \
+  --output json \
+  | jq '{hcp: .hypershift.enabled, version: .version.raw_id}'
+----
+
+==== ARO
+
+Show the cluster profile:
+
+[source,bash]
+----
+az aro show \
+  --resource-group <resource-group> \
+  --name <cluster-name> \
+  --query clusterProfile
+----
+
+The `resourceGroupId` field is the managed resource group that holds the cluster's VMs.
+
+==== Both Clusters
+
+List the nodes on each cluster:
+
+[source,bash]
+----
+oc get nodes
+----
+
+The ROSA HCP cluster shows only worker nodes, because its control plane is not in your account.
+The ARO cluster also shows three control plane nodes with the `master` role.
+On EKS and AKS, like on ROSA HCP, you never see the control plane as nodes.
+
+=== Exercise 2: See How the Service Reaches Your Account
+
+==== ROSA
+
+Red Hat acts in your AWS account only through IAM roles you created when you set up ROSA.
+List the account-wide roles:
+
+[source,bash]
+----
+rosa list account-roles
+----
+
+The `Support` role is the one Red Hat SRE assumes to troubleshoot your cluster's AWS resources.
+The `Installer` and `Worker` roles create the cluster and run its nodes.
+The cluster's operator roles, shown by `rosa describe cluster`, give individual platform Operators, such as the ingress and storage Operators, just the AWS permissions they need.
+
+==== ARO
+
+The cluster's resources live in the managed resource group shown in Exercise 1.
+Save its ID:
+
+[source,bash]
+----
+MANAGED_RG=$(az aro show \
+  --resource-group <resource-group> \
+  --name <cluster-name> \
+  --query clusterProfile.resourceGroupId \
+  --output tsv)
+----
+
+List what is in it:
+
+[source,bash]
+----
+az resource list \
+  --resource-group "${MANAGED_RG##*/}" \
+  --query "[].{name: name, type: type}" \
+  --output table
+----
+
+You can read these resources, but not change them.
+The deny assignment on the resource group enforces this.
+Build the Azure Resource Manager URL that lists it:
+
+[source,bash]
+----
+DENY_URL="https://management.azure.com${MANAGED_RG}"
+----
+
+[source,bash]
+----
+DENY_URL+="/providers/Microsoft.Authorization/denyAssignments"
+----
+
+[source,bash]
+----
+DENY_URL+="?api-version=2022-04-01"
+----
+
+Read the deny assignment's name and the principals it exempts:
+
+[source,bash]
+----
+az rest \
+  --method get \
+  --url "$DENY_URL" \
+  --query "value[].properties.denyAssignmentName"
+----
+
+[source,bash]
+----
+az rest \
+  --method get \
+  --url "$DENY_URL" \
+  --query "value[].properties.excludePrincipals[].id"
+----
+
+The deny assignment blocks every write by everyone else, including subscription owners.
+Only the exempt principals, such as the ARO resource provider, may change the resources.
+
+=== Exercise 3: Find What SRE Owns in the Cluster
+
+Platform namespaces start with `openshift-`.
+Count them:
+
+[source,bash]
+----
+oc get namespaces \
+  --no-headers \
+  | grep -c '^openshift-'
+----
+
+On ROSA, look for the managed-service namespaces that do not exist on a self-managed OpenShift cluster:
+
+[source,bash]
+----
+oc get namespaces \
+  --no-headers \
+  | grep -E 'managed|backplane|ocm'
+----
+
+These run the agents SRE uses to monitor the cluster, apply managed configuration and reach it for support.
+
+On ROSA, the managed service also installs validating admission webhooks.
+They stop even cluster administrators from changing resources SRE owns, such as the ClusterVersion, the machine API and the cluster autoscaler:
+
+[source,bash]
+----
+oc get validatingwebhookconfigurations \
+  | grep managed.openshift.io
+----
+
+=== Exercise 4: Try to Change a Managed Resource
+
+Try to add a label to the ClusterVersion, the resource that controls upgrades.
+The `--dry-run=server` flag sends the request through admission control without saving it, so nothing changes even if the request is accepted:
+
+[source,bash]
+----
+oc label clusterversion version \
+  workshop=test \
+  --dry-run=server
+----
+
+On ROSA, a managed webhook refuses the request, even though you are a cluster administrator.
+On ROSA you change upgrade settings through the `rosa` CLI or OpenShift Cluster Manager, never through the ClusterVersion.
+
+On ARO, the request is accepted.
+ARO protects its platform through the deny assignment on the Azure side and its support policy, rather than through admission webhooks, and you start upgrades in the cluster yourself.
+
+On both, changes the service does not support can take the cluster out of support.
+ROSA calls this _limited support_: SRE stops proactive monitoring and the SLA no longer applies until the cause is fixed.
+If your ROSA cluster is in limited support, `rosa describe cluster` shows a `Limited Support` section with the reasons.
+
+=== Exercise 5: Know Your Support Path
+
+[cols="1,2,2",options="header"]
+|===
+| |ROSA |ARO
+
+|Where you open a case
+|The Red Hat Customer Portal, or AWS Support
+|The Azure portal, or the Red Hat Customer Portal
+
+|Who answers
+|Either side; the case is routed to Red Hat or AWS, and Red Hat can open AWS cases for you
+|Microsoft and Red Hat support engineers together
+
+|What you need
+|At least an AWS Developer Support plan to open ROSA technical cases. Red Hat support is included
+|An Azure support plan to open cases with Microsoft, and the Red Hat pull secret on the cluster to open them with Red Hat
+|===
+
+When an EKS or AKS add-on from another vendor fails, you open a second case with that vendor.
+On ROSA and ARO, the platform components are part of the service, so one case covers them.
 
 == What Matters
 
-* ROSA comes in two architectures. With HCP, the control plane runs in a Red Hat account and is reached over AWS PrivateLink. With classic, it runs in your account. The responsibility line differs between them.
+* ROSA comes in two architectures. With HCP, the control plane runs in a Red Hat account and is reached over AWS PrivateLink. With classic, it runs in your account. HCP is the default for new clusters.
 * ARO now has two architectures too: standard, and hosted control planes in preview.
-* Some cluster settings are SRE-owned. Changes to them are refused or reverted, so automation that worked on EKS or AKS may fail here.
-* Application backup is yours on every platform. SRE backs up the control plane, not your workloads or volumes.
+* Some cluster settings are SRE-owned. Changes to them are refused or reverted, so automation that worked on EKS or AKS may fail here. Test cluster-wide automation against a ROSA or ARO cluster before rolling it out.
+* Application backup is yours on every platform. SRE backs up etcd for its own disaster recovery, not for restores you request, and never your volumes.
 
 === Backup and Restore
 
@@ -46,13 +292,115 @@ AWS Backup supports EKS, and Azure Backup supports AKS, as managed services with
 Neither covers ROSA or ARO.
 On ROSA and ARO you install the OpenShift API for Data Protection (OADP) Operator, which is based on Velero, and point it at an S3 bucket or Azure storage account.
 
-// Planned: comparison table (service, what it backs up, agent,
-// vaults) and a sample OADP DataProtectionApplication for each cloud.
+[cols="1,2,2,2",options="header"]
+|===
+| |AWS Backup for EKS |Azure Backup for AKS |OADP on ROSA and ARO
+
+|Delivered as
+|A managed AWS service
+|A managed Azure service, with a backup extension in the cluster
+|An Operator you install from the Software Catalog
+
+|What runs in the cluster
+|Nothing
+|The backup extension
+|Velero and its plugins, and optionally a node agent for file-level volume backup
+
+|What it backs up
+|Cluster configuration, Kubernetes resources, and EBS, EFS and S3 volumes
+|Kubernetes resources and Azure Disk volumes
+|Kubernetes resources, and volumes through CSI snapshots or the node agent
+
+|Policies and storage
+|Backup plans and vaults, with cross-Region copy
+|Backup policies and vaults
+|Schedules you define, in a bucket or storage account you own
+|===
+
+OADP is configured with one DataProtectionApplication resource.
+These samples show its shape on each cloud; this workshop does not run them.
+
+.Sample OADP configuration for ROSA
+[%collapsible]
+====
+On ROSA the `cloud-credentials` secret holds an IAM role ARN rather than access keys, the same pattern Module 2 uses for application pods.
+
+[source,yaml]
+----
+apiVersion: oadp.openshift.io/v1alpha1
+kind: DataProtectionApplication
+metadata:
+  name: dpa
+  namespace: openshift-adp
+spec:
+  configuration:
+    velero:
+      defaultPlugins:
+        - openshift
+        - aws
+  backupLocations:
+    - velero:
+        provider: aws
+        default: true
+        objectStorage:
+          bucket: <bucket-name>
+          prefix: velero
+        config:
+          region: <region>
+        credential:
+          name: cloud-credentials
+          key: credentials
+  snapshotLocations:
+    - velero:
+        provider: aws
+        config:
+          region: <region>
+        credential:
+          name: cloud-credentials
+          key: credentials
+----
+====
+
+.Sample OADP configuration for ARO
+[%collapsible]
+====
+[source,yaml]
+----
+apiVersion: oadp.openshift.io/v1alpha1
+kind: DataProtectionApplication
+metadata:
+  name: dpa
+  namespace: openshift-adp
+spec:
+  configuration:
+    velero:
+      defaultPlugins:
+        - openshift
+        - azure
+  backupLocations:
+    - velero:
+        provider: azure
+        default: true
+        objectStorage:
+          bucket: <blob-container>
+          prefix: velero
+        config:
+          resourceGroup: <storage-resource-group>
+          storageAccount: <storage-account>
+          subscriptionId: <subscription-id>
+        credential:
+          name: cloud-credentials-azure
+          key: cloud
+----
+====
 
 === Cost and Support
 
+image::module-01-cost.svg[Monthly platform cost on top of worker compute for EKS, AKS, ROSA HCP and ARO]
+
 * EKS charges a control plane fee per cluster. AKS has a free tier without an SLA, and paid tiers with one.
-* ROSA HCP charges a control plane fee per cluster plus an OpenShift fee per worker vCPU. ARO charges the OpenShift fee per worker vCPU, and standard ARO also bills its control plane VMs.
+* ROSA HCP charges a control plane fee per cluster plus an OpenShift fee per worker vCPU. ARO charges the OpenShift fee per worker vCPU, and standard ARO also bills its three control plane VMs.
+* Worker compute costs about the same on every platform and is left out of the chart. On larger clusters the per-vCPU OpenShift fee dominates, so one- and three-year commitments on that fee matter more than the control plane fee.
 * ROSA and ARO both carry a 99.95% SLA and joint support: one case reaches both the cloud provider and Red Hat.
 
 == Where Each Wins
@@ -69,25 +417,37 @@ On ROSA and ARO you install the OpenShift API for Data Protection (OADP) Operato
 
 |A tested, integrated stack instead of an add-on matrix you maintain.
 |Managed backup services with policies and vaults.
+
+|
+|One vendor and one support channel for the whole stack.
 |===
+
+== App Teams Will Notice
+
+* Cluster upgrades and SRE maintenance happen on a schedule your platform team agrees with SRE. App teams should expect rolling node restarts during those windows, and use PodDisruptionBudgets and multiple replicas, as on EKS and AKS.
+* Backups of application data are still the platform or app team's job. Agree who owns OADP schedules before the first restore request.
 
 == References
 
 * EKS
 ** https://docs.aws.amazon.com/eks/latest/best-practices/security.html[EKS security best practices (shared responsibility)]
+** https://docs.aws.amazon.com/eks/latest/userguide/managed-node-groups.html[EKS managed node groups]
 ** https://aws.amazon.com/eks/pricing/[EKS pricing]
 ** https://docs.aws.amazon.com/aws-backup/latest/devguide/eks-backups.html[AWS Backup for EKS]
 * AKS
 ** https://learn.microsoft.com/azure/aks/support-policies[AKS support policies]
+** https://learn.microsoft.com/azure/aks/auto-upgrade-node-os-image[AKS node OS auto-upgrade]
 ** https://learn.microsoft.com/azure/aks/free-standard-pricing-tiers[AKS pricing tiers]
 ** https://learn.microsoft.com/azure/backup/azure-kubernetes-service-backup-overview[Azure Backup for AKS]
 * ROSA
 ** https://docs.openshift.com/rosa/rosa_policy/rosa-policy-responsibility-matrix.html[ROSA responsibility matrix]
 ** https://docs.aws.amazon.com/rosa/latest/userguide/rosa-architecture-models.html[ROSA architecture models (HCP and classic)]
 ** https://aws.amazon.com/rosa/pricing/[ROSA pricing]
+** https://docs.aws.amazon.com/rosa/latest/userguide/rosa-support.html[ROSA support]
 ** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/backup_and_restore/oadp-application-backup-and-restore[OADP on ROSA]
 * ARO
 ** https://learn.microsoft.com/azure/openshift/responsibility-matrix[ARO responsibility matrix]
 ** https://learn.microsoft.com/azure/openshift/concepts-classic-hosted-control-planes-comparison[ARO standard and hosted control planes compared]
+** https://learn.microsoft.com/azure/openshift/support-policies-v4[ARO support policies]
 ** https://azure.microsoft.com/pricing/details/openshift/[ARO pricing]
 ** https://cloud.redhat.com/experts/misc/oadp/aro/[OADP on ARO (Cloud Experts)]
