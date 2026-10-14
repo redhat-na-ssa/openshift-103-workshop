@@ -55,13 +55,14 @@ image::module-04-scaling-models.svg[Group autoscaling grows pre-defined groups o
 
 ROSA HCP keeps its machine pools outside your cluster, in OpenShift Cluster Manager, while ARO keeps MachineSets inside it.
 So the steps differ between the two clusters.
-Run the ROSA steps while logged in to your ROSA cluster, and the ARO steps while logged in to your ARO cluster.
+Run the ROSA steps in your ROSA terminal and the ARO steps in your ARO terminal, the ones you set up in Module 2.
 
-On your workstation, set the name of your ROSA cluster:
+The ROSA steps use the `CLUSTER` variable from Module 2.
+If you open a new ROSA terminal, set it again:
 
 [source,bash]
 ----
-export ROSA_CLUSTER=<your-rosa-cluster-name>
+export CLUSTER=<your-rosa-cluster-name>
 ----
 
 === Exercise 1: Look at the Nodes You Have
@@ -87,7 +88,7 @@ List them with the `rosa` CLI:
 [source,bash]
 ----
 rosa list machinepools \
-  --cluster "$ROSA_CLUSTER"
+  --cluster "$CLUSTER"
 ----
 
 The cluster itself has no MachineSets:
@@ -152,7 +153,7 @@ Use the subnet of your existing pool:
 [source,bash]
 ----
 SUBNET=$(rosa list machinepools \
-  --cluster "$ROSA_CLUSTER" \
+  --cluster "$CLUSTER" \
   --output json \
   | jq -r '.[0].subnet')
 echo "$SUBNET"
@@ -163,7 +164,7 @@ Create an autoscaling machine pool that starts at zero nodes:
 [source,bash]
 ----
 rosa create machinepool \
-  --cluster "$ROSA_CLUSTER" \
+  --cluster "$CLUSTER" \
   --name scale-lab \
   --subnet "$SUBNET" \
   --instance-type m7i.xlarge \
@@ -179,7 +180,7 @@ Check the pool:
 [source,bash]
 ----
 rosa describe machinepool \
-  --cluster "$ROSA_CLUSTER" \
+  --cluster "$CLUSTER" \
   --machinepool scale-lab
 ----
 
@@ -189,7 +190,7 @@ You can see its few cluster-wide settings:
 [source,bash]
 ----
 rosa describe autoscaler \
-  --cluster "$ROSA_CLUSTER"
+  --cluster "$CLUSTER"
 ----
 
 ==== ARO
@@ -417,7 +418,7 @@ On ROSA you can also watch the pool's node count from outside the cluster:
 [source,bash]
 ----
 rosa list machinepools \
-  --cluster "$ROSA_CLUSTER"
+  --cluster "$CLUSTER"
 ----
 
 New nodes take several minutes to boot, install and join.
@@ -465,11 +466,11 @@ Collect the cluster's OIDC issuer and your AWS account ID:
 
 [source,bash]
 ----
-OIDC_ENDPOINT=$(oc get authentication.config.openshift.io \
+OIDC_PROVIDER=$(oc get authentication.config.openshift.io \
   cluster \
   -o jsonpath='{.spec.serviceAccountIssuer}' \
   | sed 's|^https://||')
-AWS_ACCOUNT_ID=$(aws sts get-caller-identity \
+ACCOUNT_ID=$(aws sts get-caller-identity \
   --query Account \
   --output text)
 ----
@@ -485,12 +486,12 @@ cat > karpenter-trust.json <<EOF
     "Effect": "Allow",
     "Principal": {
       "Federated":
-        "arn:aws:iam::${AWS_ACCOUNT_ID}:oidc-provider/${OIDC_ENDPOINT}"
+        "arn:aws:iam::${ACCOUNT_ID}:oidc-provider/${OIDC_PROVIDER}"
     },
     "Action": "sts:AssumeRoleWithWebIdentity",
     "Condition": {
       "StringEquals": {
-        "${OIDC_ENDPOINT}:sub":
+        "${OIDC_PROVIDER}:sub":
           "system:serviceaccount:kube-system:karpenter"
       }
     }
@@ -504,7 +505,7 @@ Create the role and attach the AWS managed policy for ROSA Karpenter:
 [source,bash]
 ----
 aws iam create-role \
-  --role-name "rosa-karpenter-${ROSA_CLUSTER}" \
+  --role-name "rosa-karpenter-${CLUSTER}" \
   --assume-role-policy-document file://karpenter-trust.json \
   --tags Key=red-hat-managed,Value=true
 ----
@@ -512,7 +513,7 @@ aws iam create-role \
 [source,bash]
 ----
 aws iam attach-role-policy \
-  --role-name "rosa-karpenter-${ROSA_CLUSTER}" \
+  --role-name "rosa-karpenter-${CLUSTER}" \
   --policy-arn \
     arn:aws:iam::aws:policy/service-role/ROSAKarpenterControllerPolicy
 ----
@@ -522,7 +523,7 @@ Turn on AutoNode with that role:
 [source,bash]
 ----
 KARPENTER_ROLE_ARN=$(aws iam get-role \
-  --role-name "rosa-karpenter-${ROSA_CLUSTER}" \
+  --role-name "rosa-karpenter-${CLUSTER}" \
   --query Role.Arn \
   --output text)
 ----
@@ -530,7 +531,7 @@ KARPENTER_ROLE_ARN=$(aws iam get-role \
 [source,bash]
 ----
 rosa edit cluster \
-  --cluster "$ROSA_CLUSTER" \
+  --cluster "$CLUSTER" \
   --autonode enabled \
   --autonode-iam-role-arn "$KARPENTER_ROLE_ARN"
 ----
@@ -589,7 +590,7 @@ Its nodes drain, the sample application's pods go back to `Pending`, and Karpent
 [source,bash]
 ----
 rosa delete machinepool \
-  --cluster "$ROSA_CLUSTER" \
+  --cluster "$CLUSTER" \
   scale-lab \
   --yes
 ----
@@ -713,6 +714,13 @@ oc patch deployment/sample-app \
 
 [source,bash]
 ----
+oc set resources deployment/sample-app \
+  --namespace sample-app \
+  --requests cpu=50m
+----
+
+[source,bash]
+----
 oc scale deployment/sample-app \
   --namespace sample-app \
   --replicas 2
@@ -725,7 +733,7 @@ If you skipped Exercise 4, delete the machine pool instead:
 [source,bash]
 ----
 rosa delete machinepool \
-  --cluster "$ROSA_CLUSTER" \
+  --cluster "$CLUSTER" \
   scale-lab \
   --yes
 ----

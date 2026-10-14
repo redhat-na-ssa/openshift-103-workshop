@@ -379,19 +379,20 @@ oc adm policy add-cluster-role-to-user \
 The collector writes to CloudWatch with an IAM role, which it assumes with its service account token.
 This is the same STS pattern as in xref:module-02-cloud-credentials.adoc[Pod Cloud Credentials].
 
-Collect the values you need:
+Work in your ROSA terminal.
+Collect the values you need; they are the same as in Module 2:
 
 [source,bash]
 ----
-REGION=$(rosa describe cluster \
-  --cluster "$ROSA_CLUSTER" \
+AWS_REGION=$(rosa describe cluster \
+  --cluster "$CLUSTER" \
   --output json \
   | jq -r '.region.id')
 ----
 
 [source,bash]
 ----
-OIDC_ENDPOINT=$(oc get authentication.config.openshift.io \
+OIDC_PROVIDER=$(oc get authentication.config.openshift.io \
   cluster \
   -o jsonpath='{.spec.serviceAccountIssuer}' \
   | sed 's|^https://||')
@@ -399,7 +400,7 @@ OIDC_ENDPOINT=$(oc get authentication.config.openshift.io \
 
 [source,bash]
 ----
-AWS_ACCOUNT_ID=$(aws sts get-caller-identity \
+ACCOUNT_ID=$(aws sts get-caller-identity \
   --query Account \
   --output text)
 ----
@@ -415,12 +416,12 @@ cat > logging-trust.json <<EOF
     "Effect": "Allow",
     "Principal": {
       "Federated":
-        "arn:aws:iam::${AWS_ACCOUNT_ID}:oidc-provider/${OIDC_ENDPOINT}"
+        "arn:aws:iam::${ACCOUNT_ID}:oidc-provider/${OIDC_PROVIDER}"
     },
     "Action": "sts:AssumeRoleWithWebIdentity",
     "Condition": {
       "StringEquals": {
-        "${OIDC_ENDPOINT}:sub":
+        "${OIDC_PROVIDER}:sub":
           "system:serviceaccount:openshift-logging:logging-collector"
       }
     }
@@ -433,7 +434,7 @@ Write a permissions policy that only allows log groups named after your cluster:
 
 [source,bash]
 ----
-LOG_GROUPS="arn:aws:logs:${REGION}:${AWS_ACCOUNT_ID}:log-group"
+LOG_GROUPS="arn:aws:logs:${AWS_REGION}:${ACCOUNT_ID}:log-group"
 ----
 
 [source,bash]
@@ -451,7 +452,7 @@ cat > logging-policy.json <<EOF
       "logs:PutLogEvents",
       "logs:PutRetentionPolicy"
     ],
-    "Resource": "${LOG_GROUPS}:workshop-${ROSA_CLUSTER}*"
+    "Resource": "${LOG_GROUPS}:workshop-${CLUSTER}*"
   }]
 }
 EOF
@@ -462,14 +463,14 @@ Create the role and attach the policy:
 [source,bash]
 ----
 aws iam create-role \
-  --role-name "${ROSA_CLUSTER}-logging" \
+  --role-name "${CLUSTER}-logging" \
   --assume-role-policy-document file://logging-trust.json
 ----
 
 [source,bash]
 ----
 aws iam put-role-policy \
-  --role-name "${ROSA_CLUSTER}-logging" \
+  --role-name "${CLUSTER}-logging" \
   --policy-name cloudwatch-logs \
   --policy-document file://logging-policy.json
 ----
@@ -479,7 +480,7 @@ Store the role's ARN in a secret that the log forwarder reads:
 [source,bash]
 ----
 LOGGING_ROLE_ARN=$(aws iam get-role \
-  --role-name "${ROSA_CLUSTER}-logging" \
+  --role-name "${CLUSTER}-logging" \
   --query Role.Arn \
   --output text)
 ----
@@ -515,8 +516,8 @@ spec:
   - name: cloudwatch
     type: cloudwatch
     cloudwatch:
-      region: ${REGION}
-      groupName: 'workshop-${ROSA_CLUSTER}.{.log_type||"none"}'
+      region: ${AWS_REGION}
+      groupName: 'workshop-${CLUSTER}.{.log_type||"none"}'
       authentication:
         type: iamRole
         iamRole:
@@ -553,8 +554,8 @@ Send a few requests to the application, as in Exercise 3, then read the log grou
 
 [source,bash]
 ----
-aws logs tail "workshop-${ROSA_CLUSTER}.application" \
-  --region "$REGION" \
+aws logs tail "workshop-${CLUSTER}.application" \
+  --region "$AWS_REGION" \
   --since 10m
 ----
 
@@ -592,26 +593,30 @@ The collector writes to a Log Analytics workspace through the Azure Monitor Logs
 That needs a custom table, a data collection endpoint and a data collection rule, and an identity allowed to send to the rule.
 The identity is a user-assigned managed identity that trusts the collector's service account, the same workload identity pattern as in xref:module-02-cloud-credentials.adoc[Pod Cloud Credentials].
 
-Set your ARO cluster's name and resource group, and look up its region and OIDC issuer:
+Work in your ARO terminal.
+The steps use the `CLUSTER` and `RESOURCE_GROUP` variables from Module 2.
+If you open a new terminal, set them again:
 
 [source,bash]
 ----
-export ARO_CLUSTER=<your-aro-cluster-name>
-export ARO_RG=<your-resource-group>
+export CLUSTER=<your-aro-cluster-name>
+export RESOURCE_GROUP=<your-resource-group>
 ----
+
+Look up the cluster's region and OIDC issuer:
 
 [source,bash]
 ----
 LOCATION=$(az aro show \
-  --resource-group "$ARO_RG" \
-  --name "$ARO_CLUSTER" \
+  --resource-group "$RESOURCE_GROUP" \
+  --name "$CLUSTER" \
   --query location \
   --output tsv)
 ----
 
 [source,bash]
 ----
-ARO_OIDC_ISSUER=$(oc get authentication.config.openshift.io \
+OIDC_ISSUER=$(oc get authentication.config.openshift.io \
   cluster \
   -o jsonpath='{.spec.serviceAccountIssuer}')
 ----
@@ -621,7 +626,7 @@ Create a Log Analytics workspace and a custom table for the application's logs:
 [source,bash]
 ----
 az monitor log-analytics workspace create \
-  --resource-group "$ARO_RG" \
+  --resource-group "$RESOURCE_GROUP" \
   --workspace-name sample-app-logs \
   --location "$LOCATION"
 ----
@@ -629,7 +634,7 @@ az monitor log-analytics workspace create \
 [source,bash]
 ----
 az monitor log-analytics workspace table create \
-  --resource-group "$ARO_RG" \
+  --resource-group "$RESOURCE_GROUP" \
   --workspace-name sample-app-logs \
   --name SampleAppLogs_CL \
   --columns \
@@ -645,7 +650,7 @@ Create a data collection endpoint, which is the URL the collector sends to:
 [source,bash]
 ----
 az monitor data-collection endpoint create \
-  --resource-group "$ARO_RG" \
+  --resource-group "$RESOURCE_GROUP" \
   --name sample-app-dce \
   --location "$LOCATION" \
   --public-network-access Enabled
@@ -656,7 +661,7 @@ Collect the IDs the rule needs:
 [source,bash]
 ----
 DCE_ID=$(az monitor data-collection endpoint show \
-  --resource-group "$ARO_RG" \
+  --resource-group "$RESOURCE_GROUP" \
   --name sample-app-dce \
   --query id \
   --output tsv)
@@ -665,7 +670,7 @@ DCE_ID=$(az monitor data-collection endpoint show \
 [source,bash]
 ----
 WORKSPACE_ID=$(az monitor log-analytics workspace show \
-  --resource-group "$ARO_RG" \
+  --resource-group "$RESOURCE_GROUP" \
   --workspace-name sample-app-logs \
   --query id \
   --output tsv)
@@ -724,7 +729,7 @@ Create the rule:
 [source,bash]
 ----
 az monitor data-collection rule create \
-  --resource-group "$ARO_RG" \
+  --resource-group "$RESOURCE_GROUP" \
   --name sample-app-dcr \
   --location "$LOCATION" \
   --rule-file sample-app-dcr.json
@@ -735,17 +740,17 @@ Create the managed identity and let it trust the collector's service account:
 [source,bash]
 ----
 az identity create \
-  --resource-group "$ARO_RG" \
+  --resource-group "$RESOURCE_GROUP" \
   --name sample-app-logging
 ----
 
 [source,bash]
 ----
 az identity federated-credential create \
-  --resource-group "$ARO_RG" \
+  --resource-group "$RESOURCE_GROUP" \
   --identity-name sample-app-logging \
   --name logging-collector \
-  --issuer "$ARO_OIDC_ISSUER" \
+  --issuer "$OIDC_ISSUER" \
   --subject \
     system:serviceaccount:openshift-logging:logging-collector \
   --audiences api://AzureADTokenExchange
@@ -756,7 +761,7 @@ Allow the identity to send to the rule:
 [source,bash]
 ----
 DCR_ID=$(az monitor data-collection rule show \
-  --resource-group "$ARO_RG" \
+  --resource-group "$RESOURCE_GROUP" \
   --name sample-app-dcr \
   --query id \
   --output tsv)
@@ -765,7 +770,7 @@ DCR_ID=$(az monitor data-collection rule show \
 [source,bash]
 ----
 PRINCIPAL_ID=$(az identity show \
-  --resource-group "$ARO_RG" \
+  --resource-group "$RESOURCE_GROUP" \
   --name sample-app-logging \
   --query principalId \
   --output tsv)
@@ -785,7 +790,7 @@ Collect the values the log forwarder needs:
 [source,bash]
 ----
 DCE_URL=$(az monitor data-collection endpoint show \
-  --resource-group "$ARO_RG" \
+  --resource-group "$RESOURCE_GROUP" \
   --name sample-app-dce \
   --query logsIngestion.endpoint \
   --output tsv)
@@ -794,7 +799,7 @@ DCE_URL=$(az monitor data-collection endpoint show \
 [source,bash]
 ----
 DCR_IMMUTABLE_ID=$(az monitor data-collection rule show \
-  --resource-group "$ARO_RG" \
+  --resource-group "$RESOURCE_GROUP" \
   --name sample-app-dcr \
   --query immutableId \
   --output tsv)
@@ -803,7 +808,7 @@ DCR_IMMUTABLE_ID=$(az monitor data-collection rule show \
 [source,bash]
 ----
 CLIENT_ID=$(az identity show \
-  --resource-group "$ARO_RG" \
+  --resource-group "$RESOURCE_GROUP" \
   --name sample-app-logging \
   --query clientId \
   --output tsv)
@@ -874,7 +879,7 @@ Then query the table:
 [source,bash]
 ----
 WORKSPACE_GUID=$(az monitor log-analytics workspace show \
-  --resource-group "$ARO_RG" \
+  --resource-group "$RESOURCE_GROUP" \
   --workspace-name sample-app-logs \
   --query customerId \
   --output tsv)
