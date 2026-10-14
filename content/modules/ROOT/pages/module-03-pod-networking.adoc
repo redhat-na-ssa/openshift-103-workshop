@@ -136,6 +136,9 @@ oc run client \
   --command -- sleep infinity
 ----
 
+`oc run` prints a PodSecurity warning about the pod's security settings.
+It is only a warning, and the pod starts.
+
 [source,bash]
 ----
 oc wait pod/client \
@@ -205,7 +208,8 @@ EOF
 ----
 
 Run both checks again.
-The client now gets `000`, and the Route returns `503` or times out, because the router is just another source of traffic:
+The client now gets `000`, and the Route returns `503` or times out, because the router is just another source of traffic.
+When the client is blocked, `oc` also prints `command terminated with exit code 28`, which is curl's timeout:
 
 [source,bash]
 ----
@@ -342,13 +346,13 @@ oc label namespace restricted-data \
   workshop.k8socp.com/sensitivity=high
 ----
 
-Run a small web server in it:
+Run a second copy of the sample application in it, as a stand-in for a service with sensitive data:
 
 [source,bash]
 ----
 oc create deployment records \
   --namespace restricted-data \
-  --image registry.access.redhat.com/ubi9/nginx-124 \
+  --image ghcr.io/shpwrck/ocp-cloud-workshop/sample-app:1.0 \
   --port 8080
 ----
 
@@ -365,12 +369,11 @@ oc rollout status deployment/records \
   --namespace restricted-data
 ----
 
-The client can reach it.
-Any status other than `000` means the connection worked:
+The client can reach it, and gets `200`:
 
 [source,bash]
 ----
-probe http://records.restricted-data.svc:8080
+probe http://records.restricted-data.svc:8080/healthz
 ----
 
 Now apply a guardrail: only namespaces with the same label may connect to it.
@@ -405,7 +408,7 @@ EOF
 
 [source,bash]
 ----
-probe http://records.restricted-data.svc:8080
+probe http://records.restricted-data.svc:8080/healthz
 ----
 
 The client is blocked.
@@ -430,7 +433,7 @@ EOF
 
 [source,bash]
 ----
-probe http://records.restricted-data.svc:8080
+probe http://records.restricted-data.svc:8080/healthz
 ----
 
 The client is still blocked.

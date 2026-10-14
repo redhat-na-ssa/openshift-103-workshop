@@ -59,6 +59,18 @@ LB_HOST=$(oc get service router-default \
   --output jsonpath='{.status.loadBalancer.ingress[0].hostname}')
 ----
 
+The Service's annotation already names the type:
+
+[source,bash]
+----
+oc get service router-default \
+  --namespace openshift-ingress \
+  --output jsonpath='{.metadata.annotations.service\.beta\.kubernetes\.io/aws-load-balancer-type}{"\n"}'
+----
+
+It prints `nlb`.
+AWS shows the same:
+
 [source,bash]
 ----
 aws elbv2 describe-load-balancers \
@@ -148,7 +160,17 @@ curl --silent \
 
 It prints `200`: the app answers over HTTPS with a trusted certificate, and you created no DNS record or certificate.
 
-Plain HTTP still reaches the app.
+Try plain HTTP:
+
+[source,bash]
+----
+curl --silent \
+  --output /dev/null \
+  --write-out '%{http_code}\n' \
+  "http://$ROUTE_HOST/healthz"
+----
+
+It prints `503`: an edge Route refuses plain HTTP unless you say otherwise.
 Tell the router to redirect it to HTTPS:
 
 [source,bash]
@@ -276,7 +298,8 @@ curl --silent \
 === Exercise 4: Use the Gateway API
 
 OpenShift implements the Gateway API with an Envoy-based gateway that the Ingress Operator manages.
-Creating the GatewayClass installs what the gateway needs, including OpenShift Service Mesh, so it takes a few minutes.
+Creating the GatewayClass makes the Ingress Operator start an Istio control plane for it, `istiod-openshift-gateway`, in the `openshift-ingress` namespace.
+On some OpenShift versions it installs the OpenShift Service Mesh operator first, which takes a few minutes.
 
 [source,bash]
 ----
@@ -329,7 +352,8 @@ oc wait gateway/workshop \
   --timeout=600s
 ----
 
-The Gateway got its own load balancer and DNS record, next to the router's:
+The Gateway got its own load balancer and DNS record, next to the router's.
+Its Service is named after the Gateway and the GatewayClass, `workshop-openshift-default`:
 
 [source,bash]
 ----
@@ -374,7 +398,8 @@ curl --silent \
   "http://sample-app.gwapi.$APPS_DOMAIN/healthz"
 ----
 
-If the name does not resolve yet, wait a minute for the new DNS record and try again.
+The load balancer and DNS record take a minute or two.
+Until then the command prints `000`, so wait and try again.
 
 [NOTE]
 ====
@@ -424,7 +449,7 @@ The next section applies network policy to it.
 * OpenShift only turns an Ingress into a Route when it has no `ingressClassName` or uses `openshift-default`. An Ingress that still says `alb` or `webapprouting.kubernetes.azure.com` is silently ignored.
 * ALB and NGINX annotations do nothing here. Route behavior is set with `haproxy.router.openshift.io/*` annotations instead, for example timeouts and rewrites.
 * On ROSA, SRE owns the default ingress controller's settings, and you change them with `rosa edit ingress`. For other needs you add another ingress controller, or the AWS Load Balancer Operator for ALBs.
-* OpenShift supports the Gateway API from 4.19. Each Gateway gets its own load balancer and needs its own certificate. The ROSA and ARO documentation do not cover it yet, it needs `cluster-admin` (not `dedicated-admin` on ROSA), and on ARO's default domain you manage its DNS yourself, so check it on your clusters before you rely on it.
+* OpenShift supports the Gateway API from 4.19. Each Gateway gets its own load balancer and needs its own certificate. On ROSA that load balancer is a Classic Load Balancer, not a Network Load Balancer like the router's. The ROSA and ARO documentation do not cover it yet, it needs `cluster-admin` (not `dedicated-admin` on ROSA), and on ARO's default domain you manage its DNS yourself, so check it on your clusters before you rely on it.
 
 == Where Each Wins
 
