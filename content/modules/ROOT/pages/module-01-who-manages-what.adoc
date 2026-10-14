@@ -137,6 +137,10 @@ Set the cluster name and resource group:
 [source,bash]
 ----
 export CLUSTER=<aro-cluster-name>
+----
+
+[source,bash]
+----
 export RESOURCE_GROUP=<resource-group>
 ----
 
