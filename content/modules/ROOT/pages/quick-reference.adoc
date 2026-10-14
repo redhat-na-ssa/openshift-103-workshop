@@ -19,7 +19,7 @@ NOTE: The commands here are copied from the modules, which mark anything that wa
 
 |Node OS and platform components
 |You roll out node images and every add-on version.
-|SRE patches them together, in the same upgrade as the cluster.
+|ARO: one cluster update moves them all. ROSA: the control plane upgrade, then each machine pool. You start or schedule them; SRE monitors.
 
 |Add-ons
 |You pick, install and version each one.

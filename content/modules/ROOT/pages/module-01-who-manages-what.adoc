@@ -60,7 +60,7 @@ image::module-01-responsibility.svg[Who is responsible for each area on EKS, AKS
 Read the chart by row:
 
 * *Control plane and etcd*: always someone else's job. On ROSA and ARO, Red Hat SRE is part of that team.
-* *Node operating system and platform components*: this is the real difference. On EKS, AWS publishes patched AMIs and add-on versions, and you roll each of them out. On AKS, the default node OS channel applies Microsoft's node images for you. On ROSA and ARO the worker OS (Red Hat Enterprise Linux CoreOS) and every platform Operator are patched together, in the same upgrade as the cluster, and SRE monitors and repairs them.
+* *Node operating system and platform components*: this is the real difference. On EKS, AWS publishes patched AMIs and add-on versions, and you roll each of them out. On AKS, the default node OS channel applies Microsoft's node images for you. On ROSA and ARO, Red Hat ships the worker OS (Red Hat Enterprise Linux CoreOS) and every platform Operator in the OpenShift release, so there is no node image to track, and SRE monitors and repairs them. On ARO they all move in one cluster update. On ROSA the platform Operators move with the control plane, and the worker OS moves only when you upgrade each machine pool.
 * *Cluster upgrades*: shared everywhere. On ROSA you schedule upgrades, or opt into automatic ones, and SRE monitors them; the control plane and each machine pool upgrade separately, control plane first. On ARO you start the upgrade yourself, and it updates the whole cluster at once. Neither service upgrades your cluster without you, except for a critical CVE. Module 4 covers both.
 * *Node capacity, identity, backup and workloads*: yours on every platform.
 
@@ -483,7 +483,7 @@ The pricing pages in the references have current numbers.
 |===
 |ROSA and ARO win |EKS and AKS win
 
-|SRE runs the node OS, the platform components and their upgrades, around the clock.
+|SRE monitors and repairs the node OS and platform components around the clock, and watches the upgrades you start or schedule.
 |Full control: any add-on, any version, any configuration.
 
 |One support case covers the cloud and the platform.

@@ -19,11 +19,11 @@ This section tours what ships, then shows how you add more through the Software 
 On ROSA and ARO, every capability a production cluster needs arrives in one of three ways.
 The diagram sorts them; the names in code font are the cluster Operators or resources you look up in the exercises.
 
-image::module-01-what-ships.svg[How platform capabilities arrive on ROSA and ARO: shipped and kept current by SRE, shipped and configured by you, or added from the Software Catalog]
+image::module-01-what-ships.svg[How platform capabilities arrive on ROSA and ARO: shipped and upgraded with the cluster, shipped and configured by you, or added from the Software Catalog]
 
-=== Ships, Kept Current by SRE
+=== Ships, Upgraded with the Cluster
 
-These are installed with the cluster and upgraded with it.
+These are installed with the cluster, upgraded with it and monitored by SRE.
 On EKS and AKS, most of them are add-ons you choose, install and keep compatible yourself.
 
 Pod network (`network`)::
@@ -90,7 +90,7 @@ Backup::
 The OADP Operator, covered in xref:module-01-who-manages-what.adoc#_backup_and_restore[Backup and Restore].
 On EKS and AKS, AWS Backup and Azure Backup are managed services.
 
-The pattern: on ROSA and ARO the infrastructure plumbing ships and is kept current by SRE, while application-facing tools such as GitOps, logging and service mesh come from the Software Catalog and are yours to run.
+The pattern: on ROSA and ARO the infrastructure plumbing ships with the cluster, is upgraded with it and is watched by SRE, while application-facing tools such as GitOps, logging and service mesh come from the Software Catalog and are yours to run.
 
 == On ROSA and ARO
 
@@ -143,7 +143,8 @@ oc get clusterversion version \
 ----
 
 On EKS and AKS the Kubernetes version is a property of the cluster resource in the cloud API.
-On OpenShift the version covers the whole platform: Kubernetes, the node operating system and every cluster Operator move together.
+On OpenShift the version covers the whole platform: Kubernetes and every cluster Operator move together.
+On ARO the node operating system moves in the same update; on ROSA it moves when you upgrade each machine pool.
 Module 4 covers how that changes upgrades.
 
 .EKS and AKS (reference only)
