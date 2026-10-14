@@ -399,7 +399,7 @@ The list is often empty, and that is a real answer.
 OpenShift flags only the APIs it has scheduled for removal in a coming release, and on 4.20 and 4.21 every API scheduled so far has already been removed.
 An empty list means nothing on the cluster calls an API that is about to disappear; it fills in when a future release schedules more removals.
 
-NOTE: The command ran on both validation clusters and returned nothing, as expected.
+NOTE: *Not validated:* a non-empty result. The command returned nothing on both validation clusters, as expected on 4.20 and 4.21.
 
 To see who calls one of them, look at its users, for example:
 
