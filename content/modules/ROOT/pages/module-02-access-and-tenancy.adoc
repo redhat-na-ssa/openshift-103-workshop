@@ -513,7 +513,7 @@ oc patch project.config.openshift.io cluster \
     {"name":"project-request"}}}'
 ----
 
-The OpenShift API servers restart to pick up the change, which takes about five minutes.
+The OpenShift API servers restart to pick up the change, which takes five to ten minutes.
 Until they all have, some project requests use the template and some don't.
 
 On ARO, wait for the restart to start, then to finish:
@@ -721,8 +721,8 @@ Developers get a web console with their projects, workloads, logs and metrics, a
 Since OpenShift 4.19 the console's Developer view is off by default.
 
 [.validation]
-NOTE: *Not validated:* turning on the Developer view.
-The ARO validation cluster did show it off by default.
+NOTE: *Not validated:* the Developer view in a browser.
+On ARO, the patch below was validated: the console Operator wrote it to the console's configuration.
 
 To turn it on, run this as an administrator:
 

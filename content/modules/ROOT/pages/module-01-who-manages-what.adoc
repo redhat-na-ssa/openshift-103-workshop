@@ -145,6 +145,14 @@ export CLUSTER=<aro-cluster-name>
 export RESOURCE_GROUP=<resource-group>
 ----
 
+If the cluster is not in your default Azure subscription, select its subscription, so that every `az` command in the workshop finds it:
+
+[source,bash]
+----
+az account set \
+  --subscription <subscription-id>
+----
+
 Look up the API server URL:
 
 [source,bash]
@@ -332,13 +340,15 @@ az rest \
 ----
 
 The deny assignment blocks every write by everyone else, including subscription owners.
-Only the exempt principals, such as the ARO resource provider, may change the resources.
+Only the exempt principals may change the resources.
+On a cluster created with a service principal, the exempt principal is that service principal, which the cluster's own components, such as the Machine API, use to create and delete VMs, disks and load balancers.
 
 [.validation]
 NOTE: *Not validated:* the Owner's error message below, which comes from Red Hat's knowledge base.
 
 An Owner who tries, for example to delete a disk there, gets an error that ends with "the access is denied because of the deny assignment with name '<name>' and Id '<id>' at scope '<managed-resource-group>'".
 With the Reader role that Setup gives you, the same attempt fails earlier with a plain `AuthorizationFailed`, so this exercise only reads the deny assignment.
+Some lab environments log `az` in as the cluster's own service principal: the deny assignment exempts that login, so a change there would go through. Don't try one.
 
 NOTE: Azure Policy assigned at the subscription or management group still applies to this managed resource group.
 A policy that blocks SRE maintenance there, such as one that requires tags on the resource group, makes the cluster unsupported.

@@ -546,6 +546,8 @@ az network public-ip list \
 ----
 
 The validation run confirmed that the pod's address is one of these.
+One of them is the router's ingress address from xref:module-03-exposing-apps.adoc[Exposing an App].
+The outbound one is named in the `effectiveOutboundIps` list of the `networkProfile` that Exercise 1 showed.
 --
 ======
 

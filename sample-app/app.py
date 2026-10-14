@@ -99,9 +99,13 @@ def list_objects():
 
         account = os.environ["STORAGE_ACCOUNT"]
         container = os.environ.get("CONTAINER", "sample-app")
+        credential = azure_credential()
+        # The Blob client retries a failed token request for over a minute,
+        # so check the credential first and fail fast when the pod has none.
+        credential.get_token("https://storage.azure.com/.default")
         service = BlobServiceClient(
             f"https://{account}.blob.core.windows.net",
-            credential=azure_credential(),
+            credential=credential,
         )
         blobs = service.get_container_client(container).list_blobs()
         objects = [{"name": b.name, "size": b.size} for b in blobs]

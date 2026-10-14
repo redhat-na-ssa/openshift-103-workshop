@@ -151,8 +151,8 @@ The public IP lives in the cluster's managed resource group.
 A deny assignment there lets you read it but not change it.
 
 [.validation]
-NOTE: *Not validated:* the deny assignment, which comes from the ARO documentation.
-The validation run did not try to change the public IP.
+NOTE: *Not validated:* that the deny assignment stops you, which comes from the ARO documentation.
+The validation run was logged in to `az` as the cluster's own service principal, which the deny assignment exempts, so a test change to the public IP's tags went through and was reverted.
 
 See the ingress the way the service manages it:
 
@@ -502,7 +502,7 @@ The `openshift-default` GatewayClass and `istiod-openshift-gateway` stay.
 Delete the GatewayClass if you do not want an Istio control plane running.
 
 [.validation]
-NOTE: *Not validated:* deleting the Ingress, which the validation run did not do.
+NOTE: *Not validated:* deleting the Ingress on ROSA. On ARO, deleting it also removed its generated Route.
 
 Remove the Ingress from Exercise 3 as well:
 
@@ -518,8 +518,9 @@ The next section applies network policy to it.
 == What Matters
 
 [.validation]
-NOTE: *Not validated:* that the Gateway's load balancer on ROSA is a Classic Load Balancer, that on ARO a Gateway adds a public IP to the cluster's Azure load balancer instead of creating a new one, and that `dedicated-admin` cannot use the Gateway API.
-The ROSA load balancer type was read from its host name and annotations, not checked in AWS, the ARO detail comes from the Azure documentation, and `dedicated-admin` was not tried.
+NOTE: *Not validated:* that the Gateway's load balancer on ROSA is a Classic Load Balancer, and that `dedicated-admin` cannot use the Gateway API.
+The ROSA load balancer type was read from its host name and annotations, not checked in AWS, and `dedicated-admin` was not tried.
+On ARO it was validated that a Gateway adds a public IP and a frontend to the cluster's existing Azure load balancer, and that deleting the Gateway removes the public IP.
 
 * A Route is OpenShift's own resource, with edge, re-encrypt and passthrough TLS. Ingress objects still work and become Routes.
 * On Module 1's xref:module-01-who-manages-what.adoc#_the_responsibility_line[responsibility line], the default router is a platform component that SRE runs, and the Routes, Ingresses and Gateways you create on it are yours, like your workloads.
