@@ -4,16 +4,16 @@ NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026.
 Steps and statements that were not checked on a live cluster carry a *Not validated* note.
 The comparison tables and summaries come from vendor documentation.
 
-On EKS and AKS you install or enable an ingress controller before anything can be reached from outside.
+On EKS and AKS you add or enable an L7 ingress controller (built into EKS Auto Mode and on by default in AKS Automatic) and bring your own DNS and certificates.
 ROSA and ARO arrive with a default ingress controller behind a cloud load balancer, a wildcard DNS name for applications and a certificate for it, so the sample application gets an HTTPS address in one step.
 This section exposes the sample application three ways: an OpenShift Route, a standard Kubernetes Ingress, and the Gateway API.
 
 .How a request reaches a pod on each platform
-image::module-03-request-path.svg[Request path from client to pod on EKS, AKS, ROSA and ARO,width=100%]
+image::module-03-request-path.svg["Request path from client to pod on EKS, AKS, ROSA and ARO",width=100%]
 
 == On EKS and AKS
 
-* EKS: install the AWS Load Balancer Controller, then each Ingress creates or joins an Application Load Balancer. The controller also supports the Gateway API.
+* EKS: install the AWS Load Balancer Controller (built in with Auto Mode), then each Ingress creates or joins an Application Load Balancer. The controller also supports the Gateway API.
 * AKS: enable the application routing add-on. Its managed NGINX loses Azure support after November 2026, and its Gateway API mode is the path forward.
 * You bring DNS (for example ExternalDNS) and certificates (for example cert-manager, AWS Certificate Manager or Azure Key Vault).
 
@@ -32,7 +32,7 @@ Expose the sample application over HTTPS with no DNS or certificate work.
 * <<ex-module-03-exposing-apps-3>> +
 Apply an Ingress written for EKS or AKS and see what OpenShift makes of it.
 * <<ex-module-03-exposing-apps-4>> +
-Expose the application through a Gateway, with its own load balancer.
+Expose the application through a Gateway, with its own load balancer on ROSA and its own public IP on ARO.
 
 [#ex-module-03-exposing-apps-1]
 === Exercise 1: Find the Default Ingress Controller
@@ -329,6 +329,8 @@ curl --silent \
   "https://sample-app-ingress.$APPS_DOMAIN/healthz"
 ----
 
+It prints `200`.
+
 [#ex-module-03-exposing-apps-4]
 === Exercise 4: Use the Gateway API
 
@@ -387,7 +389,8 @@ oc wait gateway/workshop \
   --timeout=600s
 ----
 
-The Gateway got its own load balancer and DNS record, next to the router's.
+The Gateway got its own DNS record, next to the router's.
+It also got its own load balancer on ROSA (a Classic Load Balancer), and its own public IP and rules on the cluster's Azure load balancer on ARO.
 Its Service is named after the Gateway and the GatewayClass, `workshop-openshift-default`:
 
 [source,bash]
@@ -401,6 +404,8 @@ oc get service \
 oc get dnsrecords \
   --namespace openshift-ingress
 ----
+
+AKS app routing's Gateway API mode works the same way: Istio-managed Envoy behind one LoadBalancer Service per Gateway, named `<gateway>-<class>`.
 
 Attach the sample application with an HTTPRoute in its own project:
 
@@ -473,7 +478,7 @@ To reach the Gateway by name, create the DNS record in a zone you manage.
 The Gateway serves plain HTTP because nothing gave it a certificate.
 Unlike a Route, a Gateway listener needs a certificate that you provide, for example from cert-manager.
 
-Each Gateway costs a cloud load balancer, so remove this one:
+Each Gateway costs its own load balancer on ROSA, and its own public IP and rules on the cluster's Azure load balancer on ARO, so remove this one:
 
 [source,bash]
 ----
@@ -487,19 +492,32 @@ oc delete gateway workshop \
   --namespace openshift-ingress
 ----
 
-The Route from Step 2 stays.
+The `openshift-default` GatewayClass and `istiod-openshift-gateway` stay.
+Delete the GatewayClass if you do not want an Istio control plane running.
+
+NOTE: *Not validated:* deleting the Ingress, which the validation run did not do.
+
+Remove the Ingress from Exercise 3 as well:
+
+[source,bash]
+----
+oc delete ingress sample-app-ingress \
+  --namespace sample-app
+----
+
+The Route from Exercise 2 stays.
 The next section applies network policy to it.
 
 == What Matters
 
-NOTE: *Not validated:* that the Gateway's load balancer on ROSA is a Classic Load Balancer, and that `dedicated-admin` cannot use the Gateway API.
-The load balancer type was read from its host name and annotations, not checked in AWS, and `dedicated-admin` was not tried.
+NOTE: *Not validated:* that the Gateway's load balancer on ROSA is a Classic Load Balancer, that on ARO a Gateway adds a public IP to the cluster's Azure load balancer instead of creating a new one, and that `dedicated-admin` cannot use the Gateway API.
+The ROSA load balancer type was read from its host name and annotations, not checked in AWS, the ARO detail comes from the Azure documentation, and `dedicated-admin` was not tried.
 
 * A Route is OpenShift's own resource, with edge, re-encrypt and passthrough TLS. Ingress objects still work and become Routes.
 * OpenShift only turns an Ingress into a Route when it has no `ingressClassName` or uses `openshift-default`. An Ingress that still says `alb` or `webapprouting.kubernetes.azure.com` is silently ignored.
 * ALB and NGINX annotations do nothing here. Route behavior is set with `haproxy.router.openshift.io/*` annotations instead, for example timeouts and rewrites.
 * On ROSA, SRE owns the default ingress controller's settings, and `rosa edit ingress` changes only its visibility and component routes. For other needs you add another ingress controller, or the AWS Load Balancer Operator for ALBs.
-* OpenShift supports the Gateway API from 4.19. Each Gateway gets its own load balancer and needs its own certificate. On ROSA that load balancer is a Classic Load Balancer, not a Network Load Balancer like the router's. The ROSA and ARO documentation do not cover it yet, it needs `cluster-admin` (not `dedicated-admin` on ROSA), and on ARO's default domain you manage its DNS yourself, so check it on your clusters before you rely on it.
+* OpenShift supports the Gateway API from 4.19. Each Gateway needs its own certificate. It gets its own load balancer on ROSA, a Classic Load Balancer rather than a Network Load Balancer like the router's, and its own public IP and rules on the cluster's Azure load balancer on ARO. The ROSA and ARO documentation do not cover it yet, it needs `cluster-admin` (not `dedicated-admin` on ROSA), and on ARO's default domain you manage its DNS yourself, so check it on your clusters before you rely on it.
 
 == Where Each Wins
 
@@ -514,7 +532,7 @@ The load balancer type was read from its host name and annotations, not checked 
 |Traffic goes straight from the ALB to pod IPs, with no in-cluster proxy hop on EKS.
 
 |Routes cover TLS modes that Ingress cannot express, such as re-encrypt.
-|Gateway API maps straight onto cloud load balancers.
+|The EKS Load Balancer Controller and AKS Application Gateway for Containers map Gateway API onto managed L7 load balancers with no in-cluster proxy.
 
 |The router is upgraded and monitored with the cluster.
 |You pick and tune the controller, including its version.
