@@ -1,6 +1,8 @@
 = Who Manages What
 
-NOTE: The exercise on this page has not yet been run end to end on the workshop's ROSA and ARO clusters. Expect small differences in command output until it has been validated.
+NOTE: Validated on ROSA HCP 4.20 and 4.21 and ARO 4.21 in October 2026.
+Steps and statements that were not checked on a live cluster carry a *Not validated* note.
+The comparison tables and summaries come from vendor documentation.
 
 On EKS and AKS, the cloud provider runs the control plane and you run almost everything else.
 On ROSA and ARO, Red Hat site reliability engineers (SRE) and the cloud provider also run the worker operating system and the platform components, and some settings you are used to changing are no longer yours.
@@ -112,6 +114,18 @@ The `resourceGroupId` field is the managed resource group that holds the cluster
 
 ==== Both Clusters
 
+You can read the same fact from inside the cluster, without cloud credentials.
+The Infrastructure resource records where the control plane runs:
+
+[source,bash]
+----
+oc get infrastructure cluster \
+  -o jsonpath='{.status.controlPlaneTopology}{"\n"}'
+----
+
+ROSA HCP shows `External`, because the control plane runs outside the cluster.
+ARO and ROSA classic show `HighlyAvailable`: three control plane nodes in your own account or subscription.
+
 List the nodes on each cluster:
 
 [source,bash]
@@ -159,7 +173,7 @@ List what is in it:
 ----
 az resource list \
   --resource-group "${MANAGED_RG##*/}" \
-  --query "[].{name: name, type: type}" \
+  --query "[].{name: name, resourceType: type}" \
   --output table
 ----
 
@@ -221,19 +235,30 @@ On ROSA, look for the managed-service namespaces that do not exist on a self-man
 ----
 oc get namespaces \
   --no-headers \
-  | grep -E 'managed|backplane|ocm'
+  | grep backplane
 ----
 
-These run the agents SRE uses to monitor the cluster, apply managed configuration and reach it for support.
+These namespaces hold the role bindings that give SRE and Red Hat support teams access to the cluster through backplane, Red Hat's support access path.
+On ROSA HCP they hold almost no pods: the SRE agents that monitor the cluster and apply managed configuration run with the hosted control plane in Red Hat's account.
+What runs on your nodes is the connection back to that control plane, the `konnectivity-agent` pods:
+
+[source,bash]
+----
+oc get pods \
+  --namespace kube-system
+----
 
 On ROSA, the managed service also installs validating admission webhooks.
-They stop even cluster administrators from changing resources SRE owns, such as the ClusterVersion, the machine API and the cluster autoscaler:
+They stop even cluster administrators from changing resources SRE owns, such as the ClusterVersion, the machine API and the cluster autoscaler.
+Their names start with `sre-`:
 
 [source,bash]
 ----
 oc get validatingwebhookconfigurations \
-  | grep managed.openshift.io
+  | grep '^sre-'
 ----
+
+On ROSA HCP the webhook server itself also runs in the hosted control plane, so you see its configuration but not its pods.
 
 === Exercise 4: Try to Change a Managed Resource
 
@@ -255,6 +280,9 @@ ARO protects its platform through the deny assignment on the Azure side and its 
 
 On both, changes the service does not support can take the cluster out of support.
 ROSA calls this _limited support_: SRE stops proactive monitoring and the SLA no longer applies until the cause is fixed.
+
+NOTE: *Not validated:* the `Limited Support` section, because the workshop's ROSA cluster was not in limited support.
+
 If your ROSA cluster is in limited support, `rosa describe cluster` shows a `Limited Support` section with the reasons.
 
 === Exercise 5: Know Your Support Path
@@ -319,6 +347,8 @@ On ROSA and ARO you install the OpenShift API for Data Protection (OADP) Operato
 
 OADP is configured with one DataProtectionApplication resource.
 These samples show its shape on each cloud; this workshop does not run them.
+
+NOTE: *Not validated:* the two OADP samples below, which were not applied to a cluster.
 
 .Sample OADP configuration for ROSA
 [%collapsible]
