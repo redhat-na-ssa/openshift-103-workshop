@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="700" height="500" viewBox="0 0 700 500"><title>Pod packet path with the Amazon VPC CNI, Azure CNI Overlay and OVN-Kubernetes</title><rect x="0" y="0" width="700" height="500" fill="#ffffff"/>
+<rect x="6" y="10" width="222" height="36" rx="6" fill="#f2f2f2" stroke="#8a8d90" stroke-width="1.5"/>
+<text x="117.0" y="32.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" fill="#151515" text-anchor="middle">EKS: Amazon VPC CNI</text>
+<rect x="6" y="58" width="222" height="300" rx="6" fill="#ffffff" stroke="#8a8d90" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="14" y="75" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" fill="#4d5258" text-anchor="start">VPC 10.0.0.0/16</text>
+<rect x="14" y="86" width="96" height="104" rx="6" fill="#f2f2f2" stroke="#8a8d90" stroke-width="1.5"/>
+<text x="62" y="103" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#151515" text-anchor="middle">Node 10.0.1.10</text>
+<rect x="22" y="114" width="80" height="54" rx="6" fill="#f3faf2" stroke="#3e8635" stroke-width="1.5"/>
+<text x="62.0" y="137.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="bold" fill="#1e4f18" text-anchor="middle">Pod</text>
+<text x="62.0" y="156.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#1e4f18" text-anchor="middle">10.0.1.37</text>
+<rect x="124" y="86" width="96" height="104" rx="6" fill="#f2f2f2" stroke="#8a8d90" stroke-width="1.5"/>
+<text x="172" y="103" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#151515" text-anchor="middle">Node 10.0.2.20</text>
+<rect x="132" y="114" width="80" height="54" rx="6" fill="#f3faf2" stroke="#3e8635" stroke-width="1.5"/>
+<text x="172.0" y="137.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="bold" fill="#1e4f18" text-anchor="middle">Pod</text>
+<text x="172.0" y="156.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#1e4f18" text-anchor="middle">10.0.2.84</text>
+<line x1="102" y1="141" x2="124.0" y2="141.0" stroke="#6a6e73" stroke-width="2"/>
+<polygon points="132,141 124.0,145.0 124.0,137.0" fill="#6a6e73"/>
+<text x="172" y="210" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#151515" text-anchor="middle" font-style="italic">VPC routing</text>
+<rect x="14" y="286" width="96" height="56" rx="6" fill="#ffffff" stroke="#8a8d90" stroke-width="1.5"/>
+<text x="62.0" y="311.0" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="bold" fill="#151515" text-anchor="middle">Database</text>
+<text x="62.0" y="329.0" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#151515" text-anchor="middle">10.0.5.20</text>
+<line x1="62" y1="168" x2="62.0" y2="278.0" stroke="#6a6e73" stroke-width="2"/>
+<polygon points="62,286 58.0,278.0 66.0,278.0" fill="#6a6e73"/>
+<text x="120" y="290" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#151515" text-anchor="start">Database sees</text>
+<text x="120" y="304" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#151515" text-anchor="start">source 10.0.1.37</text>
+<text x="120" y="318" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" fill="#151515" text-anchor="start">(the pod)</text>
+<text x="12" y="380" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" fill="#4d5258" text-anchor="start">Filtering happens in:</text>
+<rect x="10" y="390" width="214" height="18.5" rx="9.25" fill="#8a8d90" stroke="none"/>
+<text x="117.0" y="403.0" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">Security groups (nodes, pods)</text>
+<rect x="10" y="414" width="214" height="18.5" rx="9.25" fill="#0066cc" stroke="none"/>
+<text x="117.0" y="427.0" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">NetworkPolicy, once enabled</text>
+<rect x="239" y="10" width="222" height="36" rx="6" fill="#f2f2f2" stroke="#8a8d90" stroke-width="1.5"/>
+<text x="350.0" y="32.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" fill="#151515" text-anchor="middle">AKS: Azure CNI Overlay</text>
+<rect x="239" y="58" width="222" height="300" rx="6" fill="#ffffff" stroke="#8a8d90" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="247" y="75" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" fill="#4d5258" text-anchor="start">VNet 10.0.0.0/16</text>
+<rect x="247" y="86" width="96" height="104" rx="6" fill="#f2f2f2" stroke="#8a8d90" stroke-width="1.5"/>
+<text x="295" y="103" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#151515" text-anchor="middle">Node 10.0.1.10</text>
+<rect x="255" y="114" width="80" height="54" rx="6" fill="#f3faf2" stroke="#3e8635" stroke-width="1.5"/>
+<text x="295.0" y="137.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="bold" fill="#1e4f18" text-anchor="middle">Pod</text>
+<text x="295.0" y="156.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#1e4f18" text-anchor="middle">10.244.1.5</text>
+<rect x="357" y="86" width="96" height="104" rx="6" fill="#f2f2f2" stroke="#8a8d90" stroke-width="1.5"/>
+<text x="405" y="103" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#151515" text-anchor="middle">Node 10.0.2.20</text>
+<rect x="365" y="114" width="80" height="54" rx="6" fill="#f3faf2" stroke="#3e8635" stroke-width="1.5"/>
+<text x="405.0" y="137.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="bold" fill="#1e4f18" text-anchor="middle">Pod</text>
+<text x="405.0" y="156.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#1e4f18" text-anchor="middle">10.244.2.9</text>
+<line x1="335" y1="141" x2="357.0" y2="141.0" stroke="#6a6e73" stroke-width="2"/>
+<polygon points="365,141 357.0,145.0 357.0,137.0" fill="#6a6e73"/>
+<text x="405" y="210" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#151515" text-anchor="middle" font-style="italic">Azure overlay</text>
+<rect x="247" y="286" width="96" height="56" rx="6" fill="#ffffff" stroke="#8a8d90" stroke-width="1.5"/>
+<text x="295.0" y="311.0" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="bold" fill="#151515" text-anchor="middle">Database</text>
+<text x="295.0" y="329.0" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#151515" text-anchor="middle">10.0.5.20</text>
+<line x1="295" y1="168" x2="295.0" y2="278.0" stroke="#6a6e73" stroke-width="2"/>
+<polygon points="295,286 291.0,278.0 299.0,278.0" fill="#6a6e73"/>
+<text x="353" y="290" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#151515" text-anchor="start">Database sees</text>
+<text x="353" y="304" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#151515" text-anchor="start">source 10.0.1.10</text>
+<text x="353" y="318" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" fill="#151515" text-anchor="start">(the node)</text>
+<text x="245" y="380" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" fill="#4d5258" text-anchor="start">Filtering happens in:</text>
+<rect x="243" y="390" width="214" height="18.5" rx="9.25" fill="#8a8d90" stroke="none"/>
+<text x="350.0" y="403.0" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">NSGs on subnets and NICs</text>
+<rect x="243" y="414" width="214" height="18.5" rx="9.25" fill="#0066cc" stroke="none"/>
+<text x="350.0" y="427.0" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">NetworkPolicy engine you pick</text>
+<rect x="472" y="10" width="222" height="36" rx="6" fill="#faeae8" stroke="#c9190b" stroke-width="1.5"/>
+<text x="583.0" y="32.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" fill="#7d1007" text-anchor="middle">ROSA, ARO: OVN-Kubernetes</text>
+<rect x="472" y="58" width="222" height="300" rx="6" fill="#ffffff" stroke="#8a8d90" stroke-width="1.5" stroke-dasharray="6 4"/>
+<text x="480" y="75" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" fill="#4d5258" text-anchor="start">VPC or VNet 10.0.0.0/16</text>
+<rect x="480" y="86" width="96" height="104" rx="6" fill="#f2f2f2" stroke="#8a8d90" stroke-width="1.5"/>
+<text x="528" y="103" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#151515" text-anchor="middle">Node 10.0.1.10</text>
+<rect x="488" y="114" width="80" height="54" rx="6" fill="#f3faf2" stroke="#3e8635" stroke-width="1.5"/>
+<text x="528.0" y="137.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="bold" fill="#1e4f18" text-anchor="middle">Pod</text>
+<text x="528.0" y="156.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#1e4f18" text-anchor="middle">10.128.2.15</text>
+<rect x="590" y="86" width="96" height="104" rx="6" fill="#f2f2f2" stroke="#8a8d90" stroke-width="1.5"/>
+<text x="638" y="103" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#151515" text-anchor="middle">Node 10.0.2.20</text>
+<rect x="598" y="114" width="80" height="54" rx="6" fill="#f3faf2" stroke="#3e8635" stroke-width="1.5"/>
+<text x="638.0" y="137.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="bold" fill="#1e4f18" text-anchor="middle">Pod</text>
+<text x="638.0" y="156.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#1e4f18" text-anchor="middle">10.131.0.7</text>
+<line x1="568" y1="141" x2="590.0" y2="141.0" stroke="#6a6e73" stroke-width="2"/>
+<polygon points="598,141 590.0,145.0 590.0,137.0" fill="#6a6e73"/>
+<text x="638" y="210" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#151515" text-anchor="middle" font-style="italic">Geneve tunnel</text>
+<rect x="480" y="286" width="96" height="56" rx="6" fill="#ffffff" stroke="#8a8d90" stroke-width="1.5"/>
+<text x="528.0" y="311.0" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="bold" fill="#151515" text-anchor="middle">Database</text>
+<text x="528.0" y="329.0" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#151515" text-anchor="middle">10.0.5.20</text>
+<line x1="528" y1="168" x2="528.0" y2="278.0" stroke="#6a6e73" stroke-width="2"/>
+<polygon points="528,286 524.0,278.0 532.0,278.0" fill="#6a6e73"/>
+<text x="586" y="290" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#151515" text-anchor="start">Database sees</text>
+<text x="586" y="304" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#151515" text-anchor="start">source 10.0.1.10</text>
+<text x="586" y="318" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" fill="#151515" text-anchor="start">(the node)</text>
+<text x="478" y="380" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="bold" fill="#4d5258" text-anchor="start">Filtering happens in:</text>
+<rect x="476" y="390" width="214" height="18.5" rx="9.25" fill="#8a8d90" stroke="none"/>
+<text x="583.0" y="403.0" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">SGs or NSGs on nodes</text>
+<rect x="476" y="414" width="214" height="18.5" rx="9.25" fill="#5e40be" stroke="none"/>
+<text x="583.0" y="427.0" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">AdminNetworkPolicy, then</text>
+<rect x="476" y="438" width="214" height="18.5" rx="9.25" fill="#0066cc" stroke="none"/>
+<text x="583.0" y="451.0" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="10.5" font-weight="bold" fill="#ffffff" text-anchor="middle">NetworkPolicy, both built in</text>
+<text x="350" y="474" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#4d5258" text-anchor="middle">To the internet, all three leave through the NAT gateway or the load</text>
+<text x="350" y="490" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#4d5258" text-anchor="middle">balancer's outbound address, unless you add an egress IP or gateway.</text>
+</svg>

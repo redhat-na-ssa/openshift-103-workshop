@@ -1,0 +1,27 @@
+# Two images from one file.
+#
+#   --target root     a typical upstream image: runs as root and writes
+#                     to a root-owned directory. Fails on OpenShift's
+#                     default SCC. Used only in Module 2.
+#   (default)         the same image, fixed to run under any user ID.
+
+FROM docker.io/library/python:3.12-slim AS root
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY app.py .
+RUN ln -s /app/app.py /usr/local/bin/sample-app \
+ && mkdir -p /var/lib/sample-app
+ENV STATE_DIR=/var/lib/sample-app \
+    AWS_EC2_METADATA_DISABLED=true \
+    PYTHONUNBUFFERED=1
+EXPOSE 8080
+CMD ["sample-app"]
+
+FROM root AS nonroot
+# OpenShift runs containers with a random user ID in group 0, so make
+# writable paths owned by group 0 and group-writable, and set a non-root
+# default user for other platforms.
+RUN chgrp -R 0 /var/lib/sample-app \
+ && chmod -R g=u /var/lib/sample-app
+USER 1001

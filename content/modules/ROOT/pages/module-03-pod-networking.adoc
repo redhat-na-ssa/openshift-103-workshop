@@ -1,41 +1,575 @@
 = Pod Networking and Policy
 
-NOTE: This section is an outline. Its diagrams and exercises are being written and validated on ROSA and ARO.
-
-With the Amazon VPC CNI and Azure CNI, pods get addresses from your VPC or virtual network.
+With the Amazon VPC CNI and Azure CNI, pods can get addresses from your VPC or virtual network.
 ROSA and ARO run OVN-Kubernetes as an overlay: pod addresses never appear in the VPC or virtual network, and traffic leaves the cluster from the node's address unless you assign an egress IP.
 This section explains the packet path, then applies network policy at two levels: per project, and cluster-wide.
 
-// Planned visual:
-// - Packet-path diagram: VPC CNI, Azure CNI (and overlay or Cilium),
-//   OVN-Kubernetes. Mark where security groups, NetworkPolicy and
-//   AdminNetworkPolicy apply.
-// - Private-cluster panel on the same diagram: EKS private endpoint,
-//   AKS private cluster, ROSA HCP private API over PrivateLink, ARO
-//   private API and ingress.
+.Where pod addresses come from, what a database in the same network sees, and where filtering happens
+image::module-03-packet-path.svg[Pod packet path with the Amazon VPC CNI, Azure CNI Overlay and OVN-Kubernetes,width=100%]
 
 == On EKS and AKS
 
 * EKS: pods take VPC addresses, can carry their own security groups, and you plan subnets around address exhaustion. Network policy is a VPC CNI feature you turn on.
-* AKS: choose Azure CNI, Azure CNI overlay, or Azure CNI powered by Cilium, and a network policy engine.
-* Private clusters: the EKS endpoint can switch between public and private at any time, and AKS offers private clusters and API server VNet integration.
+* AKS: choose Azure CNI, Azure CNI Overlay, or Azure CNI powered by Cilium, and a network policy engine.
+* Private clusters: the EKS endpoint can switch between public and private at any time, and AKS offers private clusters and API Server VNet Integration.
 
 == On ROSA and ARO
 
-Outline of the exercise:
+Do these steps on your ROSA cluster, then repeat them on your ARO cluster.
+Where the two differ, the steps are split under ROSA and ARO headings.
+They use the sample application in the `sample-app` project and the Route you created in xref:module-03-exposing-apps.adoc[Exposing an App].
 
-. Compare a pod's address with the node and VPC or virtual network addresses.
-. Apply a default-deny NetworkPolicy in the sample application's project, and allow only the router.
-. Apply an AdminNetworkPolicy that blocks every project from a sensitive namespace.
-. Show that a project administrator cannot override it.
-. Check the source address of traffic leaving the cluster.
+=== Exercise 1: Compare Pod and Node Addresses
+
+List the sample application's pods with their addresses and nodes:
+
+[source,bash]
+----
+oc get pods \
+  --namespace sample-app \
+  --output wide
+----
+
+Then list the nodes with theirs:
+
+[source,bash]
+----
+oc get nodes \
+  --output wide
+----
+
+Pod addresses come from `10.128.0.0/14` by default, and node addresses from the VPC or virtual network.
+Save both addresses for one of the sample application's pods:
+
+[source,bash]
+----
+POD_IP=$(oc get pods \
+  --namespace sample-app \
+  --selector app.kubernetes.io/name=sample-app \
+  --output jsonpath='{.items[0].status.podIP}')
+----
+
+[source,bash]
+----
+NODE_IP=$(oc get pods \
+  --namespace sample-app \
+  --selector app.kubernetes.io/name=sample-app \
+  --output jsonpath='{.items[0].status.hostIP}')
+----
+
+Now look at the same split from the cloud side.
+The VPC or virtual network knows the node's address, because it belongs to a network interface.
+It does not know the pod's address, which belongs to none.
+When the pod talks to a database in the same VPC or virtual network, the database sees the node's address, so security groups and firewall rules can tell nodes apart but not pods.
+
+==== ROSA
+
+Show the cluster's address ranges, in the `Machine CIDR`, `Service CIDR` and `Pod CIDR` lines:
+
+[source,bash]
+----
+rosa describe cluster \
+  --cluster <cluster-name>
+----
+
+Look up both addresses in the VPC.
+The pod's address finds nothing, and the node's address finds its network interface:
+
+[source,bash]
+----
+for ip in "$POD_IP" "$NODE_IP"; do
+  aws ec2 describe-network-interfaces \
+    --filters "Name=addresses.private-ip-address,Values=$ip" \
+    --query "NetworkInterfaces[].NetworkInterfaceId" \
+    --output text
+done
+----
+
+==== ARO
+
+Show the cluster's address ranges:
+
+[source,bash]
+----
+az aro show \
+  --resource-group <resource-group> \
+  --name <cluster-name> \
+  --query networkProfile
+----
+
+Find the cluster's managed resource group, where its virtual machines and network interfaces live:
+
+[source,bash]
+----
+MANAGED_RG=$(az aro show \
+  --resource-group <resource-group> \
+  --name <cluster-name> \
+  --query clusterProfile.resourceGroupId \
+  --output tsv)
+----
+
+List every private address in it.
+The node's address is there, and the pod's is not:
+
+[source,bash]
+----
+az network nic list \
+  --resource-group "${MANAGED_RG##*/}" \
+  --query "[].ipConfigurations[].privateIPAddress" \
+  --output tsv
+----
+
+=== Exercise 2: Set Up a Test Client
+
+Run a client pod in its own project, to test connections from outside the sample application's project:
+
+[source,bash]
+----
+oc new-project net-client
+----
+
+[source,bash]
+----
+oc run client \
+  --namespace net-client \
+  --image registry.access.redhat.com/ubi9/ubi \
+  --command -- sleep infinity
+----
+
+[source,bash]
+----
+oc wait pod/client \
+  --namespace net-client \
+  --for=condition=Ready \
+  --timeout=120s
+----
+
+Define a shell function that prints the HTTP status the client gets from a URL.
+It prints `000` when the connection is blocked:
+
+[source,bash]
+----
+probe() {
+  oc exec client \
+    --namespace net-client \
+    -- curl --silent \
+    --output /dev/null \
+    --write-out '%{http_code}\n' \
+    --max-time 5 \
+    "$1"
+}
+----
+
+Save the Route's host name, for testing the path through the router from your workstation:
+
+[source,bash]
+----
+ROUTE_HOST=$(oc get route sample-app \
+  --namespace sample-app \
+  --output jsonpath='{.spec.host}')
+----
+
+Both paths work, because nothing restricts traffic yet:
+
+[source,bash]
+----
+probe http://sample-app.sample-app.svc:8080/healthz
+----
+
+[source,bash]
+----
+curl --silent \
+  --output /dev/null \
+  --write-out '%{http_code}\n' \
+  "https://$ROUTE_HOST/healthz"
+----
+
+=== Exercise 3: Default-Deny the Sample Application's Project
+
+NetworkPolicy works on ROSA and ARO with nothing to enable.
+Deny all incoming traffic to every pod in the project:
+
+[source,bash]
+----
+oc apply --filename - <<EOF
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-ingress
+  namespace: sample-app
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+EOF
+----
+
+Run both checks again.
+The client now gets `000`, and the Route returns `503` or times out, because the router is just another source of traffic:
+
+[source,bash]
+----
+probe http://sample-app.sample-app.svc:8080/healthz
+----
+
+[source,bash]
+----
+curl --silent \
+  --output /dev/null \
+  --write-out '%{http_code}\n' \
+  --max-time 10 \
+  "https://$ROUTE_HOST/healthz"
+----
+
+Allow the router, the user workload monitoring Prometheus (Module 4 scrapes the application's metrics) and pods in the same project.
+OpenShift labels the router's namespace with a policy group, so the first rule selects that label instead of a namespace name:
+
+[source,bash]
+----
+oc apply --filename - <<EOF
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-from-ingress
+  namespace: sample-app
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          policy-group.network.openshift.io/ingress: ""
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-from-monitoring
+  namespace: sample-app
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: openshift-user-workload-monitoring
+    ports:
+    - protocol: TCP
+      port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-same-namespace
+  namespace: sample-app
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector: {}
+EOF
+----
+
+The Route works again, and the client in `net-client` is still blocked:
+
+[source,bash]
+----
+curl --silent \
+  --output /dev/null \
+  --write-out '%{http_code}\n' \
+  "https://$ROUTE_HOST/healthz"
+----
+
+[source,bash]
+----
+probe http://sample-app.sample-app.svc:8080/healthz
+----
+
+Keep these policies.
+The sample application keeps them for Module 4.
+
+.EKS and AKS (reference only)
+[%collapsible]
+====
+EKS: network policy is off until you turn it on in the VPC CNI add-on.
+
+[source,bash]
+----
+aws eks update-addon \
+  --cluster-name <cluster-name> \
+  --addon-name vpc-cni \
+  --configuration-values '{"enableNetworkPolicy":"true"}'
+----
+
+AKS: you choose the network plugin and policy engine when you create the cluster, for example an overlay with the Cilium dataplane.
+
+[source,bash]
+----
+az aks create \
+  --resource-group <resource-group> \
+  --name <cluster-name> \
+  --network-plugin azure \
+  --network-plugin-mode overlay \
+  --network-dataplane cilium
+----
+
+The NetworkPolicy objects themselves are the same on all four platforms.
+====
+
+=== Exercise 4: Add a Cluster-Wide Guardrail
+
+NetworkPolicy belongs to whoever administers the project.
+An AdminNetworkPolicy belongs to the cluster administrator, and OVN-Kubernetes evaluates it before any NetworkPolicy:
+
+.The three policy tiers
+image::module-03-policy-tiers.svg[Order in which OVN-Kubernetes evaluates network policy tiers,width=100%]
+
+Create a project that holds sensitive data, and label it:
+
+[source,bash]
+----
+oc new-project restricted-data
+----
+
+[source,bash]
+----
+oc label namespace restricted-data \
+  workshop.k8socp.com/sensitivity=high
+----
+
+Run a small web server in it:
+
+[source,bash]
+----
+oc create deployment records \
+  --namespace restricted-data \
+  --image registry.access.redhat.com/ubi9/nginx-124 \
+  --port 8080
+----
+
+[source,bash]
+----
+oc expose deployment records \
+  --namespace restricted-data \
+  --port 8080
+----
+
+[source,bash]
+----
+oc rollout status deployment/records \
+  --namespace restricted-data
+----
+
+The client can reach it.
+Any status other than `000` means the connection worked:
+
+[source,bash]
+----
+probe http://records.restricted-data.svc:8080
+----
+
+Now apply a guardrail: only namespaces with the same label may connect to it.
+The rules run in order, so the `Allow` rule comes before the `Deny` rule:
+
+[source,bash]
+----
+oc apply --filename - <<EOF
+apiVersion: policy.networking.k8s.io/v1alpha1
+kind: AdminNetworkPolicy
+metadata:
+  name: protect-sensitive-data
+spec:
+  priority: 10
+  subject:
+    namespaces:
+      matchLabels:
+        workshop.k8socp.com/sensitivity: high
+  ingress:
+  - name: allow-same-sensitivity
+    action: Allow
+    from:
+    - namespaces:
+        matchLabels:
+          workshop.k8socp.com/sensitivity: high
+  - name: deny-all-other-namespaces
+    action: Deny
+    from:
+    - namespaces: {}
+EOF
+----
+
+[source,bash]
+----
+probe http://records.restricted-data.svc:8080
+----
+
+The client is blocked.
+Now act as the project's administrator and try to open the project to everyone with a NetworkPolicy:
+
+[source,bash]
+----
+oc apply --filename - <<EOF
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-everything
+  namespace: restricted-data
+spec:
+  podSelector: {}
+  policyTypes:
+  - Ingress
+  ingress:
+  - {}
+EOF
+----
+
+[source,bash]
+----
+probe http://records.restricted-data.svc:8080
+----
+
+The client is still blocked.
+The AdminNetworkPolicy decided first, so no NetworkPolicy in the project can undo it.
+
+Remove the guardrail and its project:
+
+[source,bash]
+----
+oc delete adminnetworkpolicy protect-sensitive-data
+----
+
+[source,bash]
+----
+oc delete project restricted-data
+----
+
+=== Exercise 5: Check Where Traffic Leaves the Cluster
+
+Ask a public service which address the client pod's traffic comes from:
+
+[source,bash]
+----
+oc exec client \
+  --namespace net-client \
+  -- curl --silent https://checkip.amazonaws.com
+----
+
+Compare it with the cloud's outbound addresses for the cluster below: it is one of them.
+Every pod on the cluster shares that address, so an external firewall that allows it allows the whole cluster.
+
+==== ROSA
+
+Find the NAT gateway addresses in the cluster's VPC:
+
+[source,bash]
+----
+VPC_ID=$(aws ec2 describe-instances \
+  --filters "Name=private-ip-address,Values=$NODE_IP" \
+  --query "Reservations[0].Instances[0].VpcId" \
+  --output text)
+----
+
+[source,bash]
+----
+aws ec2 describe-nat-gateways \
+  --filter "Name=vpc-id,Values=$VPC_ID" \
+  --query "NatGateways[].NatGatewayAddresses[].PublicIp" \
+  --output text
+----
+
+==== ARO
+
+List the public addresses in the cluster's managed resource group:
+
+[source,bash]
+----
+az network public-ip list \
+  --resource-group "${MANAGED_RG##*/}" \
+  --query "[].{name:name,address:ipAddress}" \
+  --output table
+----
+
+=== Fixed Egress Addresses (Reference Only)
+
+To give one project its own source address, OVN-Kubernetes offers egress IPs.
+This workshop does not set one up, because the cloud constraints differ: on ROSA, you label the nodes that may host egress IPs through a machine pool, and capacity depends on the instance type; on ARO, namespace egress IPs need a cluster created with user-defined routing.
+
+An egress IP for the sample application's project looks like this:
+
+[source,yaml]
+----
+apiVersion: k8s.ovn.org/v1
+kind: EgressIP
+metadata:
+  name: sample-app
+spec:
+  egressIPs:
+  - 10.0.1.200
+  namespaceSelector:
+    matchLabels:
+      kubernetes.io/metadata.name: sample-app
+----
+
+=== Clean Up
+
+Remove the test client:
+
+[source,bash]
+----
+oc delete project net-client
+----
+
+== Private Clusters
+
+Making a cluster private is an install-time choice on ROSA and ARO, so there is no exercise for it.
+What changes is where the control plane runs and how you, and the provider's SRE team, reach it:
+
+.Where the control plane runs and how private API access works
+image::module-03-private-clusters.svg[Where the control plane runs and how private API access works,width=100%]
+
+[cols="1,1,1,1,1",options="header"]
+|===
+|
+|EKS
+|AKS
+|ROSA with HCP
+|ARO
+
+|Private API
+|Endpoint access settings
+|Private cluster, or API Server VNet Integration
+|`--private` at create
+|`--apiserver-visibility Private` at create
+
+|Private ingress
+|Internal load balancers you request
+|Internal load balancers you request
+|`--default-ingress-private` at create
+|`--ingress-visibility Private` at create
+
+|Change after create
+|Yes, at any time
+|Depends on the option
+|Plan it at create
+|Plan it at create
+|===
+
+ROSA with HCP workers always reach the hosted control plane over AWS PrivateLink, public cluster or not.
+ROSA also offers clusters with no internet egress at all (egress zero).
 
 == What Matters
 
 * OVN-Kubernetes is the only network plugin. There is no CNI choice.
-* NetworkPolicy works with nothing to enable. AdminNetworkPolicy adds cluster-wide rules that project administrators cannot override.
+* Pod addresses never use VPC or virtual network space, so there is no subnet exhaustion from pods. The other side: anything outside the cluster sees node addresses, never pod addresses.
+* NetworkPolicy works with nothing to enable. A default-deny policy also blocks the router and monitoring until you allow their policy groups.
+* AdminNetworkPolicy adds cluster-wide rules that project administrators cannot override. Keep its subjects away from `openshift-*` namespaces, which the platform and SRE need.
 * Egress IPs give a project a fixed source address, with cloud-specific limits: on AWS the capacity depends on the instance type, and on ARO namespace egress IPs need user-defined routing.
-* Private clusters are an install-time choice on ROSA and ARO. ROSA HCP workers always reach the hosted control plane over AWS PrivateLink.
+* Private clusters are an install-time choice on ROSA and ARO. ROSA with HCP workers always reach the hosted control plane over AWS PrivateLink.
 
 == Where Each Wins
 
@@ -47,11 +581,17 @@ Outline of the exercise:
 |Pods are first-class network citizens: routable addresses, security groups for pods, flow logs by pod address.
 
 |NetworkPolicy, AdminNetworkPolicy and egress IPs built in.
-|Cilium on AKS adds eBPF dataplane, L7 and FQDN policy.
+|Cilium on AKS adds an eBPF dataplane, L7 and FQDN policy.
 
 |A supported private pattern that keeps SRE access working.
 |Endpoint visibility can change after the cluster is created.
 |===
+
+== App Teams Will Notice
+
+* A new project allows all traffic until someone adds policy. If the cluster's project template adds a default-deny policy, their Route returns `503` until they allow the router.
+* Databases and APIs outside the cluster see node addresses. Allow-lists that expect a pod or per-app address need an egress IP.
+* Service names resolve the same way as on EKS and AKS: `<service>.<project>.svc`.
 
 == References
 

@@ -1,18 +1,10 @@
 = What Ships and How You Extend It
 
-NOTE: This section is an outline. Its diagrams and exercises are being written and validated on ROSA and ARO.
+NOTE: The exercise on this page has not yet been run end to end on the workshop's ROSA and ARO clusters. Expect small differences in command output until it has been validated.
 
 A new EKS cluster comes with a CNI, kube-proxy and CoreDNS, and you add the rest.
 A new ROSA or ARO cluster comes with dozens of platform components, each run by an Operator, tested together and upgraded with the cluster.
 This section tours what ships, then shows how you add more through the Software Catalog (formerly OperatorHub), using OpenShift GitOps as the example.
-
-// Planned visuals:
-// - "What you install vs what ships" chart: one row per capability
-//   (CNI, ingress, CSI and default StorageClass, registry, metrics,
-//   alerting, console, autoscaler), one column per platform.
-// - Add-on to Operator map: EKS add-on / AKS extension on the left,
-//   the ClusterOperator or catalog Operator that covers it on the
-//   right.
 
 == On EKS and AKS
 
@@ -20,23 +12,458 @@ This section tours what ships, then shows how you add more through the Software 
 * AKS: Azure Disk and Azure Files CSI drivers ship by default, and you enable add-ons and extensions as needed. AKS Automatic turns on an opinionated set.
 * For anything else you use Helm charts or vendor manifests.
 
+== What You Install and What Ships
+
+The table lists the platform capabilities a production cluster needs, and how each one arrives.
+On ROSA and ARO, the last column names the cluster Operator that owns the capability, which you look up in the exercise.
+
+[cols="2,3,3,3",options="header"]
+|===
+|Capability |EKS |AKS |ROSA and ARO
+
+|Pod network
+|VPC CNI add-on; you update it
+|Azure CNI, chosen at create time
+|Ships: OVN-Kubernetes (`network`)
+
+|Cluster DNS
+|CoreDNS add-on; you update it
+|Ships
+|Ships (`dns`)
+
+|Ingress
+|You install the AWS Load Balancer Controller
+|App routing add-on, opt-in
+|Ships: router with a wildcard apps domain and a cloud load balancer (`ingress`)
+
+|Block storage and a default StorageClass
+|You install the EBS CSI add-on (Auto Mode has its own)
+|Ships: Azure Disk, `managed-csi` default
+|Ships: EBS on ROSA, Azure Disk on ARO (`storage`)
+
+|Shared file storage
+|You install the EFS CSI add-on
+|Ships: Azure Files
+|ROSA: you install the EFS CSI Driver Operator. ARO: Azure Files, off by default on managed-identity clusters
+
+|Image registry
+|ECR, outside the cluster
+|ACR, outside the cluster
+|Ships: an internal registry (`image-registry`), backed by S3 or Azure storage. ECR and ACR still work
+
+|Metrics, dashboards and alerts
+|metrics-server add-on; Prometheus you install, or Amazon Managed Service for Prometheus
+|metrics-server ships; Azure Monitor managed Prometheus add-on
+|Ships: Prometheus, Alertmanager and console dashboards (`monitoring`)
+
+|Web console for cluster resources
+|Resource view in the AWS console
+|Resource view in the Azure portal
+|Ships: the OpenShift web console (`console`)
+
+|Node autoscaling
+|You install Cluster Autoscaler or Karpenter (Auto Mode has it built in)
+|Cluster autoscaler setting, or node auto-provisioning
+|Machine pool or MachineAutoscaler setting (Module 4)
+
+|Log forwarding
+|You install Fluent Bit or the CloudWatch agent
+|Container insights add-on
+|You install the Logging Operator (Module 4)
+
+|GitOps
+|EKS capability for Argo CD, run by AWS
+|Flux extension
+|You install the OpenShift GitOps Operator (this section)
+|===
+
+The pattern: on ROSA and ARO the infrastructure plumbing ships and is kept current by SRE, while application-facing tools such as GitOps, logging and service mesh come from the Software Catalog and are yours to run.
+
 == On ROSA and ARO
 
-Outline of the exercise:
+Run each step on both clusters unless the step names one.
+Log in to the cluster first, as described in the xref:setup-requirements.adoc[Setup Requirements].
 
-. Read the cluster version and the list of cluster Operators, and their health.
-. Map each EKS add-on you would install to the cluster Operator that already provides it.
-. List the StorageClasses and find the default on each cluster.
-. Install the OpenShift GitOps Operator from the Software Catalog.
-. Sync one application from a Git repository with Argo CD.
+=== Exercise 1: Read the Cluster Version
+
+Every OpenShift cluster has one ClusterVersion resource.
+It records the release the cluster runs, its update channel, and its update history.
+
+[source,bash]
+----
+oc get clusterversion
+----
+
+Show the update channel and the version history:
+
+[source,bash]
+----
+oc get clusterversion version \
+  -o jsonpath='{.spec.channel}{"\n"}'
+----
+
+[source,bash]
+----
+oc get clusterversion version \
+  -o json \
+  | jq -r '.status.history[] | .version + "  " + .state'
+----
+
+On EKS and AKS the Kubernetes version is a property of the cluster resource in the cloud API.
+On OpenShift the version covers the whole platform: Kubernetes, the node operating system and every cluster Operator move together.
+Module 4 covers how that changes upgrades.
+
+.EKS and AKS (reference only)
+[%collapsible]
+====
+[source,bash]
+----
+aws eks describe-cluster \
+  --name <cluster-name> \
+  --query cluster.version
+----
+
+[source,bash]
+----
+az aks show \
+  --resource-group <resource-group> \
+  --name <cluster-name> \
+  --query kubernetesVersion
+----
+====
+
+=== Exercise 2: List the Cluster Operators
+
+Each platform component is run by a cluster Operator.
+Its status tells you whether the component is healthy.
+
+[source,bash]
+----
+oc get clusteroperators
+----
+
+Read the three status columns:
+
+* `AVAILABLE`: the component works.
+* `PROGRESSING`: the component is rolling out a change, for example during an upgrade.
+* `DEGRADED`: the component is not in the state it should be in.
+
+On a healthy cluster every Operator shows `True`, `False`, `False`.
+This one command replaces checking each add-on's Deployment and version on EKS or AKS.
+
+Count the Operators on each cluster:
+
+[source,bash]
+----
+oc get clusteroperators \
+  --no-headers \
+  | wc -l
+----
+
+Compare the two lists.
+On ROSA HCP there is no `etcd` Operator, and the Operators that manage machines are missing, because the control plane runs in Red Hat's account.
+Control plane components such as `kube-apiserver` still report their status here, but their pods are not in your cluster.
+On ARO every Operator runs in your cluster, on the control plane nodes.
+
+.EKS and AKS (reference only)
+[%collapsible]
+====
+[source,bash]
+----
+aws eks list-addons \
+  --cluster-name <cluster-name>
+----
+
+[source,bash]
+----
+az aks show \
+  --resource-group <resource-group> \
+  --name <cluster-name> \
+  --query addonProfiles
+----
+====
+
+=== Exercise 3: Map Your Add-ons to Cluster Operators
+
+Pick a component you install yourself on EKS, such as an ingress controller.
+Find the Operator that provides it here, and where its pieces run:
+
+[source,bash]
+----
+oc describe clusteroperator ingress
+----
+
+The `Related Objects` list at the end names the namespaces and resources the Operator manages, such as `openshift-ingress-operator` and `openshift-ingress`.
+
+Look at the router pods it runs:
+
+[source,bash]
+----
+oc get pods \
+  --namespace openshift-ingress
+----
+
+Each Operator is configured through its own resource, not by editing the Deployments it creates.
+For the ingress Operator that resource is the IngressController:
+
+[source,bash]
+----
+oc get ingresscontrollers \
+  --namespace openshift-ingress-operator
+----
+
+Repeat for two more rows of the table above, such as `storage` and `monitoring`.
+
+=== Exercise 4: Find the Default StorageClass
+
+[source,bash]
+----
+oc get storageclass
+----
+
+[source,bash]
+----
+oc get csidrivers
+----
+
+On ROSA the default class is backed by the EBS CSI driver, with gp3 volumes.
+On ARO the default class is backed by the Azure Disk CSI driver.
+Both create `ReadWriteOnce` volumes.
+For `ReadWriteMany` storage on ROSA you install the AWS EFS CSI Driver Operator and give it an IAM role.
+ARO clusters created with managed identities do not offer Azure Files by default.
+
+The CSI drivers themselves are managed by the `storage` cluster Operator through a ClusterCSIDriver resource:
+
+[source,bash]
+----
+oc get clustercsidrivers
+----
+
+.EKS and AKS (reference only)
+[%collapsible]
+====
+On a new EKS cluster without Auto Mode, there is no EBS CSI driver until you add it, with an IAM role for its service account:
+
+[source,bash]
+----
+aws eks create-addon \
+  --cluster-name <cluster-name> \
+  --addon-name aws-ebs-csi-driver \
+  --service-account-role-arn <role-arn>
+----
+
+AKS ships the Azure Disk and Azure Files drivers and their StorageClasses:
+
+[source,bash]
+----
+kubectl get storageclass
+----
+====
+
+=== Exercise 5: Browse the Software Catalog
+
+The Software Catalog lists Operators from catalog sources.
+In the web console it is under *Ecosystem*, and it was called OperatorHub in earlier releases.
+
+List the catalog sources the cluster uses:
+
+[source,bash]
+----
+oc get catalogsources \
+  --namespace openshift-marketplace
+----
+
+ARO only shows Red Hat's catalogs when the cluster has a Red Hat pull secret.
+If `redhat-operators` is missing on the ARO cluster, the pull secret was not added; see the xref:setup-requirements.adoc[Setup Requirements].
+
+Find the OpenShift GitOps Operator and its default channel:
+
+[source,bash]
+----
+oc get packagemanifest openshift-gitops-operator \
+  --namespace openshift-marketplace \
+  -o jsonpath='{.status.defaultChannel}{"\n"}'
+----
+
+=== Exercise 6: Install OpenShift GitOps
+
+An Operator is installed with three resources: a namespace, an OperatorGroup and a Subscription.
+The Subscription names the package, the channel to follow, and whether updates are approved automatically.
+
+Create the namespace:
+
+[source,bash]
+----
+oc create namespace openshift-gitops-operator
+----
+
+Create the OperatorGroup:
+
+[source,bash]
+----
+oc apply -f - <<EOF
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: openshift-gitops-operator
+  namespace: openshift-gitops-operator
+spec:
+  upgradeStrategy: Default
+EOF
+----
+
+Create the Subscription:
+
+[source,bash]
+----
+oc apply -f - <<EOF
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: openshift-gitops-operator
+  namespace: openshift-gitops-operator
+spec:
+  channel: latest
+  installPlanApproval: Automatic
+  name: openshift-gitops-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+EOF
+----
+
+Watch the install until the ClusterServiceVersion reports `Succeeded`:
+
+[source,bash]
+----
+oc get clusterserviceversions \
+  --namespace openshift-gitops-operator \
+  --watch
+----
+
+The Operator creates a default Argo CD instance in the `openshift-gitops` namespace.
+Check that its pods are running:
+
+[source,bash]
+----
+oc get pods \
+  --namespace openshift-gitops
+----
+
+NOTE: Operators that call cloud APIs, such as the EFS CSI Driver Operator, need an IAM role or managed identity, and on ROSA they should use `installPlanApproval: Manual`, so that an update cannot change the permissions they need without you noticing. OpenShift GitOps calls no cloud APIs, so automatic approval is fine here.
+
+.EKS and AKS (reference only)
+[%collapsible]
+====
+On EKS, the Argo CD capability runs Argo CD for you outside the cluster; you create it in the EKS console or API and connect it to the cluster.
+
+On AKS, GitOps is the Flux extension:
+
+[source,bash]
+----
+az k8s-extension create \
+  --resource-group <resource-group> \
+  --cluster-name <cluster-name> \
+  --cluster-type managedClusters \
+  --extension-type microsoft.flux \
+  --name flux
+----
+====
+
+=== Exercise 7: Sync One Application
+
+Create a namespace for the application:
+
+[source,bash]
+----
+oc create namespace gitops-hello
+----
+
+Label it so the default Argo CD instance may manage it:
+
+[source,bash]
+----
+oc label namespace gitops-hello \
+  argocd.argoproj.io/managed-by=openshift-gitops
+----
+
+Create an Argo CD Application that points at this workshop's repository:
+
+[source,bash]
+----
+oc apply -f - <<EOF
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: gitops-hello
+  namespace: openshift-gitops
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/shpwrck/ocp-cloud-workshop.git
+    targetRevision: main
+    path: exercises/module-01/gitops-hello
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: gitops-hello
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+EOF
+----
+
+Check that the application is synced and healthy:
+
+[source,bash]
+----
+oc get applications.argoproj.io gitops-hello \
+  --namespace openshift-gitops
+----
+
+[source,bash]
+----
+oc get pods \
+  --namespace gitops-hello
+----
+
+Open the Argo CD web console.
+Its address is the host of this route:
+
+[source,bash]
+----
+oc get route openshift-gitops-server \
+  --namespace openshift-gitops \
+  -o jsonpath='{.spec.host}{"\n"}'
+----
+
+Log in with *Log in via OpenShift*, using your cluster credentials.
+
+=== Clean Up
+
+Delete the application, which also removes what it deployed:
+
+[source,bash]
+----
+oc delete applications.argoproj.io gitops-hello \
+  --namespace openshift-gitops
+----
+
+[source,bash]
+----
+oc delete namespace gitops-hello
+----
+
+Keep the OpenShift GitOps Operator installed; later modules do not depend on it, but removing an Operator takes more steps than installing one.
 
 == What Matters
 
-* Platform components are owned by Operators. Editing their resources directly is reverted; you change them through the Operator's configuration resource, and only where SRE allows it.
+* Platform components are owned by Operators. Editing their resources directly is reverted; you change them through the Operator's configuration resource, such as the IngressController, and only where SRE allows it.
+* One health view: `oc get clusteroperators` replaces checking each add-on. A `DEGRADED` platform Operator is SRE's to fix, but you will see it first.
 * Storage: ROSA ships the EBS CSI driver with a default gp3 StorageClass. Shared (RWX) storage needs the EFS CSI Driver Operator and an IAM role. ARO ships Azure Disk as the default; Azure Files is disabled by default on clusters created with managed identities.
 * ARO needs a Red Hat pull secret before it can install Operators from the Software Catalog.
-* On ROSA, the `dedicated-admin` role can install Operators.
-* Helm still works on ROSA and ARO.
+* On ROSA, the `dedicated-admin` role can install Operators, so you do not need `cluster-admin` to extend the platform.
+* Catalog Operators such as OpenShift GitOps run on your worker nodes and are yours to operate: their capacity, their configuration and approving their updates.
+* Helm still works on ROSA and ARO. Use it for vendor software that has no Operator.
 
 == Where Each Wins
 
@@ -45,23 +472,33 @@ Outline of the exercise:
 |ROSA and ARO win |EKS and AKS win
 
 |Ingress, registry, monitoring, storage and console work on day one.
-|Smaller footprint: you run only what you choose.
+|Smaller footprint: you run only what you choose, and Auto Mode runs its controllers outside your nodes.
 
 |No add-on version matrix: components upgrade with the cluster.
 |Freedom to swap components, such as Cilium or a different ingress.
 
-|One catalog and lifecycle model (Operators) for platform add-ons.
+|One catalog and lifecycle model (Operators) for platform add-ons, with one health view.
 |Managed GitOps: the EKS Argo CD capability and the AKS Flux extension run without an in-cluster Argo CD to operate.
+
+|
+|AKS Automatic gives a similar opinionated default set, with AKS add-ons supported by Microsoft.
 |===
+
+== App Teams Will Notice
+
+* Application teams get a working Route, a default StorageClass and metrics on day one, with nothing to request from you.
+* Teams used to installing their own controllers with Helm will find that cluster-wide components come from the Software Catalog, and installing one needs an administrator.
 
 == References
 
 * EKS
 ** https://docs.aws.amazon.com/eks/latest/userguide/eks-add-ons.html[EKS add-ons]
+** https://docs.aws.amazon.com/eks/latest/userguide/automode.html[EKS Auto Mode]
 ** https://docs.aws.amazon.com/eks/latest/userguide/ebs-csi.html[EBS CSI driver]
 ** https://docs.aws.amazon.com/eks/latest/userguide/argocd.html[EKS capability for Argo CD]
 * AKS
 ** https://learn.microsoft.com/azure/aks/integrations[AKS add-ons, extensions and integrations]
+** https://learn.microsoft.com/azure/aks/intro-aks-automatic[AKS Automatic]
 ** https://learn.microsoft.com/azure/aks/csi-storage-drivers[CSI drivers on AKS]
 ** https://learn.microsoft.com/azure/azure-arc/kubernetes/tutorial-use-gitops-flux2[GitOps with Flux v2]
 * ROSA
@@ -73,4 +510,5 @@ Outline of the exercise:
 ** https://learn.microsoft.com/azure/openshift/howto-add-update-pull-secret[Add a Red Hat pull secret to ARO]
 * OpenShift
 ** https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/operators/operator-reference[Cluster Operators reference]
+** https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/updating_clusters/understanding-openshift-updates-1[Understanding OpenShift updates (ClusterVersion)]
 ** https://docs.redhat.com/en/documentation/red_hat_openshift_gitops/1.21/html/installing_gitops/installing-openshift-gitops[Installing OpenShift GitOps]
