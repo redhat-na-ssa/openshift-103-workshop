@@ -1,5 +1,9 @@
 = Pod Networking and Policy
 
+NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026.
+Steps and statements that were not checked on a live cluster carry a *Not validated* note.
+The comparison tables and summaries come from vendor documentation.
+
 With the Amazon VPC CNI and Azure CNI, pods can get addresses from your VPC or virtual network.
 ROSA and ARO run OVN-Kubernetes as an overlay: pod addresses never appear in the VPC or virtual network, and traffic leaves the cluster from the node's address unless you assign an egress IP.
 This section explains the packet path, then applies network policy at two levels: per project, and cluster-wide.
@@ -17,8 +21,6 @@ image::module-03-packet-path.svg[Pod packet path with the Amazon VPC CNI, Azure 
 
 Do these steps on your ROSA cluster, then repeat them on your ARO cluster.
 Where the two differ, the steps are split under ROSA and ARO headings.
-
-NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026, except the steps marked as not validated. The EKS and AKS reference blocks, Fixed Egress Addresses and Private Clusters are reference only and were not run.
 They use the sample application in the `sample-app` project and the Route you created in xref:module-03-exposing-apps.adoc[Exposing an App].
 
 === Exercise 1: Compare Pod and Node Addresses
@@ -68,7 +70,7 @@ When the pod talks to a database in the same VPC or virtual network, the databas
 
 Show the cluster's address ranges, in the `Machine CIDR`, `Service CIDR` and `Pod CIDR` lines:
 
-CAUTION: Not validated: needs a `rosa` login to the cluster's Red Hat organization.
+NOTE: *Not validated:* `rosa describe cluster`, which needs a `rosa` login to the cluster's Red Hat organization.
 
 [source,bash]
 ----
@@ -79,7 +81,7 @@ rosa describe cluster \
 Look up both addresses in the VPC.
 The pod's address finds nothing, and the node's address finds its network interface:
 
-CAUTION: Not validated: needs AWS credentials for the account that owns the cluster.
+NOTE: *Not validated:* the VPC lookup, which needs AWS credentials for the account that owns the cluster.
 
 [source,bash]
 ----
@@ -475,7 +477,8 @@ Every pod on the cluster shares that address, so an external firewall that allow
 
 Find the NAT gateway addresses in the cluster's VPC:
 
-CAUTION: Not validated: needs AWS credentials for the account that owns the cluster.
+NOTE: *Not validated:* the NAT gateway lookup, which needs AWS credentials for the account that owns the cluster.
+That the pod's address on ARO is one of the cluster's outbound addresses was validated.
 
 [source,bash]
 ----
@@ -506,6 +509,8 @@ az network public-ip list \
 ----
 
 === Fixed Egress Addresses (Reference Only)
+
+NOTE: *Not validated:* this section, which no exercise runs.
 
 To give one project its own source address, OVN-Kubernetes offers egress IPs.
 This workshop does not set one up, because the cloud constraints differ: on ROSA, you label the nodes that may host egress IPs through a machine pool, and capacity depends on the instance type; on ARO, namespace egress IPs need a cluster created with user-defined routing.

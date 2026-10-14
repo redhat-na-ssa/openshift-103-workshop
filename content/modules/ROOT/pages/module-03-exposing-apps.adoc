@@ -1,5 +1,9 @@
 = Exposing an App
 
+NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026.
+Steps and statements that were not checked on a live cluster carry a *Not validated* note.
+The comparison tables and summaries come from vendor documentation.
+
 On EKS and AKS you install or enable an ingress controller before anything can be reached from outside.
 ROSA and ARO arrive with a default ingress controller behind a cloud load balancer, a wildcard DNS name for applications and a certificate for it, so the sample application gets an HTTPS address in one step.
 This section exposes the sample application three ways: an OpenShift Route, a standard Kubernetes Ingress, and the Gateway API.
@@ -17,8 +21,6 @@ image::module-03-request-path.svg[Request path from client to pod on EKS, AKS, R
 
 Do these steps on your ROSA cluster, then repeat them on your ARO cluster.
 Where the two differ, the steps are split under ROSA and ARO headings.
-
-NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026, except the steps marked as not validated. The EKS and AKS reference blocks were not run.
 The sample application from Module 2 runs in the `sample-app` project, behind a Service named `sample-app` on port `8080`.
 Its `/healthz` path always answers `200`, so the checks below use it.
 
@@ -73,7 +75,7 @@ oc get service router-default \
 It prints `nlb`.
 AWS shows the same:
 
-CAUTION: Not validated: needs AWS credentials for the account that owns the cluster.
+NOTE: *Not validated:* `aws elbv2 describe-load-balancers`, which needs AWS credentials for the account that owns the cluster.
 
 [source,bash]
 ----
@@ -84,7 +86,7 @@ aws elbv2 describe-load-balancers \
 
 See the ingress the way the service manages it:
 
-CAUTION: Not validated: needs a `rosa` login to the cluster's Red Hat organization.
+NOTE: *Not validated:* `rosa list ingresses`, which needs a `rosa` login to the cluster's Red Hat organization.
 
 [source,bash]
 ----
@@ -94,7 +96,7 @@ rosa list ingresses \
 
 On ROSA you change the default ingress with `rosa edit ingress`, not by editing the IngressController object.
 
-CAUTION: Not validated: taken from the ROSA documentation.
+NOTE: *Not validated:* changing the default ingress with `rosa edit ingress`, which comes from the ROSA documentation.
 
 ==== ARO
 
@@ -127,7 +129,8 @@ az network public-ip list \
 The public IP lives in the cluster's managed resource group.
 A deny assignment there lets you read it but not change it.
 
-CAUTION: Not validated: taken from the ARO documentation; the workshop did not try to change the public IP.
+NOTE: *Not validated:* the deny assignment, which comes from the ARO documentation.
+The validation run did not try to change the public IP.
 
 See the ingress the way the service manages it:
 
@@ -461,11 +464,14 @@ The next section applies network policy to it.
 
 == What Matters
 
+NOTE: *Not validated:* that the Gateway's load balancer on ROSA is a Classic Load Balancer, and that `dedicated-admin` cannot use the Gateway API.
+The load balancer type was read from its host name and annotations, not checked in AWS, and `dedicated-admin` was not tried.
+
 * A Route is OpenShift's own resource, with edge, re-encrypt and passthrough TLS. Ingress objects still work and become Routes.
 * OpenShift only turns an Ingress into a Route when it has no `ingressClassName` or uses `openshift-default`. An Ingress that still says `alb` or `webapprouting.kubernetes.azure.com` is silently ignored.
 * ALB and NGINX annotations do nothing here. Route behavior is set with `haproxy.router.openshift.io/*` annotations instead, for example timeouts and rewrites.
 * On ROSA, SRE owns the default ingress controller's settings, and you change them with `rosa edit ingress`. For other needs you add another ingress controller, or the AWS Load Balancer Operator for ALBs.
-* OpenShift supports the Gateway API from 4.19. Each Gateway gets its own load balancer and needs its own certificate. On ROSA that load balancer is a Classic Load Balancer, not a Network Load Balancer like the router's (seen from its host name and annotations, not checked in AWS). The ROSA and ARO documentation do not cover it yet, it needs `cluster-admin` (not `dedicated-admin` on ROSA, which was not validated), and on ARO's default domain you manage its DNS yourself, so check it on your clusters before you rely on it.
+* OpenShift supports the Gateway API from 4.19. Each Gateway gets its own load balancer and needs its own certificate. On ROSA that load balancer is a Classic Load Balancer, not a Network Load Balancer like the router's. The ROSA and ARO documentation do not cover it yet, it needs `cluster-admin` (not `dedicated-admin` on ROSA), and on ARO's default domain you manage its DNS yourself, so check it on your clusters before you rely on it.
 
 == Where Each Wins
 
