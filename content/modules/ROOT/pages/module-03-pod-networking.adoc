@@ -494,7 +494,8 @@ oc exec client \
 ----
 
 Compare it with the cloud's outbound addresses for the cluster below: it is one of them.
-Every pod on the cluster shares that address, so an external firewall that allows it allows the whole cluster.
+A multi-AZ ROSA cluster has a NAT gateway in each zone, and ARO can have several outbound addresses, so which one a pod uses depends on its node.
+Allow-list every address the query below returns, and remember that allowing them allows every pod in the cluster.
 
 [tabs]
 ======
