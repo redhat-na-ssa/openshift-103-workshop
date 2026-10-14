@@ -1,0 +1,68 @@
+= Workload Security Defaults
+
+NOTE: This section is an outline. Its diagrams and exercises are being written and validated on ROSA and ARO.
+
+EKS and AKS admit almost any pod unless you add guardrails.
+ROSA and ARO admit pods through security context constraints (SCCs), which by default run every container as a non-root user with a random user ID chosen per project.
+This is the first difference most EKS and AKS engineers hit, and the one application teams notice most.
+
+// Planned visuals:
+// - Admission flow: Pod Security Admission (EKS, AKS) vs SCC
+//   admission plus synced Pod Security Admission labels (OpenShift).
+// - "Why my pod failed" decision tree: runs as root, fixed UID,
+//   host path, privileged port, added capabilities.
+
+== On EKS and AKS
+
+* Pod Security Admission is available, but nothing is enforced until you label namespaces.
+* Guardrails come from policy engines you add: Kyverno, OPA Gatekeeper, or Azure Policy on AKS.
+* AKS Automatic enforces the baseline Pod Security Standard and Deployment Safeguards.
+
+== On ROSA and ARO
+
+Outline of the exercise:
+
+. Deploy the sample application from an upstream image that runs as root, the way you would on EKS or AKS.
+. Watch the pod fail, and read the SCC admission error.
+. Find the SCC the pod was admitted under, and the user ID it was given.
+. Fix it the right way: use an image that runs as non-root and tolerates an arbitrary user ID.
+. Fix it the wrong way for comparison: grant the `anyuid` SCC to the service account, and discuss why that is a last resort.
+. Look at the Pod Security Admission labels OpenShift synced onto the namespace.
+
+== What Matters
+
+* New OpenShift 4.21 clusters admit ordinary users under `restricted-v3`; earlier clusters use `restricted-v2`. Check which one your cluster uses.
+* SCCs are granted to service accounts, users and groups through RBAC, not set per namespace.
+* OpenShift keeps Pod Security Admission labels in sync with the SCCs a namespace's service accounts can use, so upstream tooling that reads those labels still works.
+
+== Where Each Wins
+
+[cols="1,1",options="header"]
+|===
+|ROSA and ARO win |EKS and AKS win
+
+|Secure by default: non-root, random user IDs and dropped capabilities with nothing to build.
+|Upstream Pod Security Standards only, so upstream Helm charts and policies work unchanged.
+
+|Per-project user ID ranges isolate tenants from each other.
+|Azure Policy gives fleet-wide enforcement and compliance reporting.
+|===
+
+== App Teams Will Notice
+
+Images that run as root, expect a fixed user ID, write to the image file system, or bind to ports below 1024 fail on first deploy.
+Many upstream Helm charts need a `securityContext` change or an SCC grant before they run.
+Give teams a short guide: build images that run as non-root, make writable paths group-writable for group 0, and listen on high ports.
+
+== References
+
+* EKS
+** https://docs.aws.amazon.com/eks/latest/best-practices/pod-security.html[Pod security best practices]
+* AKS
+** https://learn.microsoft.com/azure/aks/use-psa[Use Pod Security Admission]
+** https://learn.microsoft.com/azure/aks/use-azure-policy[Azure Policy for AKS]
+* ROSA
+** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/authentication_and_authorization/managing-pod-security-policies[Managing SCCs on ROSA]
+* OpenShift (ARO uses the OpenShift documentation)
+** https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/authentication_and_authorization/managing-pod-security-policies[Managing security context constraints]
+** https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/authentication_and_authorization/understanding-and-managing-pod-security-admission[Pod security admission and SCC synchronization]

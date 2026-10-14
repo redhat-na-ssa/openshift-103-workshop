@@ -1,26 +1,57 @@
 = Home
 
-This workshop illustrates the differences between native managed Kubernetes on the public cloud (Amazon EKS and Azure AKS) and the managed OpenShift services on the same clouds (Red Hat OpenShift Service on AWS and Azure Red Hat OpenShift).
+This workshop is for platform engineers who already run Amazon EKS or Azure AKS and now operate Red Hat OpenShift Service on AWS (ROSA) or Azure Red Hat OpenShift (ARO).
+
+It is not a sales pitch.
+Each section shows what is different, which differences matter in daily operation, where ROSA and ARO save you work compared with a platform you build yourself on EKS or AKS, and where the native service is the better tool.
 
 ifdef::openshift-102-showroom[]
 include::openshift-102:ROOT:partial$cli-tools-container.adoc[]
 endif::[]
 
+== How the Workshop Works
+
+You do the hands-on work on a ROSA cluster and an ARO cluster.
+Each step also shows how you would do the same task on EKS or AKS, as a reference block you read but do not run.
+No EKS or AKS cluster is needed.
+
+One sample application runs through Modules 2 to 4.
+You deploy it, give it cloud credentials, expose it, apply network policy to it, scale nodes under it and monitor it.
+
+Every section follows the same pattern:
+
+* *On EKS and AKS*: the habit you bring with you.
+* *On ROSA and ARO*: the same task, done the OpenShift way.
+* *What matters*: the differences that change how you operate.
+* *Where each wins*: what ROSA and ARO take off your plate, and where EKS and AKS are better.
+* *App teams will notice*: differences your application teams will ask you about, where there are any.
+
+Sections with little hands-on work rely on diagrams and comparison tables instead.
+
+== Modules
+
+. *The Service Model*: who manages what on each platform, what it costs, and what a cluster ships with.
+. *Access and Workload Security*: logging in, onboarding teams, pod security defaults and cloud credentials for pods.
+. *Networking*: exposing applications, pod networking and network policy.
+. *Day-2 Operations*: scaling nodes, upgrades and observability.
+
 == Prerequisites
 
 This workshop assumes the following:
 
-* You have basic familiarity with Kubernetes.
-* You have access to an AWS or Azure account, or to clusters provisioned for you.
+* You operate Kubernetes on EKS or AKS today, and are comfortable with `kubectl` and the `aws` or `az` CLI.
+* You have access to a ROSA cluster and an ARO cluster prepared as described in the xref:setup-requirements.adoc[Setup Requirements].
 
 == Expectations
 
 After completing this workshop, you will be able to:
 
-* Explain what EKS and AKS provide compared with ROSA and ARO.
+* Explain what Red Hat, AWS and Microsoft manage on ROSA and ARO, and what remains your job.
 
-* Provision, secure and expose workloads on each platform.
+* Map your EKS and AKS habits for access, security, networking, scaling, upgrades and observability to ROSA and ARO.
 
-* Choose between native managed Kubernetes and managed OpenShift for a given workload.
+* Recognize the differences that matter in daily operation, and the ones your application teams will notice.
+
+* Judge where ROSA and ARO improve on a self-built EKS or AKS platform, and where the native service is the better choice.
 
 Before running the workshop, review the xref:setup-requirements.adoc[Setup Requirements].

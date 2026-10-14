@@ -1,0 +1,93 @@
+= Who Manages What
+
+NOTE: This section is an outline. Its diagrams and exercises are being written and validated on ROSA and ARO.
+
+On EKS and AKS, the cloud provider runs the control plane and you run almost everything else.
+On ROSA and ARO, Red Hat site reliability engineers (SRE) and the cloud provider also run the worker operating system and the platform components, and some settings you are used to changing are no longer yours.
+This section draws that line for all four platforms, and covers support, cost and backup, because they follow from the same line.
+
+// Planned visuals:
+// - Responsibility chart: rows (control plane, etcd, node OS, CNI,
+//   ingress, monitoring, upgrades, app backup, app data), one column
+//   per platform, cells "provider", "Red Hat SRE", "you", "shared".
+// - Architecture diagram: EKS, AKS, ROSA HCP, ROSA classic, ARO,
+//   showing where the control plane runs and how SRE reaches it.
+// - Cost model chart: control plane fee and per-worker fee per
+//   platform for the same 3-worker pool.
+
+== On EKS and AKS
+
+* AWS or Microsoft runs the API server and etcd.
+* You choose, install and update the add-ons: CNI, CSI drivers, load balancer controller, metrics-server, autoscaler.
+* You patch or replace nodes, or hand that to EKS Auto Mode or AKS node OS auto-upgrade.
+* You open support cases with AWS or Microsoft, and with each vendor whose add-on you run.
+
+== On ROSA and ARO
+
+Outline of the exercise:
+
+. Read the cluster's service details.
+** ROSA: describe the cluster with the `rosa` CLI, including whether it is ROSA with hosted control planes (HCP) or classic.
+** ARO: show the cluster with the `az aro` CLI.
+. List the namespaces SRE owns and the components they run.
+. Try to change a managed resource, and see the change refused or reverted.
+. Find the support path: how to open a case and who answers it.
+
+== What Matters
+
+* ROSA comes in two architectures. With HCP, the control plane runs in a Red Hat account and is reached over AWS PrivateLink. With classic, it runs in your account. The responsibility line differs between them.
+* ARO now has two architectures too: standard, and hosted control planes in preview.
+* Some cluster settings are SRE-owned. Changes to them are refused or reverted, so automation that worked on EKS or AKS may fail here.
+* Application backup is yours on every platform. SRE backs up the control plane, not your workloads or volumes.
+
+=== Backup and Restore
+
+AWS Backup supports EKS, and Azure Backup supports AKS, as managed services with backup policies and vaults.
+Neither covers ROSA or ARO.
+On ROSA and ARO you install the OpenShift API for Data Protection (OADP) Operator, which is based on Velero, and point it at an S3 bucket or Azure storage account.
+
+// Planned: comparison table (service, what it backs up, agent,
+// vaults) and a sample OADP DataProtectionApplication for each cloud.
+
+=== Cost and Support
+
+* EKS charges a control plane fee per cluster. AKS has a free tier without an SLA, and paid tiers with one.
+* ROSA HCP charges a control plane fee per cluster plus an OpenShift fee per worker vCPU. ARO charges the OpenShift fee per worker vCPU, and standard ARO also bills its control plane VMs.
+* ROSA and ARO both carry a 99.95% SLA and joint support: one case reaches both the cloud provider and Red Hat.
+
+== Where Each Wins
+
+[cols="1,1",options="header"]
+|===
+|ROSA and ARO win |EKS and AKS win
+
+|SRE runs the node OS, the platform components and their upgrades, around the clock.
+|Full control: any add-on, any version, any configuration.
+
+|One support case covers the cloud and the platform.
+|Much lower platform cost, and a free tier on AKS.
+
+|A tested, integrated stack instead of an add-on matrix you maintain.
+|Managed backup services with policies and vaults.
+|===
+
+== References
+
+* EKS
+** https://docs.aws.amazon.com/eks/latest/best-practices/security.html[EKS security best practices (shared responsibility)]
+** https://aws.amazon.com/eks/pricing/[EKS pricing]
+** https://docs.aws.amazon.com/aws-backup/latest/devguide/eks-backups.html[AWS Backup for EKS]
+* AKS
+** https://learn.microsoft.com/azure/aks/support-policies[AKS support policies]
+** https://learn.microsoft.com/azure/aks/free-standard-pricing-tiers[AKS pricing tiers]
+** https://learn.microsoft.com/azure/backup/azure-kubernetes-service-backup-overview[Azure Backup for AKS]
+* ROSA
+** https://docs.openshift.com/rosa/rosa_policy/rosa-policy-responsibility-matrix.html[ROSA responsibility matrix]
+** https://docs.aws.amazon.com/rosa/latest/userguide/rosa-architecture-models.html[ROSA architecture models (HCP and classic)]
+** https://aws.amazon.com/rosa/pricing/[ROSA pricing]
+** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/backup_and_restore/oadp-application-backup-and-restore[OADP on ROSA]
+* ARO
+** https://learn.microsoft.com/azure/openshift/responsibility-matrix[ARO responsibility matrix]
+** https://learn.microsoft.com/azure/openshift/concepts-classic-hosted-control-planes-comparison[ARO standard and hosted control planes compared]
+** https://azure.microsoft.com/pricing/details/openshift/[ARO pricing]
+** https://cloud.redhat.com/experts/misc/oadp/aro/[OADP on ARO (Cloud Experts)]

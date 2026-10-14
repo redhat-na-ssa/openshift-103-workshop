@@ -1,37 +1,38 @@
 = Setup Requirements
 :hardbreaks-option:
 
-This page lists everything needed to run this workshop on each of the four platforms it compares: Amazon EKS, Azure AKS, Red Hat OpenShift Service on AWS (ROSA) and Azure Red Hat OpenShift (ARO).
+This page lists everything needed to run this workshop.
 
-Module 2 has attendees create clusters, so attendees need their own cloud accounts, or a sandbox account per attendee or pair.
-If the instructor provisions the clusters ahead of time instead, attendees need only the binaries and the cluster access described below, and Module 2 becomes a walkthrough.
+Attendees do the hands-on work on a ROSA cluster and an ARO cluster.
+EKS and AKS appear only as reference blocks, so no EKS or AKS cluster is needed.
+The instructor creates the clusters ahead of time.
+Several exercises change cluster-wide settings (identity providers, AdminNetworkPolicy, machine pools), so each attendee or pair needs their own ROSA and ARO cluster.
 
-== Cloud Accounts and Quotas
+== Cluster
 
 [cols="1,3",options="header"]
 |===
 |Platform |Requirement
 
-|EKS
-|An AWS account, in a region where EKS is available.
-Service Quotas must allow at least 16 On-Demand standard vCPUs for the node groups.
-
 |ROSA
-a|The same AWS account, with the ROSA service enabled in the AWS console and linked to a Red Hat account at https://console.redhat.com[console.redhat.com].
-The Elastic Load Balancing service-linked role must exist, and Service Quotas must cover a ROSA cluster.
-Check the quotas with:
+a|* ROSA with hosted control planes (HCP), in STS mode (the default).
+* OpenShift 4.22 or later, for the Red Hat build of Karpenter in Module 4.
+* A public API and default ingress.
+* At least 2 worker nodes, with Service Quotas that allow the cluster to scale out by at least 3 more nodes in Module 4.
+
+Check the quotas before creating the cluster:
 
 [source,bash]
 ----
 rosa verify quota
 ----
 
-|AKS
-|An Azure subscription, with quota for at least 16 vCPUs in the chosen region.
-
 |ARO
-a|The same Azure subscription, with quota for at least 40 vCPUs in the region (3 control plane nodes on Standard_D8s_v5 and 3 workers on Standard_D4s_v5).
-A Red Hat pull secret is optional; it adds access to Red Hat Operators.
+a|* Created with managed identities, which Module 2 needs for workload identity. A cluster created with a service principal cannot be converted.
+* Created with a Red Hat pull secret, which Module 1 needs to install Operators.
+* The newest OpenShift version ARO offers.
+* A public API and default ingress.
+* Quota for at least 3 more worker nodes in the region, for Module 4.
 
 These resource providers must be registered:
 
@@ -49,199 +50,160 @@ done
 ----
 |===
 
-== Binaries
+To create the clusters, follow:
 
-Each attendee needs these command line tools on their workstation or in the workshop terminal.
+* https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/install_clusters/index[Creating ROSA with HCP clusters]
+* https://learn.microsoft.com/azure/openshift/howto-understand-managed-identities[Creating ARO clusters with managed identities]
+
+== Operators and Cluster Components
+
+Nothing needs to be installed before the workshop.
+Attendees install these Operators during the exercises:
+
+[cols="1,1,2",options="header"]
+|===
+|Operator |Module |Notes
+
+|Red Hat OpenShift GitOps
+|1
+|The Software Catalog example.
+
+|Red Hat OpenShift Logging
+|4
+|Forwards application logs to CloudWatch and Azure Monitor Logs.
+|===
+
+The default ingress controller, OVN-Kubernetes, the CSI drivers and platform monitoring come with every ROSA and ARO cluster.
+
+== Attendee Accounts, Projects and Roles
+
+[cols="1,3",options="header"]
+|===
+|Where |What the attendee needs
+
+|ROSA cluster
+|Cluster administrator, through the temporary admin user or an identity provider.
+On their Red Hat account, permission to manage the cluster in OpenShift Cluster Manager, so they can add identity providers, machine pools and upgrade policies with the `rosa` CLI.
+
+|ARO cluster
+|The kubeadmin credential, and `Contributor` on the cluster's resource group.
+
+|AWS account
+a|Permission to create:
+
+* IAM roles and policies (Module 2 and Module 4)
+* S3 buckets (Module 2)
+* ECR repositories (Module 2)
+* CloudWatch log groups (Module 4)
+
+|Azure subscription
+a|Permission to create, in a resource group:
+
+* User-assigned managed identities and federated credentials (Module 2)
+* Storage accounts and role assignments on them (Module 2)
+* Container registries (Module 2)
+* Log Analytics workspaces (Module 4)
+
+In Microsoft Entra ID: permission to create an app registration for the ARO identity provider (Module 2).
+
+|GitHub
+|A GitHub account, to create an OAuth app for the ROSA identity provider (Module 2).
+|===
+
+== Attendee Workstation
 
 [cols="1,1,2",options="header"]
 |===
 |Tool |Used for |Notes
 
-|`kubectl`
-|EKS and AKS
-|Within one minor version of the cluster.
-
 |`oc`
 |ROSA and ARO
-|Matches the OpenShift version.
-Can also replace kubectl on EKS and AKS.
-
-|`aws` (v2)
-|EKS and ROSA
-|Configured with credentials for the attendee's AWS account.
-
-|`eksctl`
-|EKS
-|Creates the EKS cluster and its node groups.
+|Matches the OpenShift version of the clusters.
 
 |`rosa`
 |ROSA
 |Logged in with a token from console.redhat.com.
 
-|`az`
-|AKS and ARO
-|The ARO commands are built in; no extension is needed.
+|`aws` (v2)
+|ROSA
+|Configured with credentials for the AWS account.
 
-|`helm`
-|EKS and AKS
-|Installs the AWS Load Balancer Controller and other add-ons.
+|`az`
+|ARO
+|Logged in to the Azure subscription.
 
 |`jq`
 |All
 |Reads JSON output in the exercises.
 |===
 
-== Roles and Permissions
+`kubectl`, `eksctl` and `helm` are not needed.
+Commands for EKS and AKS appear only as reference.
 
-[cols="1,3",options="header"]
-|===
-|Platform |Who needs what
-
-|EKS
-a|The attendee's AWS identity needs permission to create EKS clusters with eksctl:
-
-* EKS
-* EC2
-* CloudFormation
-* IAM role and OIDC provider creation
-* Auto Scaling
-
-The `AdministratorAccess` policy on a sandbox account is the simplest choice.
-
-|ROSA
-a|The attendee's AWS identity needs the same IAM rights, to create the ROSA account-wide roles, the OIDC configuration and the operator roles:
-
-[source,bash]
-----
-rosa create account-roles --mode auto
-rosa create oidc-config --mode auto
-rosa create operator-roles --mode auto \
-  --prefix <prefix> \
-  --oidc-config-id <oidc-config-id>
-----
-
-Their Red Hat account needs permission to create clusters in the organization.
-
-|AKS
-|`Contributor` on the subscription or on a dedicated resource group, plus `User Access Administrator` to assign roles to managed identities for Workload ID.
-
-|ARO
-|`Contributor` and `User Access Administrator` on the subscription.
-In Microsoft Entra ID, the attendee must be able to create app registrations and service principals, because creating an ARO cluster also creates its service principal.
-|===
-
-== Cluster Components and Operators
-
-[cols="1,3",options="header"]
-|===
-|Platform |What must be installed or enabled
-
-|EKS
-|Amazon EBS CSI driver add-on (persistent storage), AWS Load Balancer Controller (ingress, Module 4), metrics-server (autoscaling, Module 5) and Cluster Autoscaler or Karpenter (node scaling, Module 5).
-An IAM OIDC provider for the cluster (IRSA, Module 3).
-
-|AKS
-a|Create the cluster with Workload ID (Module 3), the cluster autoscaler (Module 5) and the application routing add-on (ingress, Module 4) enabled:
-
-[source,bash]
-----
-az aks create \
-  --resource-group <resource-group> \
-  --name <cluster-name> \
-  --enable-oidc-issuer \
-  --enable-workload-identity \
-  --enable-cluster-autoscaler \
-  --min-count 1 \
-  --max-count 3 \
-  --enable-app-routing
-----
-
-Azure Disk CSI and metrics-server are installed by default.
-
-|ROSA
-|Nothing beyond the defaults: the ingress controller, OVN-Kubernetes, the EBS CSI driver and cluster monitoring come with every cluster.
-Create the cluster in STS mode (the default) for Module 3.
-
-|ARO
-|Nothing beyond the defaults: the ingress controller, OVN-Kubernetes, the Azure Disk CSI driver and cluster monitoring come with every cluster.
-|===
-
-== Access
-
-Attendees log in to EKS with their AWS identity; EKS creates an access entry for the cluster creator.
-
-[source,bash]
-----
-aws eks update-kubeconfig \
-  --region <region> \
-  --name <cluster-name>
-----
-
-Attendees log in to AKS with:
-
-[source,bash]
-----
-az aks get-credentials \
-  --resource-group <resource-group> \
-  --name <cluster-name>
-----
-
-Attendees log in to ROSA as cluster-admin, through an identity provider or a temporary admin user:
-
-[source,bash]
-----
-rosa create admin --cluster <cluster-name>
-----
-
-Attendees log in to ARO as the kubeadmin user, with the password from:
-
-[source,bash]
-----
-az aro list-credentials \
-  --resource-group <resource-group> \
-  --name <cluster-name>
-----
-
-Module 3 then adds an identity provider on each cluster.
+== Network and Image Access
 
 Workstations need outbound HTTPS to:
 
 * the AWS and Azure APIs
 * console.redhat.com
 * api.openshift.com
+* the ROSA and ARO cluster API and application domains
+
+Clusters need outbound access to:
+
 * quay.io
 * registry.redhat.io
+* the attendee's ECR and ACR registries
+
+== Verification Checklist
+
+Before the workshop, check each item for every attendee.
+
+The attendee can log in to both clusters:
+
+[source,bash]
+----
+oc whoami
+----
+
+Both clusters report their version and are not upgrading:
+
+[source,bash]
+----
+oc get clusterversion
+----
+
+The ROSA cluster is HCP and on 4.22 or later:
+
+[source,bash]
+----
+rosa describe cluster \
+  --cluster <cluster-name>
+----
+
+The ARO cluster is ready:
+
+[source,bash]
+----
+az aro show \
+  --resource-group <resource-group> \
+  --name <cluster-name> \
+  --query provisioningState
+----
+
+Both clusters can reach the Software Catalog:
+
+[source,bash]
+----
+oc get packagemanifests \
+  --namespace openshift-marketplace
+----
 
 == Cost and Cleanup
 
-Each cluster costs money while it runs; ROSA and ARO clusters cost the most.
-Delete every cluster at the end of the workshop:
+ROSA and ARO clusters cost money while they run.
+At the end of the workshop, delete the cloud resources attendees created: IAM roles and policies, S3 buckets, ECR repositories, CloudWatch log groups, managed identities, storage accounts, container registries and Log Analytics workspaces.
+Then delete the clusters, following:
 
-[source,bash]
-----
-eksctl delete cluster \
-  --name <cluster-name> \
-  --region <region>
-
-az aks delete --yes \
-  --resource-group <resource-group> \
-  --name <cluster-name>
-
-rosa delete cluster --yes \
-  --cluster <cluster-name>
-
-az aro delete --yes \
-  --resource-group <resource-group> \
-  --name <cluster-name>
-----
-
-After the ROSA cluster is deleted, remove its operator roles and OIDC configuration:
-
-[source,bash]
-----
-rosa delete operator-roles --mode auto \
-  --prefix <prefix>
-
-rosa delete oidc-config --mode auto \
-  --oidc-config-id <oidc-config-id>
-----
+* https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/install_clusters/index[Deleting ROSA with HCP clusters]
+* https://learn.microsoft.com/azure/openshift/howto-understand-managed-identities[Deleting ARO clusters with managed identities]

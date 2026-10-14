@@ -1,0 +1,76 @@
+= What Ships and How You Extend It
+
+NOTE: This section is an outline. Its diagrams and exercises are being written and validated on ROSA and ARO.
+
+A new EKS cluster comes with a CNI, kube-proxy and CoreDNS, and you add the rest.
+A new ROSA or ARO cluster comes with dozens of platform components, each run by an Operator, tested together and upgraded with the cluster.
+This section tours what ships, then shows how you add more through the Software Catalog (formerly OperatorHub), using OpenShift GitOps as the example.
+
+// Planned visuals:
+// - "What you install vs what ships" chart: one row per capability
+//   (CNI, ingress, CSI and default StorageClass, registry, metrics,
+//   alerting, console, autoscaler), one column per platform.
+// - Add-on to Operator map: EKS add-on / AKS extension on the left,
+//   the ClusterOperator or catalog Operator that covers it on the
+//   right.
+
+== On EKS and AKS
+
+* EKS: you install add-ons such as the EBS CSI driver, the AWS Load Balancer Controller and metrics-server, and keep their versions compatible with the cluster. EKS Auto Mode takes several of these over.
+* AKS: Azure Disk and Azure Files CSI drivers ship by default, and you enable add-ons and extensions as needed. AKS Automatic turns on an opinionated set.
+* For anything else you use Helm charts or vendor manifests.
+
+== On ROSA and ARO
+
+Outline of the exercise:
+
+. Read the cluster version and the list of cluster Operators, and their health.
+. Map each EKS add-on you would install to the cluster Operator that already provides it.
+. List the StorageClasses and find the default on each cluster.
+. Install the OpenShift GitOps Operator from the Software Catalog.
+. Sync one application from a Git repository with Argo CD.
+
+== What Matters
+
+* Platform components are owned by Operators. Editing their resources directly is reverted; you change them through the Operator's configuration resource, and only where SRE allows it.
+* Storage: ROSA ships the EBS CSI driver with a default gp3 StorageClass. Shared (RWX) storage needs the EFS CSI Driver Operator and an IAM role. ARO ships Azure Disk as the default; Azure Files is disabled by default on clusters created with managed identities.
+* ARO needs a Red Hat pull secret before it can install Operators from the Software Catalog.
+* On ROSA, the `dedicated-admin` role can install Operators.
+* Helm still works on ROSA and ARO.
+
+== Where Each Wins
+
+[cols="1,1",options="header"]
+|===
+|ROSA and ARO win |EKS and AKS win
+
+|Ingress, registry, monitoring, storage and console work on day one.
+|Smaller footprint: you run only what you choose.
+
+|No add-on version matrix: components upgrade with the cluster.
+|Freedom to swap components, such as Cilium or a different ingress.
+
+|One catalog and lifecycle model (Operators) for platform add-ons.
+|Managed GitOps: the EKS Argo CD capability and the AKS Flux extension run without an in-cluster Argo CD to operate.
+|===
+
+== References
+
+* EKS
+** https://docs.aws.amazon.com/eks/latest/userguide/eks-add-ons.html[EKS add-ons]
+** https://docs.aws.amazon.com/eks/latest/userguide/ebs-csi.html[EBS CSI driver]
+** https://docs.aws.amazon.com/eks/latest/userguide/argocd.html[EKS capability for Argo CD]
+* AKS
+** https://learn.microsoft.com/azure/aks/integrations[AKS add-ons, extensions and integrations]
+** https://learn.microsoft.com/azure/aks/csi-storage-drivers[CSI drivers on AKS]
+** https://learn.microsoft.com/azure/azure-arc/kubernetes/tutorial-use-gitops-flux2[GitOps with Flux v2]
+* ROSA
+** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/introduction_to_rosa/policies-and-service-definition[ROSA service definition]
+** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/operators/administrator-tasks[Installing Operators on ROSA]
+** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/storage/using-container-storage-interface-csi[CSI storage on ROSA]
+* ARO
+** https://learn.microsoft.com/azure/openshift/openshift-service-definitions[ARO service definition]
+** https://learn.microsoft.com/azure/openshift/howto-add-update-pull-secret[Add a Red Hat pull secret to ARO]
+* OpenShift
+** https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/operators/operator-reference[Cluster Operators reference]
+** https://docs.redhat.com/en/documentation/red_hat_openshift_gitops/1.21/html/installing_gitops/installing-openshift-gitops[Installing OpenShift GitOps]

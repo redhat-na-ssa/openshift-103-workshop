@@ -1,0 +1,75 @@
+= Access and Tenancy
+
+NOTE: This section is an outline. Its diagrams and exercises are being written and validated on ROSA and ARO.
+
+On EKS and AKS, your cloud identity is your cluster identity.
+On ROSA and ARO, the OpenShift OAuth server sits in between: you add identity providers, users log in to the CLI and web console through it, and groups map them to roles.
+Once people can log in, they need somewhere to work, so this section also covers projects, the OpenShift take on namespaces.
+
+// Planned visuals:
+// - Login flow diagram: IAM access entry (EKS), Entra ID + Azure RBAC
+//   (AKS), OAuth server + IdP (ROSA, ARO), external OIDC (ROSA HCP).
+// - Namespace vs project comparison table.
+
+== On EKS and AKS
+
+* EKS: you grant IAM principals access with access entries and access policies. The `aws-auth` ConfigMap is deprecated.
+* AKS: Microsoft Entra ID authenticates users, and Azure RBAC or Kubernetes RBAC authorizes them.
+* Teams get namespaces, RoleBindings and ResourceQuotas that you create yourself, often through infrastructure as code.
+
+== On ROSA and ARO
+
+Outline of the exercise:
+
+. Log in with the temporary admin (ROSA) or kubeadmin (ARO) credential.
+. Add an identity provider: GitHub or another OIDC provider on ROSA, Microsoft Entra ID on ARO.
+. Log in as a regular user through the web console and the CLI.
+. Create a group, add the user, and bind the group to a role.
+. Create a project as that user, then see who is allowed to create projects.
+. Change the project template so every new project gets a quota and limits.
+
+== What Matters
+
+* ROSA recommends the `dedicated-admin` role over `cluster-admin` for day-to-day administration. ARO has no `dedicated-admin`; you start from kubeadmin.
+* Every logged-in user can create projects by default, through the self-provisioner role. Most platform teams remove it or replace it with a request process.
+* ROSA HCP can skip the OAuth server and use an external OIDC provider such as Entra directly, which is closer to the EKS and AKS model. It must be chosen when the cluster is created and cannot be reverted. ARO offers external authentication only on its hosted control planes preview.
+
+== Where Each Wins
+
+[cols="1,1",options="header"]
+|===
+|ROSA and ARO win |EKS and AKS win
+
+|Any identity provider, with web console single sign-on.
+|Cloud IAM is the cluster identity: nothing extra to configure.
+
+|Project templates apply quotas, limits and policies to every new project.
+|Access is managed as cloud role assignments, alongside the rest of your cloud IAM.
+|===
+
+== App Teams Will Notice
+
+Developers get a web console with their projects, workloads, logs and metrics.
+Since OpenShift 4.19 the developer view is off by default, and a cluster administrator turns it on.
+OpenShift also offers in-cluster builds (Builds for OpenShift, source-to-image) and Pipelines (Tekton).
+Decide whether to offer these, or to keep builds in the CI system your teams already use, as they would on EKS or AKS.
+
+== References
+
+* EKS
+** https://docs.aws.amazon.com/eks/latest/userguide/access-entries.html[Access entries]
+** https://docs.aws.amazon.com/eks/latest/best-practices/tenant-isolation.html[Tenant isolation]
+* AKS
+** https://learn.microsoft.com/azure/aks/entra-id-authorization[Entra ID authorization]
+** https://learn.microsoft.com/azure/aks/best-practices-multi-tenancy[Multi-tenancy best practices]
+* ROSA
+** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/authentication_and_authorization/sd-configuring-identity-providers[Configuring identity providers]
+** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/install_clusters/rosa-hcp-sts-creating-a-cluster-ext-auth[HCP with external authentication]
+** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/building_applications/projects[Projects on ROSA]
+* ARO
+** https://learn.microsoft.com/azure/openshift/configure-azure-ad-cli[Configure Entra ID authentication]
+** https://learn.microsoft.com/azure/openshift/connect-cluster[Connect to an ARO cluster]
+* OpenShift
+** https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/authentication_and_authorization/understanding-identity-provider[Understanding identity providers]
+** https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/authentication_and_authorization/using-rbac[Using RBAC]
+** https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/web_console/web-console-overview[Web console overview]

@@ -1,0 +1,67 @@
+= Upgrades
+
+NOTE: This section is an outline. Its diagrams and exercises are being written and validated on ROSA and ARO.
+
+On EKS you upgrade the control plane, then each add-on against a compatibility matrix, then the nodes.
+On ROSA and ARO one release moves Kubernetes, the node OS and every platform Operator together, with checks that block an upgrade when something is not ready.
+A real upgrade takes an hour or more, so this section inspects and schedules upgrades without running one.
+
+// Planned visuals:
+// - Upgrade timeline for EKS, AKS, ROSA HCP and ARO: what you run,
+//   in what order, and what happens automatically.
+// - "What moves together" chart: Kubernetes, node OS, CNI, ingress,
+//   CSI, monitoring, per platform.
+
+== On EKS and AKS
+
+* EKS: upgrade the control plane one minor version at a time, update add-ons, then roll node groups or let Auto Mode replace nodes. Extended support is on by default and costs more per hour.
+* AKS: auto-upgrade channels and planned maintenance windows automate the control plane and node images.
+
+== On ROSA and ARO
+
+Outline of the exercise:
+
+. See the cluster's update channel, current version and available updates.
+. ROSA: schedule an upgrade policy with the `rosa` CLI, then cancel it.
+. ARO: read the ClusterVersion history and conditions.
+. Find what would block an upgrade, and where SRE notifications arrive.
+
+== What Matters
+
+* ROSA HCP upgrades the control plane and each machine pool separately. Machine pools can trail the control plane by up to two minor versions.
+* Standard ARO upgrades the control plane and workers together, and you start minor upgrades yourself.
+* Red Hat may apply critical security fixes without waiting for you.
+* New OpenShift versions reach ARO months after their general availability.
+* OpenShift does not support rolling back an upgrade.
+
+== Where Each Wins
+
+[cols="1,1",options="header"]
+|===
+|ROSA and ARO win |EKS and AKS win
+
+|One tested payload: no add-on version juggling.
+|Newer Kubernetes versions sooner.
+
+|Upgrade-blocking checks catch problems before they start.
+|AKS maintenance windows and auto-upgrade channels; AKS long-term support.
+
+|SRE watches the upgrade.
+|EKS supports rolling back a control plane upgrade.
+|===
+
+== References
+
+* EKS
+** https://docs.aws.amazon.com/eks/latest/userguide/update-cluster.html[Update an EKS cluster]
+** https://docs.aws.amazon.com/eks/latest/userguide/kubernetes-versions.html[Kubernetes version lifecycle on EKS]
+* AKS
+** https://learn.microsoft.com/azure/aks/auto-upgrade-cluster[Auto-upgrade channels]
+** https://learn.microsoft.com/azure/aks/planned-maintenance[Planned maintenance]
+* ROSA
+** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/upgrading/rosa-hcp-upgrading[Upgrading ROSA HCP]
+* ARO
+** https://learn.microsoft.com/azure/openshift/howto-upgrade[Upgrade an ARO cluster]
+** https://learn.microsoft.com/azure/openshift/support-lifecycle[ARO support lifecycle]
+* OpenShift
+** https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/updating_clusters/understanding-openshift-updates-1[Understanding OpenShift updates]
