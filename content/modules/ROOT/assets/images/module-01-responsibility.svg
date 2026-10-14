@@ -1,0 +1,135 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="902" height="456" viewBox="0 0 902 456" role="img" aria-labelledby="t d">
+<title id="t">Who is responsible for what on EKS, AKS, ROSA HCP and ARO</title>
+<desc id="d">Control plane and etcd: Amazon EKS AWS, Azure AKS Microsoft, ROSA HCP Red Hat SRE, ARO Microsoft + SRE. Node operating system: Amazon EKS AWS + you, Azure AKS Microsoft + you, ROSA HCP SRE + you, ARO MS + SRE + you. Platform components: Amazon EKS You (add-ons), Azure AKS Microsoft + you, ROSA HCP Red Hat SRE, ARO Microsoft + SRE. Cluster upgrades: Amazon EKS You, Azure AKS Microsoft + you, ROSA HCP SRE + you, ARO MS + SRE + you. Node capacity: Amazon EKS You, Azure AKS You, ROSA HCP You, ARO You. Identity and access: Amazon EKS You, Azure AKS You, ROSA HCP You, ARO You. App backup and data: Amazon EKS You, Azure AKS You, ROSA HCP You, ARO You. Your workloads: Amazon EKS You, Azure AKS You, ROSA HCP You, ARO You.</desc>
+<rect x="0" y="0" width="902" height="456" fill="#ffffff"/>
+<text x="16" y="24" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="16" font-weight="bold" fill="#1f1f1e" text-anchor="start">Who runs what, day to day</text>
+<text x="291.0" y="62" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13.5" font-weight="bold" fill="#1f1f1e" text-anchor="middle">Amazon EKS</text>
+<text x="461.0" y="62" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13.5" font-weight="bold" fill="#1f1f1e" text-anchor="middle">Azure AKS</text>
+<text x="631.0" y="62" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13.5" font-weight="bold" fill="#1f1f1e" text-anchor="middle">ROSA HCP</text>
+<text x="801.0" y="62" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13.5" font-weight="bold" fill="#1f1f1e" text-anchor="middle">ARO</text>
+<text x="16" y="101.0" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" fill="#1f1f1e" text-anchor="start">Control plane and etcd</text>
+<rect x="210" y="80" width="162" height="32" rx="6" ry="6" fill="#d3f0e5" stroke="#1baf7a" stroke-width="1.5"/>
+<rect x="211" y="81.0" width="8" height="30.0" rx="0" ry="0" fill="#1baf7a" stroke="none" stroke-width="1"/>
+<text x="226" y="100.32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f1f1e" text-anchor="start">AWS</text>
+<rect x="380" y="80" width="162" height="32" rx="6" ry="6" fill="#d3f0e5" stroke="#1baf7a" stroke-width="1.5"/>
+<rect x="381" y="81.0" width="8" height="30.0" rx="0" ry="0" fill="#1baf7a" stroke="none" stroke-width="1"/>
+<text x="396" y="100.32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f1f1e" text-anchor="start">Microsoft</text>
+<rect x="550" y="80" width="162" height="32" rx="6" ry="6" fill="#fbe1d6" stroke="#eb6834" stroke-width="1.5"/>
+<rect x="551" y="81.0" width="8" height="30.0" rx="0" ry="0" fill="#eb6834" stroke="none" stroke-width="1"/>
+<text x="566" y="100.32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f1f1e" text-anchor="start">Red Hat SRE</text>
+<rect x="720" y="80" width="162" height="32" rx="6" ry="6" fill="#d3f0e5" stroke="#1baf7a" stroke-width="1.5"/>
+<rect x="721" y="81.0" width="8" height="15.0" rx="0" ry="0" fill="#1baf7a" stroke="none" stroke-width="1"/>
+<rect x="721" y="96.0" width="8" height="15.0" rx="0" ry="0" fill="#eb6834" stroke="none" stroke-width="1"/>
+<text x="736" y="100.32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f1f1e" text-anchor="start">Microsoft + SRE</text>
+<text x="16" y="141.0" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" fill="#1f1f1e" text-anchor="start">Node operating system</text>
+<rect x="210" y="120" width="162" height="32" rx="6" ry="6" fill="#d3f0e5" stroke="#1baf7a" stroke-width="1.5"/>
+<rect x="211" y="121.0" width="8" height="15.0" rx="0" ry="0" fill="#1baf7a" stroke="none" stroke-width="1"/>
+<rect x="211" y="136.0" width="8" height="15.0" rx="0" ry="0" fill="#2a78d6" stroke="none" stroke-width="1"/>
+<text x="226" y="140.32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f1f1e" text-anchor="start">AWS + you</text>
+<rect x="380" y="120" width="162" height="32" rx="6" ry="6" fill="#d3f0e5" stroke="#1baf7a" stroke-width="1.5"/>
+<rect x="381" y="121.0" width="8" height="15.0" rx="0" ry="0" fill="#1baf7a" stroke="none" stroke-width="1"/>
+<rect x="381" y="136.0" width="8" height="15.0" rx="0" ry="0" fill="#2a78d6" stroke="none" stroke-width="1"/>
+<text x="396" y="140.32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f1f1e" text-anchor="start">Microsoft + you</text>
+<rect x="550" y="120" width="162" height="32" rx="6" ry="6" fill="#fbe1d6" stroke="#eb6834" stroke-width="1.5"/>
+<rect x="551" y="121.0" width="8" height="15.0" rx="0" ry="0" fill="#eb6834" stroke="none" stroke-width="1"/>
+<rect x="551" y="136.0" width="8" height="15.0" rx="0" ry="0" fill="#2a78d6" stroke="none" stroke-width="1"/>
+<text x="566" y="140.32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f1f1e" text-anchor="start">SRE + you</text>
+<rect x="720" y="120" width="162" height="32" rx="6" ry="6" fill="#d3f0e5" stroke="#1baf7a" stroke-width="1.5"/>
+<rect x="721" y="121.0" width="8" height="10.0" rx="0" ry="0" fill="#1baf7a" stroke="none" stroke-width="1"/>
+<rect x="721" y="131.0" width="8" height="10.0" rx="0" ry="0" fill="#eb6834" stroke="none" stroke-width="1"/>
+<rect x="721" y="141.0" width="8" height="10.0" rx="0" ry="0" fill="#2a78d6" stroke="none" stroke-width="1"/>
+<text x="736" y="140.32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f1f1e" text-anchor="start">MS + SRE + you</text>
+<text x="16" y="181.0" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" fill="#1f1f1e" text-anchor="start">Platform components</text>
+<rect x="210" y="160" width="162" height="32" rx="6" ry="6" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1.5"/>
+<rect x="211" y="161.0" width="8" height="30.0" rx="0" ry="0" fill="#2a78d6" stroke="none" stroke-width="1"/>
+<text x="226" y="180.32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f1f1e" text-anchor="start">You (add-ons)</text>
+<rect x="380" y="160" width="162" height="32" rx="6" ry="6" fill="#d3f0e5" stroke="#1baf7a" stroke-width="1.5"/>
+<rect x="381" y="161.0" width="8" height="15.0" rx="0" ry="0" fill="#1baf7a" stroke="none" stroke-width="1"/>
+<rect x="381" y="176.0" width="8" height="15.0" rx="0" ry="0" fill="#2a78d6" stroke="none" stroke-width="1"/>
+<text x="396" y="180.32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f1f1e" text-anchor="start">Microsoft + you</text>
+<rect x="550" y="160" width="162" height="32" rx="6" ry="6" fill="#fbe1d6" stroke="#eb6834" stroke-width="1.5"/>
+<rect x="551" y="161.0" width="8" height="30.0" rx="0" ry="0" fill="#eb6834" stroke="none" stroke-width="1"/>
+<text x="566" y="180.32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f1f1e" text-anchor="start">Red Hat SRE</text>
+<rect x="720" y="160" width="162" height="32" rx="6" ry="6" fill="#d3f0e5" stroke="#1baf7a" stroke-width="1.5"/>
+<rect x="721" y="161.0" width="8" height="15.0" rx="0" ry="0" fill="#1baf7a" stroke="none" stroke-width="1"/>
+<rect x="721" y="176.0" width="8" height="15.0" rx="0" ry="0" fill="#eb6834" stroke="none" stroke-width="1"/>
+<text x="736" y="180.32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f1f1e" text-anchor="start">Microsoft + SRE</text>
+<text x="16" y="221.0" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" fill="#1f1f1e" text-anchor="start">Cluster upgrades</text>
+<rect x="210" y="200" width="162" height="32" rx="6" ry="6" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1.5"/>
+<rect x="211" y="201.0" width="8" height="30.0" rx="0" ry="0" fill="#2a78d6" stroke="none" stroke-width="1"/>
+<text x="226" y="220.32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f1f1e" text-anchor="start">You</text>
+<rect x="380" y="200" width="162" height="32" rx="6" ry="6" fill="#d3f0e5" stroke="#1baf7a" stroke-width="1.5"/>
+<rect x="381" y="201.0" width="8" height="15.0" rx="0" ry="0" fill="#1baf7a" stroke="none" stroke-width="1"/>
+<rect x="381" y="216.0" width="8" height="15.0" rx="0" ry="0" fill="#2a78d6" stroke="none" stroke-width="1"/>
+<text x="396" y="220.32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f1f1e" text-anchor="start">Microsoft + you</text>
+<rect x="550" y="200" width="162" height="32" rx="6" ry="6" fill="#fbe1d6" stroke="#eb6834" stroke-width="1.5"/>
+<rect x="551" y="201.0" width="8" height="15.0" rx="0" ry="0" fill="#eb6834" stroke="none" stroke-width="1"/>
+<rect x="551" y="216.0" width="8" height="15.0" rx="0" ry="0" fill="#2a78d6" stroke="none" stroke-width="1"/>
+<text x="566" y="220.32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f1f1e" text-anchor="start">SRE + you</text>
+<rect x="720" y="200" width="162" height="32" rx="6" ry="6" fill="#d3f0e5" stroke="#1baf7a" stroke-width="1.5"/>
+<rect x="721" y="201.0" width="8" height="10.0" rx="0" ry="0" fill="#1baf7a" stroke="none" stroke-width="1"/>
+<rect x="721" y="211.0" width="8" height="10.0" rx="0" ry="0" fill="#eb6834" stroke="none" stroke-width="1"/>
+<rect x="721" y="221.0" width="8" height="10.0" rx="0" ry="0" fill="#2a78d6" stroke="none" stroke-width="1"/>
+<text x="736" y="220.32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f1f1e" text-anchor="start">MS + SRE + you</text>
+<text x="16" y="261.0" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" fill="#1f1f1e" text-anchor="start">Node capacity</text>
+<rect x="210" y="240" width="162" height="32" rx="6" ry="6" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1.5"/>
+<rect x="211" y="241.0" width="8" height="30.0" rx="0" ry="0" fill="#2a78d6" stroke="none" stroke-width="1"/>
+<text x="226" y="260.32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f1f1e" text-anchor="start">You</text>
+<rect x="380" y="240" width="162" height="32" rx="6" ry="6" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1.5"/>
+<rect x="381" y="241.0" width="8" height="30.0" rx="0" ry="0" fill="#2a78d6" stroke="none" stroke-width="1"/>
+<text x="396" y="260.32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f1f1e" text-anchor="start">You</text>
+<rect x="550" y="240" width="162" height="32" rx="6" ry="6" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1.5"/>
+<rect x="551" y="241.0" width="8" height="30.0" rx="0" ry="0" fill="#2a78d6" stroke="none" stroke-width="1"/>
+<text x="566" y="260.32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f1f1e" text-anchor="start">You</text>
+<rect x="720" y="240" width="162" height="32" rx="6" ry="6" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1.5"/>
+<rect x="721" y="241.0" width="8" height="30.0" rx="0" ry="0" fill="#2a78d6" stroke="none" stroke-width="1"/>
+<text x="736" y="260.32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f1f1e" text-anchor="start">You</text>
+<text x="16" y="301.0" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" fill="#1f1f1e" text-anchor="start">Identity and access</text>
+<rect x="210" y="280" width="162" height="32" rx="6" ry="6" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1.5"/>
+<rect x="211" y="281.0" width="8" height="30.0" rx="0" ry="0" fill="#2a78d6" stroke="none" stroke-width="1"/>
+<text x="226" y="300.32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f1f1e" text-anchor="start">You</text>
+<rect x="380" y="280" width="162" height="32" rx="6" ry="6" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1.5"/>
+<rect x="381" y="281.0" width="8" height="30.0" rx="0" ry="0" fill="#2a78d6" stroke="none" stroke-width="1"/>
+<text x="396" y="300.32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f1f1e" text-anchor="start">You</text>
+<rect x="550" y="280" width="162" height="32" rx="6" ry="6" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1.5"/>
+<rect x="551" y="281.0" width="8" height="30.0" rx="0" ry="0" fill="#2a78d6" stroke="none" stroke-width="1"/>
+<text x="566" y="300.32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f1f1e" text-anchor="start">You</text>
+<rect x="720" y="280" width="162" height="32" rx="6" ry="6" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1.5"/>
+<rect x="721" y="281.0" width="8" height="30.0" rx="0" ry="0" fill="#2a78d6" stroke="none" stroke-width="1"/>
+<text x="736" y="300.32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f1f1e" text-anchor="start">You</text>
+<text x="16" y="341.0" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" fill="#1f1f1e" text-anchor="start">App backup and data</text>
+<rect x="210" y="320" width="162" height="32" rx="6" ry="6" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1.5"/>
+<rect x="211" y="321.0" width="8" height="30.0" rx="0" ry="0" fill="#2a78d6" stroke="none" stroke-width="1"/>
+<text x="226" y="340.32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f1f1e" text-anchor="start">You</text>
+<rect x="380" y="320" width="162" height="32" rx="6" ry="6" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1.5"/>
+<rect x="381" y="321.0" width="8" height="30.0" rx="0" ry="0" fill="#2a78d6" stroke="none" stroke-width="1"/>
+<text x="396" y="340.32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f1f1e" text-anchor="start">You</text>
+<rect x="550" y="320" width="162" height="32" rx="6" ry="6" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1.5"/>
+<rect x="551" y="321.0" width="8" height="30.0" rx="0" ry="0" fill="#2a78d6" stroke="none" stroke-width="1"/>
+<text x="566" y="340.32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f1f1e" text-anchor="start">You</text>
+<rect x="720" y="320" width="162" height="32" rx="6" ry="6" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1.5"/>
+<rect x="721" y="321.0" width="8" height="30.0" rx="0" ry="0" fill="#2a78d6" stroke="none" stroke-width="1"/>
+<text x="736" y="340.32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f1f1e" text-anchor="start">You</text>
+<text x="16" y="381.0" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" fill="#1f1f1e" text-anchor="start">Your workloads</text>
+<rect x="210" y="360" width="162" height="32" rx="6" ry="6" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1.5"/>
+<rect x="211" y="361.0" width="8" height="30.0" rx="0" ry="0" fill="#2a78d6" stroke="none" stroke-width="1"/>
+<text x="226" y="380.32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f1f1e" text-anchor="start">You</text>
+<rect x="380" y="360" width="162" height="32" rx="6" ry="6" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1.5"/>
+<rect x="381" y="361.0" width="8" height="30.0" rx="0" ry="0" fill="#2a78d6" stroke="none" stroke-width="1"/>
+<text x="396" y="380.32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f1f1e" text-anchor="start">You</text>
+<rect x="550" y="360" width="162" height="32" rx="6" ry="6" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1.5"/>
+<rect x="551" y="361.0" width="8" height="30.0" rx="0" ry="0" fill="#2a78d6" stroke="none" stroke-width="1"/>
+<text x="566" y="380.32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f1f1e" text-anchor="start">You</text>
+<rect x="720" y="360" width="162" height="32" rx="6" ry="6" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1.5"/>
+<rect x="721" y="361.0" width="8" height="30.0" rx="0" ry="0" fill="#2a78d6" stroke="none" stroke-width="1"/>
+<text x="736" y="380.32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1f1f1e" text-anchor="start">You</text>
+<rect x="16.0" y="423" width="16.0" height="14" rx="0" ry="0" fill="#1baf7a" stroke="none" stroke-width="1"/>
+<text x="38" y="434" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#1f1f1e" text-anchor="start">Cloud provider</text>
+<rect x="155.0" y="423" width="16.0" height="14" rx="0" ry="0" fill="#eb6834" stroke="none" stroke-width="1"/>
+<text x="177.0" y="434" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#1f1f1e" text-anchor="start">Red Hat SRE</text>
+<rect x="274.5" y="423" width="16.0" height="14" rx="0" ry="0" fill="#2a78d6" stroke="none" stroke-width="1"/>
+<text x="296.5" y="434" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#1f1f1e" text-anchor="start">You</text>
+<rect x="342.0" y="423" width="8.0" height="14" rx="0" ry="0" fill="#eb6834" stroke="none" stroke-width="1"/>
+<rect x="350.0" y="423" width="8.0" height="14" rx="0" ry="0" fill="#2a78d6" stroke="none" stroke-width="1"/>
+<text x="364.0" y="434" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#1f1f1e" text-anchor="start">Shared (one stripe per party)</text>
+</svg>

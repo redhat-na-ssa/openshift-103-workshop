@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: gitops-hello
+  labels:
+    app: gitops-hello
+spec:
+  selector:
+    app: gitops-hello
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080

@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gitops-hello
+  labels:
+    app: gitops-hello
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gitops-hello
+  template:
+    metadata:
+      labels:
+        app: gitops-hello
+    spec:
+      containers:
+        - name: web
+          image: registry.access.redhat.com/ubi9/python-312:latest
+          command:
+            - python3
+            - -m
+            - http.server
+            - "8080"
+          ports:
+            - containerPort: 8080
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            capabilities:
+              drop:
+                - ALL
+            seccompProfile:
+              type: RuntimeDefault
+          resources:
+            requests:
+              cpu: 10m
+              memory: 64Mi
+            limits:
+              memory: 128Mi
