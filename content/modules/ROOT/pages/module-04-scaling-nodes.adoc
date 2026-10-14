@@ -1,6 +1,8 @@
 = Scaling Nodes
 
-NOTE: The exercises in this section are written but not yet validated on ROSA and ARO.
+NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026.
+Steps and statements that were not checked on a live cluster carry a *Not validated* note.
+The comparison tables and summaries come from vendor documentation.
 
 EKS Auto Mode, Karpenter and AKS node auto-provisioning pick an instance type for each batch of pending pods, mix spot and on-demand capacity, and consolidate nodes.
 ROSA and ARO scale in groups of identical nodes: machine pools on ROSA, MachineSets on ARO, with the cluster autoscaler.
@@ -82,6 +84,9 @@ ARO also shows three control plane nodes, which run in your subscription but whi
 
 ==== ROSA
 
+NOTE: *Not validated:* `rosa list machinepools`.
+The `oc` command after it was validated.
+
 Machine pools live in OpenShift Cluster Manager.
 List them with the `rosa` CLI:
 
@@ -91,13 +96,15 @@ rosa list machinepools \
   --cluster "$CLUSTER"
 ----
 
-The cluster itself has no MachineSets:
+The cluster itself has no Machine API at all:
 
 [source,bash]
 ----
 oc get machinesets \
   --namespace openshift-machine-api
 ----
+
+The command fails with `the server doesn't have a resource type "machinesets"`.
 
 ==== ARO
 
@@ -146,6 +153,8 @@ You add a group of nodes with the label `workshop=scale-lab` and a matching tain
 The group starts small and the cluster autoscaler grows it when pods are pending.
 
 ==== ROSA
+
+NOTE: *Not validated:* the ROSA steps of this exercise, which need the `rosa` CLI, including a machine pool that starts at zero nodes.
 
 A machine pool on ROSA HCP lives in one subnet, so in one availability zone.
 Use the subnet of your existing pool:
@@ -300,6 +309,7 @@ oc get machines \
 ----
 
 Press Ctrl+C when its phase is `Running`.
+The new node is in the same availability zone as the MachineSet you copied.
 
 .EKS and AKS (reference only)
 [%collapsible]
@@ -338,6 +348,9 @@ az aks nodepool add \
 ====
 
 === Exercise 3: Scale the Sample Application Past Capacity
+
+NOTE: *Not validated:* this exercise on ROSA, which needs the machine pool from Exercise 2.
+It was validated on ARO, and the ROSA behavior described below comes from Red Hat's documentation.
 
 Run these steps on both clusters.
 
@@ -423,6 +436,7 @@ rosa list machinepools \
 
 New nodes take several minutes to boot, install and join.
 Read the rest of this exercise while you wait, then press Ctrl+C when all pods are `Running`.
+For a minute, pods from the previous rollout can still run on the regular workers while they are replaced.
 
 What is happening:
 
@@ -457,6 +471,9 @@ kubectl get configmap cluster-autoscaler-status \
 ====
 
 === Exercise 4: Let Karpenter Pick the Nodes (ROSA Only)
+
+NOTE: *Not validated:* this whole exercise.
+The validation cluster ran ROSA HCP 4.20, and AutoNode needs 4.22 and the `rosa` and `aws` CLIs.
 
 From OpenShift 4.22, ROSA HCP can run the Red Hat build of Karpenter, called AutoNode in OpenShift Cluster Manager.
 Its controller runs in the hosted control plane and launches EC2 instances in your account, so it needs an IAM role.
@@ -727,6 +744,8 @@ oc scale deployment/sample-app \
 ----
 
 ==== ROSA
+
+NOTE: *Not validated:* the ROSA cleanup steps, which need the `rosa` CLI.
 
 If you skipped Exercise 4, delete the machine pool instead:
 

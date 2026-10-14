@@ -1,6 +1,8 @@
 = Upgrades
 
-NOTE: The exercises in this section are written but not yet validated on ROSA and ARO.
+NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026.
+Steps and statements that were not checked on a live cluster carry a *Not validated* note.
+The comparison tables and summaries come from vendor documentation.
 
 On EKS you upgrade the control plane, then each add-on against a compatibility matrix, then the nodes.
 On ROSA and ARO one release moves Kubernetes, the node OS and every platform Operator together, with checks that block an upgrade when something is not ready.
@@ -58,10 +60,15 @@ Ask the cluster for its recommendation, including any known risks of the availab
 oc adm upgrade recommend
 ----
 
+A new cluster can report `Upgradeable=False` with the reason `AdminAckRequired`.
+That is an acknowledgment gate, covered in Exercise 4, and it blocks only the next minor version.
+
 The update channel decides which versions are offered.
 Patch releases arrive in the current channel, and a new minor version needs a channel change, which never happens on its own.
 
 ==== ROSA
+
+NOTE: *Not validated:* the `rosa` commands in this part, and the claim that machine pools can trail the control plane by two minor versions.
 
 On ROSA the channel and the list of updates come from OpenShift Cluster Manager.
 Show the cluster's channel and version:
@@ -94,6 +101,10 @@ You would change the channel with `rosa edit cluster` and its `--channel` flag, 
 ==== ARO
 
 On ARO the channel is a field of the cluster's ClusterVersion, and it is not set by default.
+
+NOTE: *Not validated:* setting the channel, which was not run on the validation cluster.
+That a new ARO cluster has no channel was validated.
+
 If `oc adm upgrade` reported no channel, set it to the stable channel of the cluster's minor version, for example:
 
 [source,bash]
@@ -144,7 +155,7 @@ oc get clusterversion version -o json \
       | @tsv'
 ----
 
-The newest update is first.
+The newest update is first, and a new cluster can list its install version more than once.
 `Completed` means every Operator reached the new version, and `Partial` means the update did not finish.
 
 Show the conditions the Cluster Version Operator reports:
@@ -158,9 +169,11 @@ oc get clusterversion version -o json \
 ----
 
 `Progressing` is `True` while an update runs.
-`Upgradeable` is `False` when something blocks the next minor update.
+An `Upgradeable` condition appears, set to `False`, only when something blocks the next minor update.
 
 === Exercise 3: Schedule an Upgrade, Then Cancel It (ROSA Only)
+
+NOTE: *Not validated:* this whole exercise, which needs the `rosa` CLI, and the `UpgradeConfig` example, which was not created.
 
 On ROSA you schedule upgrades with the `rosa` CLI or OpenShift Cluster Manager, and Red Hat runs them.
 You schedule one here and cancel it before it starts.
@@ -322,14 +335,28 @@ oc get clusteroperators -o json \
 No output means no Operator blocks a minor update.
 
 Some minor updates also need an administrator's acknowledgment, for example of an API removal.
-They are kept in a ConfigMap:
+The platform lists these gates in one ConfigMap:
+
+[source,bash]
+----
+oc get configmap admin-gates \
+  --namespace openshift-config-managed \
+  -o json \
+  | jq '.data'
+----
+
+Your acknowledgments go in another, which stays empty until you acknowledge a gate:
 
 [source,bash]
 ----
 oc get configmap admin-acks \
   --namespace openshift-config \
-  -o yaml
+  -o json \
+  | jq '.data'
 ----
+
+A gate that is listed in `admin-gates` and not acknowledged in `admin-acks` blocks the next minor update, even when no Operator does.
+`oc adm upgrade` reports it as `Upgradeable=False` with the reason `AdminAckRequired`.
 
 ==== Removed APIs
 
@@ -345,6 +372,9 @@ oc get apirequestcounts -o json \
       | @tsv'
 ----
 
+NOTE: *Not validated:* this command.
+Both validation clusters had no request counts, so it had nothing to show.
+
 To see who calls one of them, look at its users, for example:
 
 [source,bash]
@@ -356,6 +386,9 @@ oc get apirequestcount <resource>.<version>.<group> \
       | @tsv' \
   | sort -u
 ----
+
+The list can be empty even when workloads call deprecated APIs: it was empty on both a new ROSA HCP cluster and a new ARO cluster when this workshop was tested.
+Treat an empty result as no data, and also check your manifests against the https://kubernetes.io/docs/reference/using-api/deprecation-guide/[Kubernetes deprecated API migration guide].
 
 ==== Pod disruption budgets
 
@@ -392,6 +425,11 @@ oc get poddisruptionbudgets \
 ----
 
 The sample application's budget is in the list.
+Budgets in `openshift-*` namespaces, such as `packageserver-pdb`, can appear too; those belong to the platform and Red Hat manages them.
+
+NOTE: *Not validated:* the drain behavior below, which comes from the vendors' documentation.
+No upgrade was run.
+
 What happens next depends on the platform:
 
 * ROSA HCP drains each machine pool node for at most the pool's node drain grace period, then removes the node anyway.
@@ -399,6 +437,8 @@ What happens next depends on the platform:
 With an `UpgradeConfig`, the managed upgrade operator forces the drain after `PDBForceDrainTimeout` minutes.
 * EKS managed node group updates fail with a pod eviction error unless you force them.
 * AKS upgrades fail on a node that cannot drain, unless you set the undrainable node behavior to cordon it and move on.
+
+NOTE: *Not validated:* `rosa describe machinepool`, which needs the `rosa` CLI.
 
 On ROSA, see the grace period of a pool:
 
@@ -429,6 +469,8 @@ oc get poddisruptionbudget sample-app \
 ----
 
 === Exercise 5: Know Where Upgrade Notices Arrive
+
+NOTE: *Not validated:* these notification paths, which come from the vendors' documentation.
 
 Nothing to run here, but worth setting up before you need it.
 
@@ -476,7 +518,7 @@ Test updates on a non-production cluster first.
 Applications need at least two replicas and a budget that allows one disruption to stay up.
 * A budget that allows no disruptions holds up the update on ARO, and is overridden after the grace period on ROSA HCP.
 * Each Kubernetes minor version removes some deprecated APIs.
-Manifests and Helm charts that use them fail after the update, and the API request counts show who still calls them.
+Manifests and Helm charts that use them fail after the update, and the API request counts, when populated, show who still calls them.
 
 == References
 
