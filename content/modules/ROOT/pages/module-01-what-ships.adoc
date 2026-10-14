@@ -186,7 +186,20 @@ Read the three status columns:
 * `DEGRADED`: the component is not in the state it should be in.
 
 On a healthy cluster every Operator shows `True`, `False`, `False`.
-This one command replaces checking each add-on's Deployment and version on EKS or AKS.
+This one command covers every platform component that ships with the cluster, where EKS and AKS have you check each add-on's Deployment and version.
+Operators you add from the Software Catalog, such as GitOps, Logging or OADP, are not in this list.
+Their ClusterServiceVersions report their health instead; the selector skips the copies that OLM places in every namespace:
+
+NOTE: *Not validated:* this listing, which is read-only.
+
+[source,bash]
+----
+oc get clusterserviceversions \
+  --all-namespaces \
+  --selector '!olm.copiedFrom'
+----
+
+The `PHASE` column shows `Succeeded` for a healthy Operator.
 
 Count the Operators on each cluster:
 
@@ -517,7 +530,7 @@ Keep the OpenShift GitOps Operator installed; later modules do not depend on it,
 == What Matters
 
 * Platform components are owned by Operators. Editing their resources directly is reverted; you change them through the Operator's configuration resource, such as the IngressController, and only where SRE allows it.
-* One health view: `oc get clusteroperators` replaces checking each add-on. A `DEGRADED` platform Operator is SRE's to fix, but you will see it first.
+* One health view for the platform: `oc get clusteroperators` covers every component that ships with the cluster, and catalog Operators report through their ClusterServiceVersions. SRE is alerted when a platform Operator degrades, but if your own configuration caused it, such as an identity provider, a webhook or a PodDisruptionBudget, the fix is yours.
 * Storage: ROSA ships the EBS CSI driver with a default gp3 StorageClass. Shared (RWX) storage needs the EFS CSI Driver Operator and an IAM role. ARO ships Azure Disk as the default; Azure Files ships on clusters created with a service principal and is disabled by default on clusters created with managed identities.
 * ARO needs a Red Hat pull secret before it can install Operators from the Software Catalog.
 * On ROSA, the `dedicated-admin` role can install Operators into `openshift-operators` and into projects you create, so you do not need `cluster-admin` to extend the platform. It cannot create other `openshift-` namespaces, such as the one Exercise 6 uses.
@@ -536,7 +549,7 @@ Keep the OpenShift GitOps Operator installed; later modules do not depend on it,
 |No add-on version matrix: components upgrade with the cluster.
 |Freedom to swap components, such as Cilium or a different ingress.
 
-|One catalog and lifecycle model (Operators) for platform add-ons, with one health view.
+|One catalog and lifecycle model (Operators) for platform add-ons, with one health view for the components that ship with the cluster.
 |Managed GitOps: the EKS Argo CD capability and the AKS Flux extension run without an in-cluster Argo CD to operate.
 
 |

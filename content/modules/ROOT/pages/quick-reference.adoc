@@ -27,7 +27,7 @@ NOTE: The commands here are copied from the modules, which mark anything that wa
 
 |Platform health
 |You check each add-on.
-|One view: the cluster Operators.
+|One view for the components that ship with the cluster: the cluster Operators. Catalog Operators report through their ClusterServiceVersions.
 
 |Backup
 |AWS Backup or Azure Backup, as a managed service.
