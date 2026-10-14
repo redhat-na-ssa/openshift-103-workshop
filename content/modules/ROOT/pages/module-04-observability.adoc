@@ -49,7 +49,7 @@ The optional box in the diagram is Prometheus remote write: the cluster's Promet
 
 == On ROSA and ARO
 
-Run each exercise on both clusters.
+Run each exercise on your cluster.
 Where the steps differ, they appear in a *ROSA (AWS)* tab and an *ARO (Azure)* tab.
 
 .Exercises on this page
@@ -261,7 +261,7 @@ histogram_quantile(0.95,
 )
 ----
 
-The same queries work from the command line, through the Thanos Querier route that both clusters expose:
+The same queries work from the command line, through the Thanos Querier route that ROSA and ARO both expose:
 
 [source,bash]
 ----
@@ -1021,7 +1021,7 @@ ARO can get the same Container Insights experience only by connecting the cluste
 [#ex-module-04-observability-7]
 === Exercise 7: Clean Up
 
-Delete the log forwarder on both clusters.
+Delete the log forwarder.
 The collector pods stop:
 
 [source,bash]

@@ -11,9 +11,11 @@ endif::[]
 
 == How the Workshop Works
 
-You do the hands-on work on a ROSA cluster and an ARO cluster.
+You do the hands-on work on one cluster: ROSA or ARO, whichever your team runs.
+If your team runs both, you can have one of each and run every step on both.
 In this workshop, ROSA always means ROSA with hosted control planes (HCP), the default architecture for new ROSA clusters; ROSA classic is not covered.
 Where the steps differ between the two, they appear in tabs: pick *ROSA (AWS)* or *ARO (Azure)* once, and every page follows your choice.
+Switch to the other tab to read what changes on the other cloud.
 Where it helps, a step also shows how you would do the same task on EKS or AKS, as a reference block you read but do not run.
 No EKS or AKS cluster is needed.
 
@@ -42,7 +44,7 @@ The xref:quick-reference.adoc[Quick Reference] after Module 4 sums up the worksh
 This workshop assumes the following:
 
 * You operate Kubernetes on EKS or AKS today, and are comfortable with `kubectl` and the `aws` or `az` CLI.
-* You have access to a ROSA cluster and an ARO cluster prepared as described in the xref:setup-requirements.adoc[Setup Requirements].
+* You have access to a ROSA cluster, an ARO cluster or both, prepared as described in the xref:setup-requirements.adoc[Setup Requirements].
 
 == Expectations
 

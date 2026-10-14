@@ -27,7 +27,7 @@ It comes in two images built from the same https://github.com/shpwrck/ocp-cloud-
 * `sample-app:1.0-root` behaves like many upstream images: it runs as root and writes to a directory owned by root.
 * `sample-app:1.0` is the same image, fixed to run under any user ID.
 
-Run the exercises on both clusters, in the administrator terminal from xref:module-02-access-and-tenancy.adoc[Access and Tenancy].
+Run the exercises on your cluster, in the administrator terminal from xref:module-02-access-and-tenancy.adoc[Access and Tenancy].
 The commands are the same on ROSA and ARO.
 
 .Exercises on this page
@@ -379,7 +379,7 @@ oc get deployment sample-app \
 It answers `restricted-v2`.
 Name the service account and its group: without them, the review checks your own permissions, and as cluster-admin you may use every SCC, so it answers `anyuid`.
 
-The sample application now runs securely on both clusters.
+The sample application now runs securely.
 The next section gives it cloud credentials.
 
 == What Matters

@@ -19,7 +19,8 @@ image::module-03-request-path.svg["Request path from client to pod on EKS, AKS, 
 
 == On ROSA and ARO
 
-Do these steps on your ROSA cluster, then repeat them on your ARO cluster.
+Do these steps on your cluster.
+If you have both, finish them on ROSA, then repeat them on ARO.
 Where the two differ, the steps are split into ROSA and ARO tabs.
 The sample application from Module 2 runs in the `sample-app` project, behind a Service named `sample-app` on port `8080`.
 Its `/healthz` path always answers `200`, so the checks below use it.

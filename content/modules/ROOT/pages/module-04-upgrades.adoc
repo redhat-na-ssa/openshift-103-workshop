@@ -36,7 +36,7 @@ AKS long-term support keeps a version for two years.
 
 == On ROSA and ARO
 
-Run each exercise in both your ROSA and ARO terminals unless it says otherwise.
+Run each exercise in your cluster's terminal unless it says otherwise.
 Where the steps differ, they appear in a *ROSA (AWS)* tab and an *ARO (Azure)* tab.
 
 The ROSA steps use the `CLUSTER` variable from xref:module-01-who-manages-what.adoc#before-you-start[Before You Start].
@@ -210,6 +210,7 @@ NOTE: *Not validated:* this whole exercise, which needs the `rosa` CLI, and the 
 
 On ROSA you schedule upgrades with the `rosa` CLI or OpenShift Cluster Manager, and Red Hat runs them.
 You schedule one here and cancel it before it starts.
+If your cluster is ARO, read it without running it; the ARO way to start an update follows at the end.
 
 If `rosa list upgrades` showed no available version, read through this exercise without running it.
 

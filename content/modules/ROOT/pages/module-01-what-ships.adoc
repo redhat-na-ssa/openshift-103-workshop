@@ -96,8 +96,8 @@ The pattern: on ROSA and ARO the infrastructure plumbing ships with the cluster,
 
 == On ROSA and ARO
 
-Run each step on both clusters unless the step names one.
-Use the terminals you logged in with in xref:module-01-who-manages-what.adoc#before-you-start[Before You Start].
+Run each step on your cluster, and skip steps that name only the other platform.
+Use the terminal you logged in with in xref:module-01-who-manages-what.adoc#before-you-start[Before You Start].
 
 .Exercises on this page
 * <<ex-module-01-what-ships-1>> +
@@ -202,7 +202,7 @@ oc get clusterserviceversions \
 
 The `PHASE` column shows `Succeeded` for a healthy Operator.
 
-Count the Operators on each cluster:
+Count the Operators:
 
 [source,bash]
 ----
@@ -211,7 +211,7 @@ oc get clusteroperators \
   | wc -l
 ----
 
-Compare the two lists.
+The lists differ between the two platforms.
 On ROSA there is no `etcd` Operator, and the Operators that manage machines are missing, because the control plane runs in Red Hat's account.
 Control plane components such as `kube-apiserver` still report their status here, but their pods are not in your cluster.
 On ARO every Operator runs in your cluster, on the control plane nodes.
