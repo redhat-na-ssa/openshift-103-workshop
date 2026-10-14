@@ -1,6 +1,8 @@
 = Access and Tenancy
 
-NOTE: The exercises on this page have not been validated on live ROSA and ARO clusters yet.
+NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026.
+Steps and statements that were not checked on a live cluster carry a *Not validated* note.
+The comparison tables and summaries come from vendor documentation.
 
 On EKS and AKS, your cloud identity is your cluster identity.
 On ROSA and ARO, the OpenShift OAuth server sits in between: you add identity providers, people log in to the CLI and web console through it, and OpenShift keeps its own User, Identity and Group objects.
@@ -63,6 +65,9 @@ Set the cluster name:
 ----
 export CLUSTER=<rosa-cluster-name>
 ----
+
+NOTE: *Not validated:* `rosa create admin`, which needs the `rosa` CLI logged in to the cluster's organization.
+Logging in with the credentials it prints was validated.
 
 Create a temporary cluster administrator:
 
@@ -161,7 +166,12 @@ There is no separate login step and no shared administrator password, unless you
 
 === Exercise 2: Add an identity provider
 
+NOTE: *Not validated:* signing in through either identity provider, which the validation environments do not allow.
+On ARO, the steps up to and including the authentication Operator rollout were validated.
+
 ==== ROSA
+
+NOTE: *Not validated:* `rosa create idp`, which needs the `rosa` CLI logged in to the cluster's organization.
 
 On ROSA, you add identity providers with the `rosa` CLI, and Red Hat applies them to the cluster.
 This workshop uses an htpasswd provider with one developer account, so you don't need to register an application anywhere.
@@ -379,6 +389,9 @@ az role assignment create \
 ====
 
 === Exercise 3: Log in as the developer
+
+NOTE: *Not validated:* this exercise, which needs a working identity provider login.
+Exercises 4 and 5 were validated as the cluster administrator, impersonating the developer.
 
 Open a second terminal for the developer on each cluster.
 Give it its own kubeconfig file, so the administrator's login stays in the first terminal:
@@ -646,6 +659,8 @@ oc auth can-i create deployments \
   --namespace team-a
 ----
 
+NOTE: *Not validated:* Entra ID group claims.
+
 On ARO you can let Entra ID manage group membership instead: add a `groups` claim to the OAuth resource and the Entra app registration, and the OAuth server creates and updates Groups, named by Entra group object ID, each time a member logs in.
 You still create the RoleBindings yourself.
 
@@ -702,6 +717,9 @@ az role assignment create \
 == App Teams Will Notice
 
 Developers get a web console with their projects, workloads, logs and metrics, and log in to it with the same account as the CLI.
+NOTE: *Not validated:* turning on the Developer view.
+The ARO validation cluster did show it off by default.
+
 Since OpenShift 4.19 the console's Developer view is off by default.
 To turn it on, run this as an administrator:
 

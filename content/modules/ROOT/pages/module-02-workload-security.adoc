@@ -1,5 +1,9 @@
 = Workload Security Defaults
 
+NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026.
+Steps and statements that were not checked on a live cluster carry a *Not validated* note.
+The comparison tables and summaries come from vendor documentation.
+
 EKS and AKS admit almost any pod unless you add guardrails.
 ROSA and ARO admit pods through security context constraints (SCCs), which by default run every container as a non-root user ID picked for its project, with all capabilities dropped.
 This is the first difference most EKS and AKS engineers hit, and the one application teams notice most.
