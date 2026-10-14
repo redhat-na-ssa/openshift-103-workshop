@@ -543,7 +543,8 @@ az network public-ip list \
 NOTE: *Not validated:* this section, which no exercise runs.
 
 To give one project its own source address, OVN-Kubernetes offers egress IPs.
-This workshop does not set one up, because the cloud constraints differ: on ROSA, you label the nodes that may host egress IPs through a machine pool, and capacity depends on the instance type; on ARO, namespace egress IPs need a cluster created with user-defined routing.
+This workshop does not set one up, because the cloud constraints differ: on ROSA, you label the nodes that may host egress IPs through a machine pool, and capacity depends on the instance type; on ARO, namespace egress IPs need a cluster created with a private API, private ingress and user-defined routing, where you provide the egress path through a firewall or NAT.
+Public ARO clusters, like the ones in this workshop, cannot use them, and the choice cannot be changed after the cluster is created.
 
 An egress IP for the sample application's project looks like this:
 
@@ -614,7 +615,7 @@ ROSA also offers clusters with no internet egress at all (egress zero).
 * Pod addresses never use VPC or virtual network space, so there is no subnet exhaustion from pods. The other side: anything outside the cluster sees node addresses, never pod addresses.
 * NetworkPolicy works with nothing to enable. A default-deny policy also blocks the router and monitoring until you allow their policy groups.
 * AdminNetworkPolicy adds cluster-wide rules that project administrators cannot override. Keep its subjects away from `openshift-*` namespaces, which the platform and SRE need.
-* Egress IPs give a project a fixed source address, with cloud-specific limits: on AWS the capacity depends on the instance type, and on ARO namespace egress IPs need user-defined routing.
+* Egress IPs give a project a fixed source address, with cloud-specific limits: on AWS the capacity depends on the instance type, and on ARO namespace egress IPs need a private cluster created with user-defined routing. Public ARO clusters cannot use them.
 * Private clusters are an install-time choice on ROSA and ARO. ROSA workers always reach the hosted control plane over AWS PrivateLink.
 
 == Where Each Wins
@@ -626,7 +627,7 @@ ROSA also offers clusters with no internet egress at all (egress zero).
 |No pod address planning in your VPC or virtual network.
 |Pods are first-class network citizens: routable addresses, security groups for pods, flow logs by pod address.
 
-|NetworkPolicy, AdminNetworkPolicy and egress IPs built in.
+|NetworkPolicy, AdminNetworkPolicy and egress IPs built in (on ARO, only on private clusters with user-defined routing).
 |Cilium on AKS adds an eBPF dataplane, L7 and FQDN policy.
 
 |A supported private pattern that keeps SRE access working.
@@ -636,7 +637,7 @@ ROSA also offers clusters with no internet egress at all (egress zero).
 == App Teams Will Notice
 
 * A new project allows all traffic until someone adds policy. If the cluster's project template adds a default-deny policy, their Route returns `503` until they allow the router.
-* Databases and APIs outside the cluster see node addresses. Allow-lists that expect a pod or per-app address need an egress IP.
+* Databases and APIs outside the cluster see node addresses. Allow-lists that expect a pod or per-app address need an egress IP; on a public ARO cluster, allow-list the cluster's outbound addresses instead.
 * Service names resolve the same way as on EKS and AKS: `<service>.<project>.svc`.
 
 == References
