@@ -437,7 +437,8 @@ oc label namespace gitops-hello \
   argocd.argoproj.io/managed-by=openshift-gitops
 ----
 
-Create an Argo CD Application that points at this workshop's repository:
+Create an Argo CD Application that points at this workshop's repository.
+Its finalizer makes deleting the Application also delete what it deployed; without it, the deployed resources stay behind:
 
 [source,bash]
 ----
@@ -447,6 +448,8 @@ kind: Application
 metadata:
   name: gitops-hello
   namespace: openshift-gitops
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
@@ -493,6 +496,8 @@ The route answered and Argo CD offered the OpenShift login, but nobody signed in
 Log in with *Log in via OpenShift*, using your cluster credentials.
 
 === Clean Up
+
+NOTE: *Not validated:* the cascading delete through the finalizer.
 
 Delete the application, which also removes what it deployed:
 
