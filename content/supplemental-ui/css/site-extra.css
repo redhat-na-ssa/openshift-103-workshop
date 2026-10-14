@@ -181,3 +181,20 @@ video {
 .doc details .admonitionblock.validation td.content {
     background: #ffffff;
 }
+/* keep the ROSA / ARO tab strip in view, under the navbar (3.5rem) and the breadcrumb
+   bar (2.5rem), while a long tab panel scrolls past */
+@media screen {
+    .doc .tabs .tablist {
+        position: sticky;
+        top: 6rem;
+        z-index: 1;
+        background-color: #ffffff;
+    }
+}
+/* named stages that split a long tab panel ([discrete] ==== headings) */
+.doc h4.discrete {
+    font-weight: 600;
+    margin-top: 2rem;
+    padding-bottom: 0.25rem;
+    border-bottom: 1px solid #e1e1e1;
+}

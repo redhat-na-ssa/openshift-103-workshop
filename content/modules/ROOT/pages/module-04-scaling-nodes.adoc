@@ -94,9 +94,7 @@ oc get nodes \
   -L topology.kubernetes.io/zone
 ----
 
-ROSA shows only worker nodes.
-The control plane runs in a Red Hat account and never appears as nodes.
-ARO also shows three control plane nodes, which run in your subscription but which you must not change.
+ROSA shows only worker nodes, and ARO also shows its three control plane nodes, as in xref:module-01-who-manages-what.adoc#ex-module-01-who-manages-what-1[Who Manages What Exercise 1].
 
 [tabs]
 ======
@@ -495,7 +493,8 @@ For a minute, pods from the previous rollout can still run on the regular worker
 What is happening:
 
 * On ROSA, the cluster autoscaler runs in the hosted control plane.
-It raises the machine pool's node count, and the HyperShift node pool controller creates EC2 instances in your account.
+It raises the machine pool's node count, and the hosted control plane's node pool controller creates EC2 instances in your account.
+That controller is part of HyperShift, the hosted control plane technology behind ROSA HCP.
 * On ARO, the cluster autoscaler and the Machine API run in your cluster.
 The autoscaler raises the MachineSet's replica count, and the Machine API creates Azure VMs.
 * In both cases the new node boots Red Hat Enterprise Linux CoreOS at the exact version that matches an OpenShift release: the cluster's on ARO, its machine pool's on ROSA.
@@ -727,12 +726,6 @@ oc get nodes --output wide
 Every node runs Red Hat Enterprise Linux CoreOS at the version that belongs to an OpenShift release.
 On ARO that is the cluster's release.
 On ROSA it is the release of the node's machine pool, which can trail the control plane.
-Compare the OS image above with the cluster version:
-
-[source,bash]
-----
-oc get clusterversion
-----
 
 On ARO, the Machine Config Operator rolls OS changes onto nodes, one pool at a time:
 
@@ -869,6 +862,7 @@ oc delete clusterautoscaler default
 
 == What Matters
 
+* On Module 1's xref:module-01-who-manages-what.adoc#_the_responsibility_line[responsibility line], node capacity is yours on every platform: you choose the pools, instance sizes and limits, and keep cloud quota for them, even where the service runs the autoscaler.
 * ROSA and ARO use different tools.
 ROSA machine pools are managed through the `rosa` CLI or OpenShift Cluster Manager.
 Standard ARO has no pool API, and you edit MachineSets in the cluster with `oc`.

@@ -698,6 +698,45 @@ The ARO support policy does not allow an HTTPS proxy in the path of the service'
 * Service names resolve the same way as on EKS and AKS: `<service>.<project>.svc`.
 * Cluster-wide policies written as EKS ClusterNetworkPolicy must be rewritten as AdminNetworkPolicy or BaselineAdminNetworkPolicy, because the APIs differ.
 
+== Check Your Understanding
+
+These questions cover the whole module.
+Try each one before you open its answer.
+
+. A team moves an app from EKS with an Ingress that sets `ingressClassName: alb` and ALB annotations.
+On ROSA nothing serves it.
+Why, and what are their options?
++
+.Answer
+[%collapsible]
+====
+OpenShift turns an Ingress into a Route only when it has no `ingressClassName` or uses `openshift-default`, so an `alb` Ingress is ignored, and ALB annotations do nothing on the router.
+Drop the class and use `haproxy.router.openshift.io/*` annotations or a Route, as in xref:module-03-exposing-apps.adoc#ex-module-03-exposing-apps-3[Exposing an App Exercise 3].
+If they need an ALB, add the AWS Load Balancer Operator.
+====
+
+. Your database team allow-listed pod addresses for an app on EKS with the VPC CNI.
+After the move, the database sees a different source address.
+What does it see now, and what do you give them?
++
+.Answer
+[%collapsible]
+====
+The node's address: pod addresses stay inside the OVN-Kubernetes overlay, as xref:module-03-pod-networking.adoc#ex-module-03-pod-networking-1[Exercise 1] showed.
+Allow the worker subnets, or give the project its own source address with an egress IP, whose setup differs by cloud (xref:module-03-pod-networking.adoc#_fixed_egress_addresses_reference_only[Fixed Egress Addresses]).
+====
+
+. Your security team wants a rule that no project can override, such as always letting monitoring reach every namespace.
+Which policy do you use?
++
+.Answer
+[%collapsible]
+====
+An AdminNetworkPolicy, as in xref:module-03-pod-networking.adoc#ex-module-03-pod-networking-4[Exercise 4].
+Cluster administrators create it, and OVN-Kubernetes evaluates it before any NetworkPolicy, so a project's own policies cannot override its Allow and Deny rules.
+For a default that projects may override, use the BaselineAdminNetworkPolicy, which is evaluated last.
+====
+
 == References
 
 * EKS

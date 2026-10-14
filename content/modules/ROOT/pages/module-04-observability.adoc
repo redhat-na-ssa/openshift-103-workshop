@@ -264,7 +264,8 @@ histogram_quantile(0.95,
 )
 ----
 
-The same queries work from the command line, through the Thanos Querier route that ROSA and ARO both expose:
+The same queries work from the command line, through the Thanos Querier, the query front end over platform and user workload Prometheus.
+ROSA and ARO both expose it as a route:
 
 [source,bash]
 ----
@@ -341,7 +342,113 @@ The rule itself was validated: it loads and fires, as the `ALERTS` metric shows.
 
 In the console, open *Observe* > *Alerting* > *Alerting rules* and filter on *Source: User*.
 The rule is listed and `Inactive` while the application reads its bucket or container without errors.
-Without the Module 2 credentials it fires after a minute, which shows it working.
+Without the Module 2 credentials every request to `/` fails, so the rule fires a minute after you send requests, as in Exercise 3, and shows it working.
+
+[discrete]
+==== Optional: See It Fire
+
+If the application reads its bucket or container without errors, break the read on purpose for a few minutes and watch the alert go off.
+
+[.validation]
+NOTE: *Not validated:* this optional step, which was not run on a cluster.
+
+[tabs]
+======
+ROSA (AWS)::
++
+--
+Save the bucket name:
+
+[source,bash]
+----
+SAVED_BUCKET=$(oc set env deployment/sample-app \
+  --namespace sample-app \
+  --list \
+  | sed -n 's/^BUCKET=//p')
+----
+
+Point the application at a bucket it may not read:
+
+[source,bash]
+----
+oc set env deployment/sample-app \
+  --namespace sample-app \
+  BUCKET="$SAVED_BUCKET-missing"
+----
+--
+ARO (Azure)::
++
+--
+Point the application at a container that does not exist:
+
+[source,bash]
+----
+oc set env deployment/sample-app \
+  --namespace sample-app \
+  CONTAINER=missing
+----
+--
+======
+
+Wait for the new pod:
+
+[source,bash]
+----
+oc rollout status deployment/sample-app \
+  --namespace sample-app
+----
+
+Wait a minute, so that Prometheus scrapes the new pod once, then send requests with the loop from Exercise 3:
+
+[source,bash]
+----
+for i in $(seq 1 100); do
+  curl -s -o /dev/null "https://${APP_HOST}/"
+done
+----
+
+Every request now returns `500`.
+After about two minutes, ask the Thanos Querier for the alert's state:
+
+[source,bash]
+----
+curl -sG "https://${THANOS_HOST}/api/v1/query" \
+  -H "Authorization: Bearer $(oc whoami -t)" \
+  --data-urlencode \
+    'query=ALERTS{alertname="SampleAppObjectStoreErrors"}' \
+  | jq '.data.result[].metric.alertstate'
+----
+
+It prints `"pending"` during the rule's one-minute `for` period, then `"firing"`.
+The console's *Observe* > *Alerting* page shows the same alert.
+
+Put the setting back:
+
+[tabs]
+======
+ROSA (AWS)::
++
+--
+[source,bash]
+----
+oc set env deployment/sample-app \
+  --namespace sample-app \
+  BUCKET="$SAVED_BUCKET"
+----
+--
+ARO (Azure)::
++
+--
+[source,bash]
+----
+oc set env deployment/sample-app \
+  --namespace sample-app \
+  CONTAINER=sample-app
+----
+--
+======
+
+The alert resolves about five minutes after the last error, when the errors leave the rule's five-minute window.
 
 User-defined alerts go to the platform Alertmanager by default.
 Sending them to your team's channels means configuring Alertmanager receivers, which you can delegate to projects with a separate user workload Alertmanager.
@@ -445,6 +552,9 @@ If you open a new terminal, set it again:
 export CLUSTER=<your-rosa-cluster-name>
 ----
 
+[discrete]
+==== Collect the Values
+
 Collect the values you need; they are the same as in Module 2:
 
 [source,bash]
@@ -469,6 +579,9 @@ ACCOUNT_ID=$(aws sts get-caller-identity \
   --query Account \
   --output text)
 ----
+
+[discrete]
+==== Create the IAM Role
 
 Write a trust policy for the collector's service account:
 
@@ -540,6 +653,9 @@ aws iam put-role-policy \
   --policy-document file://logging-policy.json
 ----
 
+[discrete]
+==== Create the Log Forwarder
+
 Store the role's ARN in a secret that the log forwarder reads:
 
 [source,bash]
@@ -599,6 +715,9 @@ spec:
     - cloudwatch
 EOF
 ----
+
+[discrete]
+==== Check the Logs
 
 Check that the forwarder is ready and its collector pods run:
 
@@ -667,6 +786,9 @@ export CLUSTER=<your-aro-cluster-name>
 export RESOURCE_GROUP=<your-resource-group>
 ----
 
+[discrete]
+==== Collect the Values
+
 Look up the cluster's region and OIDC issuer:
 
 [source,bash]
@@ -684,6 +806,9 @@ OIDC_ISSUER=$(oc get authentication.config.openshift.io \
   cluster \
   --output jsonpath='{.spec.serviceAccountIssuer}')
 ----
+
+[discrete]
+==== Create the Workspace and Table
 
 Create a Log Analytics workspace and a custom table for the application's logs:
 
@@ -708,6 +833,9 @@ az monitor log-analytics workspace table create \
     Namespace=string \
     Pod=string
 ----
+
+[discrete]
+==== Create the Data Collection Endpoint and Rule
 
 Create a data collection endpoint, which is the URL the collector sends to:
 
@@ -799,6 +927,9 @@ az monitor data-collection rule create \
   --rule-file sample-app-dcr.json
 ----
 
+[discrete]
+==== Create the Managed Identity
+
 Create the managed identity and let it trust the collector's service account:
 
 [source,bash]
@@ -848,6 +979,9 @@ az role assignment create \
   --role "Monitoring Metrics Publisher" \
   --scope "$DCR_ID"
 ----
+
+[discrete]
+==== Create the Log Forwarder
 
 Collect the values the log forwarder needs:
 
@@ -926,6 +1060,9 @@ spec:
     - log-analytics
 EOF
 ----
+
+[discrete]
+==== Check the Logs
 
 Check that the forwarder is ready and its collector pods run:
 
@@ -1201,6 +1338,7 @@ The cloud resources (the IAM role and log group on AWS, the workspace, rule, end
 
 == What Matters
 
+* Monitoring splits along Module 1's xref:module-01-who-manages-what.adoc#_the_responsibility_line[responsibility line]: SRE runs platform monitoring, while user workload monitoring, your alert rules, alert receivers and log forwarding are yours.
 * Platform monitoring is preconfigured and managed by Red Hat.
 User workload monitoring covers your applications, and you may need to turn it on.
 * Alertmanager sends no notifications by default, and Red Hat SRE watches the platform with its own tooling.
@@ -1238,6 +1376,42 @@ Grant them the `monitoring-edit` role in their projects so they can.
 * Logs arrive with the application's line as a string field next to Kubernetes metadata.
 Structured JSON logs make queries in CloudWatch and Log Analytics much easier.
 * A default-deny network policy must allow user workload monitoring, or scraping stops.
+
+== Check Your Understanding
+
+These questions cover the whole module.
+Try each one before you open its answer.
+
+. A team runs one replica with a PodDisruptionBudget of `minAvailable: 1`.
+What happens at the next upgrade of its nodes?
++
+.Answer
+[%collapsible]
+====
+The drain cannot evict the pod, so the update holds on that node.
+On ROSA it waits with no time limit unless the machine pool has a node drain grace period.
+Run at least two replicas, so the budget can let one go, and find such budgets before an upgrade, as in xref:module-04-upgrades.adoc#ex-module-04-upgrades-4[Upgrades Exercise 4].
+====
+
+. After a traffic spike, pods stay `Pending` and no new node joins.
+Where do you look?
++
+.Answer
+[%collapsible]
+====
+At the pool's maximum size (the machine pool's autoscaling limits on ROSA, the MachineAutoscaler on ARO), at the cloud quota for its instance type, and at whether the pod's node selector and tolerations fit the pool.
+The cluster autoscaler adds nodes only to a pool the pending pod can run on, as in xref:module-04-scaling-nodes.adoc#ex-module-04-scaling-nodes-3[Scaling Nodes Exercise 3].
+====
+
+. Your new alert rule fires, but nobody is notified.
+Why?
++
+.Answer
+[%collapsible]
+====
+Alertmanager sends no notifications until you configure a receiver, so the alert shows only in the console.
+Add receivers to the platform Alertmanager, or let projects route their own alerts with a separate user workload Alertmanager, as xref:module-04-observability.adoc#ex-module-04-observability-4[Exercise 4] mentions.
+====
 
 == References
 

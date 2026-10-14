@@ -152,7 +152,7 @@ It records the release the cluster runs, its update channel, and its update hist
 oc get clusterversion
 ----
 
-Show the update channel and the version history:
+Show the update channel:
 
 [source,bash]
 ----
@@ -162,13 +162,7 @@ oc get clusterversion version \
 
 On ROSA the channel is set by the service and follows your cluster's minor version, such as `stable-4.20`.
 On ARO it is empty until you set one, because you start ARO upgrades yourself; Module 4 covers this.
-
-[source,bash]
-----
-oc get clusterversion version \
-  --output json \
-  | jq -r '.status.history[] | .version + "  " + .state'
-----
+The update history is in xref:module-04-upgrades.adoc#ex-module-04-upgrades-2[Upgrades Exercise 2].
 
 On EKS and AKS the Kubernetes version is a property of the cluster resource in the cloud API.
 On OpenShift the version covers the whole platform: Kubernetes and every cluster Operator move together.
@@ -218,7 +212,9 @@ Operators you add from the Software Catalog, such as GitOps, Logging or OADP, ar
 [.validation]
 NOTE: *Not validated:* this listing, which is read-only.
 
-Their ClusterServiceVersions report their health instead; the selector skips the copies that OLM places in every namespace:
+Their ClusterServiceVersions (CSVs) report their health instead.
+A CSV is the record that the Operator Lifecycle Manager (OLM) keeps of each installed Operator version.
+The selector skips the copies that OLM places in every namespace:
 
 [source,bash]
 ----
@@ -399,8 +395,14 @@ oc get packagemanifest openshift-gitops-operator \
 [#ex-module-01-what-ships-6]
 === Exercise 6: Install OpenShift GitOps
 
-An Operator is installed with three resources: a namespace, an OperatorGroup and a Subscription.
-The Subscription names the package, the channel to follow, and whether updates are approved automatically.
+A catalog Operator plays the part of an add-on or a Helm chart that you install on EKS or AKS.
+Unlike the cluster Operators in Exercise 2, it is not part of the OpenShift release: it follows its own update channel, and OLM installs and updates it.
+It is installed with three resources: a namespace, an OperatorGroup and a Subscription.
+
+* The OperatorGroup sets which namespaces the Operator serves.
+* The Subscription names the package, the channel to follow, and whether updates are approved automatically.
+* OLM then creates an InstallPlan, the pending install or update, which `installPlanApproval: Manual` holds until you approve it.
+* The installed version is a ClusterServiceVersion, roughly what a Helm release is to a chart.
 
 Create the namespace:
 
@@ -615,6 +617,48 @@ Flux is a native extension on AKS; ARO gets it only through Azure Arc, after you
 
 * Application teams get a working Route, a default StorageClass and metrics on day one, with nothing to request from you.
 * Teams used to installing their own controllers with Helm will find that cluster-wide components come from the Software Catalog, and installing one needs an administrator.
+
+== Check Your Understanding
+
+These questions cover the whole module.
+Try each one before you open its answer.
+
+. A teammate adds a label to the ClusterVersion on both clusters, for an inventory script.
+ARO accepts it and ROSA refuses it.
+Why the difference, and should they keep the label on ARO?
++
+.Answer
+[%collapsible]
+====
+ROSA protects the resources SRE owns with managed admission webhooks, so the cluster refuses the change, as in xref:module-01-who-manages-what.adoc#ex-module-01-who-manages-what-4[Who Manages What Exercise 4].
+ARO protects its platform through the deny assignment on the Azure side and its support policy, so the API accepts the label.
+Accepted is not the same as supported: treat platform resources as read-only on both, and keep inventory data outside them, for example in cloud tags.
+====
+
+. An app team asks you to install metrics-server and the AWS Load Balancer Controller on ROSA, as they had on EKS.
+What do you tell them?
++
+.Answer
+[%collapsible]
+====
+Look up each add-on's cluster Operator first, as in xref:module-01-what-ships.adoc#ex-module-01-what-ships-3[Exercise 3].
+Metrics ship with the `monitoring` cluster Operator, so `oc adm top` and the Horizontal Pod Autoscaler work without metrics-server.
+The router serves Routes and plain Ingresses, so most apps need no controller.
+Only if they need ALBs do you add the AWS Load Balancer Operator from the Software Catalog, and then it is yours to operate and update, like any catalog Operator.
+====
+
+. Your finance team compares the ROSA or ARO cluster fee with the EKS or AKS control plane fee and asks why it is higher.
+What do you show them?
++
+.Answer
+[%collapsible]
+====
+The xref:module-01-who-manages-what.adoc#_the_responsibility_line[responsibility line].
+The EKS or AKS fee covers the control plane.
+The ROSA or ARO fee also covers the worker OS, the platform components and their upgrades, SRE monitoring and one support path, which on EKS or AKS cost add-ons and your team's time.
+Compare whole platforms, including the people who run them.
+For a cluster that needs little of that, such as a short-lived test cluster, the native service can be the better buy.
+====
 
 == References
 
