@@ -88,7 +88,7 @@ The default ingress controller, OVN-Kubernetes, the CSI drivers and platform mon
 |Where |What the attendee needs
 
 |ROSA cluster
-|Cluster administrator, through the temporary admin user or an identity provider.
+|Cluster administrator (`cluster-admin`, not `dedicated-admin`), through the temporary admin user or an identity provider.
 A cluster has only one temporary admin user.
 Either the facilitator creates it and hands out its login command, or each attendee creates it on their own cluster in Module 1, but not both.
 On their Red Hat account, permission to manage the cluster in OpenShift Cluster Manager, so they can add identity providers, machine pools and upgrade policies, and turn on AutoNode (the Red Hat build of Karpenter), with the `rosa` CLI.
@@ -173,6 +173,7 @@ Clusters need outbound access to:
 * registry.access.redhat.com (UBI images for the test pods in Module 3)
 * checkip.amazonaws.com (the egress address check in Module 3)
 * ghcr.io, for the sample application's image (Modules 2 and 3)
+* github.com, where Argo CD clones this workshop's repository (Module 1)
 * api.openshift.com, for the update information the upgrade exercises read (Module 4)
 * the attendee's ECR and ACR registries
 

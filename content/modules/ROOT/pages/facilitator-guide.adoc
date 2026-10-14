@@ -1,0 +1,822 @@
+= Facilitator Guide
+
+This page is for the instructor who runs a delivery of this workshop, not for attendees.
+It is deliberately left out of the attendee navigation, so share its address only with the people who run the workshop.
+
+== Before the Day
+
+Each attendee runs the hands-on steps on one cluster, ROSA or ARO, whichever their team runs, and reads the other tab for comparison.
+An attendee whose team runs both can have one of each and run every step on both, as xref:index.adoc#_how_the_workshop_works[How the Workshop Works] and xref:setup-requirements.adoc[Setup Requirements] describe.
+Several exercises change cluster-wide settings, so each attendee or pair needs a cluster of their own.
+
+=== Setup Checklist
+
+Work through xref:setup-requirements.adoc[Setup Requirements] for every cluster, then check these items:
+
+* [ ] Each attendee or pair has their own cluster, built as xref:setup-requirements.adoc#_cluster[Cluster] describes: ROSA with hosted control planes on 4.22 or later with its own OIDC config, or ARO created with managed identities and a Red Hat pull secret.
+* [ ] Module 4 has room to grow, counted in vCPUs: three more nodes of the scale-lab instance type on both clouds, and on ROSA up to 16 vCPUs for the Karpenter NodePool.
+On Azure, check the quota for the worker VM family and the regional total.
+* [ ] Every attendee has the roles in xref:setup-requirements.adoc#_attendee_accounts_projects_and_roles[Attendee Accounts, Projects and Roles].
+On ROSA, "cluster administrator" means `cluster-admin`, not `dedicated-admin`.
+Several exercises need it, such as the `openshift-gitops-operator` namespace in What Ships and the Gateway API in Exposing an App.
+* [ ] On ARO, the Entra ID tenant lets users consent to the new app registration, or a tenant administrator is ready to grant admin consent for it.
+* [ ] Every workstation has the tools in xref:setup-requirements.adoc#_attendee_workstation[Attendee Workstation], and a bash or zsh shell on Linux or macOS, or WSL on Windows.
+The commands use bash syntax, and Upgrades gives its `date` command only for Linux and macOS.
+* [ ] Workstations and clusters reach the hosts in xref:setup-requirements.adoc#_network_and_image_access[Network and Image Access].
+Clusters also need `github.com`, because Argo CD in the cluster clones this workshop's repository in What Ships Exercise 7, and `registry.access.redhat.com` is needed in Module 1 as well as Module 3.
+* [ ] The xref:setup-requirements.adoc#_verification_checklist[Verification Checklist] passes for every attendee.
+* [ ] On ROSA, the attendee's AWS credentials belong to the account that owns the cluster.
+The validation runs could not do the AWS steps for exactly this reason.
+* [ ] On ARO, the attendee can create and delete an Entra ID app registration, which Access and Tenancy Exercise 2 creates.
+
+To check the AWS account, have the attendee print the account their `aws` CLI uses, and compare it with the account that owns the cluster:
+
+[source,bash]
+----
+aws sts get-caller-identity \
+  --query Account \
+  --output text
+----
+
+=== Dry Run
+
+Run one attendee path per platform, end to end, before the day.
+The module pages were validated on ROSA HCP 4.20 and ARO 4.21, while Setup asks for ROSA 4.22 or later, so the dry run is also the first check on the version you deliver on.
+
+* [ ] Use one ROSA and one ARO cluster built exactly like the attendees' clusters, not an attendee's own cluster: the exercises leave cluster-wide changes behind, such as the identity provider, the project template and AutoNode.
+* [ ] Work with an attendee-level account: the same Red Hat organization permissions, AWS permissions and Azure roles your attendees get, so that permission gaps show up now.
+* [ ] Run every page in order, from xref:module-01-who-manages-what.adoc#before-you-start[Before You Start] to the Observability clean-up, in one terminal per cluster.
+* [ ] Time each page and replace the estimates in the <<_agenda,Agenda>> and <<_slow_steps,Slow Steps>> with what you measured.
+* [ ] On ROSA, run the steps the pages mark *Not validated* that attendees will run: `rosa create admin`, `rosa create idp` and the htpasswd sign-in, the AWS steps of Pod Cloud Credentials and the ECR pull, the AWS lookups in Module 3, the `scale-lab` machine pool from zero nodes and its scale-up, Karpenter, scheduling and cancelling an upgrade, and log delivery to CloudWatch.
+* [ ] On ARO, run the Entra ID sign-in, workload identity from the federated credential onward, setting the update channel, and log forwarding to Azure Monitor Logs end to end.
+* [ ] On both, sign in to the Argo CD console, check the cascading delete in What Ships Exercise 7, and open the console views that Observability uses.
+* [ ] Run the Gateway API exercise on your version: whether the Ingress Operator installs the Service Mesh Operator first depends on the version.
+* [ ] Try the <<_if_identity_provider_sign_in_fails,identity provider fallback>> once, so that you can hand it out quickly.
+* [ ] Check whether the ROSA `scale-lab` machine pool can be created one patch release behind and upgraded in place (see <<_upgrades_without_a_live_upgrade,Upgrades Without a Live Upgrade>>).
+* [ ] Clean up in the order xref:setup-requirements.adoc#_cost_and_cleanup[Cost and Cleanup] gives, to test that too.
+
+=== The ROSA Temporary Administrator
+
+A ROSA cluster has only one temporary admin user.
+Either you create it on each cluster before the day and hand out its login command, or each attendee creates it in xref:module-01-who-manages-what.adoc#before-you-start[Before You Start], but never both.
+
+If you create it, run this for each cluster and keep the `oc login` command it prints for that cluster's attendee:
+
+[source,bash]
+----
+rosa create admin \
+  --cluster <cluster-name>
+----
+
+When the attendee then runs `rosa create admin` in Before You Start, it says the cluster already has a `cluster-admin` user, and the page tells them to run your `oc login` command instead.
+If attendees create it themselves, their `rosa` CLI must be logged in to the Red Hat organization that owns the cluster, which the validation runs could not test, so include it in your dry run.
+Attendees need that `rosa` login for later steps anyway: the identity provider, machine pools, AutoNode and upgrades.
+
+ARO needs no step from you: an attendee with `Contributor` on the cluster's resource group reads the kubeadmin password with `az` in Before You Start.
+
+=== What to Hand Each Attendee
+
+[cols="1,2,2,2",options="header"]
+|===
+|Item |ROSA |ARO |Where it is used
+
+|Cluster name
+|The ROSA cluster's name.
+|The ARO cluster's name.
+|`CLUSTER` in Before You Start, and every page after it.
+
+|Resource group
+|Not needed.
+|The resource group that holds the cluster.
+|`RESOURCE_GROUP` in Before You Start.
+
+|Login
+|The `oc login` command from `rosa create admin`, if you created the admin.
+|Nothing extra: the attendee reads the kubeadmin password with `az`.
+|Before You Start.
+
+|API URL
+|It is part of the `oc login` command.
+Access and Tenancy Exercise 3 looks it up with `rosa`, so hand it out in case that `rosa` login fails.
+|Before You Start looks it up with `az`.
+|Before You Start, and the developer login in Access and Tenancy.
+
+|Console URL
+|The web console address, which no ROSA step looks up.
+|Access and Tenancy Exercise 2 looks it up with `az`.
+|The console steps in What Ships, Access and Tenancy, and Observability, and the Argo CD login.
+
+|Cloud access
+|A Red Hat login with permission to manage the cluster in OpenShift Cluster Manager, for `rosa`, and AWS credentials for the account that owns the cluster, for `aws`.
+|An `az` login to the subscription with the roles Setup lists, and permission to create an app registration in Entra ID.
+|Modules 2 to 4.
+|===
+
+Send each attendee their own values privately, before the day, so that they can run the Verification Checklist themselves.
+Do not post them in a shared channel: the ROSA `oc login` command carries the temporary administrator's password, and it gives `cluster-admin` on that cluster.
+An attendee with both clusters gets one set for each.
+
+== Agenda
+
+The table gives an estimated duration for one cloud, including reading, the commands and the waits.
+Times are estimates until you have run a full dry run, so replace them with your own.
+Running both clouds roughly doubles the hands-on time.
+
+The estimates count about one minute per command block on the attendee's tab, including reading the step and its output, plus 5 to 15 minutes per page for its diagrams, tables and What Matters, plus the waits in <<_slow_steps,Slow Steps>>.
+Ranges cover the difference between the two clouds; where one cloud is clearly longer, the table says which.
+
+[cols="1,2,4,1",options="header"]
+|===
+|Module |Section |What attendees do |Estimate (one cloud)
+
+|Start
+|xref:index.adoc[Introduction]
+|Read how the workshop works, and pick the ROSA or ARO tab.
+|5 to 10 min
+
+|Module 1: The Service Model
+|xref:module-01-who-manages-what.adoc[Who Manages What]
+|Log in and set the variables in Before You Start.
+See where the control plane runs, how the service reaches their cloud account, what SRE runs in the cluster, a refused change, and the support path.
+|30 to 40 min
+
+|Module 1: The Service Model
+|xref:module-01-what-ships.adoc[What Ships and How You Extend It]
+|Read the cluster version and the cluster Operators, find the default storage, install OpenShift GitOps, and sync one application from Git.
+|40 to 45 min
+
+|Module 2: Access and Workload Security
+|xref:module-02-access-and-tenancy.adoc[Access and Tenancy]
+|Add an identity provider, log in as a developer in a second terminal, add a project template with a quota, turn off self-provisioning, and give a team a project.
+|45 min (ROSA) to 70 min (ARO)
+
+|Module 2: Access and Workload Security
+|xref:module-02-workload-security.adoc[Workload Security Defaults]
+|Deploy the sample application with a root image, read the SCC decision, fix the image, and compare with `anyuid`.
+|30 to 35 min
+
+|Module 2: Access and Workload Security
+|xref:module-02-cloud-credentials.adoc[Pod Cloud Credentials]
+|Give the sample application short-lived credentials to read S3 or Blob Storage, and pull its image from ECR or ACR.
+|40 to 50 min
+
+|Module 3: Networking
+|xref:module-03-exposing-apps.adoc[Exposing an App]
+|Find the default router, then expose the sample application with a Route, an Ingress and a Gateway.
+|40 to 45 min
+
+|Module 3: Networking
+|xref:module-03-pod-networking.adoc[Pod Networking and Policy]
+|Compare pod and node addresses, default-deny the sample application's project, add an AdminNetworkPolicy, and find the egress address.
+|45 to 50 min
+
+|Module 4: Day-2 Operations
+|xref:module-04-scaling-nodes.adoc[Scaling Nodes]
+|Add an autoscaling group of nodes, scale the sample application until new nodes join, see who patches the node OS, and clean up.
+|45 to 55 min, plus 25 to 30 min for Karpenter on ROSA
+
+|Module 4: Day-2 Operations
+|xref:module-04-upgrades.adoc[Upgrades]
+|Read the version, channel and update history, schedule and cancel a ROSA upgrade, and find what would block an upgrade, including a PodDisruptionBudget.
+|25 to 35 min
+
+|Module 4: Day-2 Operations
+|xref:module-04-observability.adoc[Observability]
+|Look at platform monitoring, scrape the sample application and alert on it, install the Logging Operator, and forward logs to CloudWatch or Azure Monitor Logs.
+|50 min (ROSA) to 70 min (ARO)
+
+|End
+|xref:quick-reference.adoc[Quick Reference]
+|Review the summary, and take questions.
+|15 min
+|===
+
+By these estimates, one cloud takes about 7 to 9 hours before breaks and discussion, so it does not fit comfortably in one day.
+Splitting after Module 2 gives two parts of about 3 to 5 hours each; on the second day, attendees set their variables again, as <<_after_a_closed_terminal,After a Closed Terminal>> describes.
+Attendees with both clusters run each step in both terminals, except on Exposing an App and Pod Networking and Policy, which they finish on ROSA and then repeat on ARO.
+
+If you run short of time, have attendees read these exercises instead of running them, because no later page depends on them:
+
+* xref:module-04-scaling-nodes.adoc#ex-module-04-scaling-nodes-4[Scaling Nodes Exercise 4] (Karpenter, ROSA only).
+Exercise 6 covers the clean-up for either path.
+* xref:module-03-exposing-apps.adoc#ex-module-03-exposing-apps-4[Exposing an App Exercise 4] (the Gateway API).
+Still run its last step, which deletes the Ingress from Exercise 3.
+
+== Slow Steps
+
+Where a page states a wait, the table repeats it.
+Every other figure is an estimate to check in your dry run.
+
+[cols="2,2,3",options="header"]
+|===
+|Step |Typical wait |What to talk about while it runs
+
+|xref:module-01-who-manages-what.adoc#before-you-start[Before You Start] (ROSA): the admin from `rosa create admin` becomes usable.
+|About a minute, as the page says.
+|The xref:module-01-who-manages-what.adoc#_where_each_platform_runs[Where Each Platform Runs] diagram: where each control plane runs, and who operates it.
+
+|xref:module-01-what-ships.adoc#ex-module-01-what-ships-6[What Ships Exercise 6]: the GitOps Operator installs and starts Argo CD.
+|2 to 5 minutes (estimate).
+|The xref:module-01-what-ships.adoc#_what_you_install_and_what_ships[What You Install and What Ships] diagram, and the note on manual update approval for Operators that call cloud APIs.
+
+|xref:module-01-what-ships.adoc#ex-module-01-what-ships-7[What Ships Exercise 7]: Argo CD syncs the application.
+|1 to 2 minutes (estimate).
+|xref:module-01-who-manages-what.adoc#_where_your_infrastructure_as_code_lives[Where Your Infrastructure as Code Lives]: which settings GitOps can reach on ROSA and ARO.
+
+|xref:module-02-access-and-tenancy.adoc#ex-module-02-access-and-tenancy-2[Access and Tenancy Exercise 2] (ROSA): the htpasswd identity provider becomes ready.
+|Usually within two minutes, as the page says.
+|The login flow diagram at the top of the page, and why the administrator logins are break-glass only (xref:module-02-access-and-tenancy.adoc#_what_matters[What Matters]).
+
+|Access and Tenancy Exercise 2 (ARO): the authentication Operator rolls out new OAuth servers.
+|5 to 10 minutes (estimate).
+The page waits up to 3 minutes for it to start and up to 10 to finish.
+|The login flow diagram, then What Matters on client secret expiry, leavers' tokens and just-in-time admin access.
+
+|xref:module-02-access-and-tenancy.adoc#ex-module-02-access-and-tenancy-4[Access and Tenancy Exercise 4]: the API servers restart for the project template.
+|About five minutes, as the page says.
+The ARO wait allows up to 15.
+|The namespace and project table in xref:module-02-access-and-tenancy.adoc#_on_eks_and_aks[On EKS and AKS], and whether to keep self-provisioning.
+
+|xref:module-02-cloud-credentials.adoc#ex-module-02-cloud-credentials-1[Pod Cloud Credentials Exercise 1]: a new IAM role (ROSA), or new role assignments and a federated credential (ARO), take effect.
+|A few seconds on AWS and about a minute on Azure, as the page says.
+|The token flow diagram at the top of the page, and xref:module-02-cloud-credentials.adoc#_what_matters[What Matters] on shared OIDC configs and the shared worker role.
+
+|xref:module-03-exposing-apps.adoc#ex-module-03-exposing-apps-4[Exposing an App Exercise 4]: the GatewayClass is accepted.
+|A few minutes on versions that install the Service Mesh Operator first, as the page says.
+The wait allows up to 10.
+|The request path diagram at the top of the page, and the Gateway API row of Where Each Wins.
+
+|Exposing an App Exercise 4 (ROSA): the Gateway's new load balancer answers.
+|A minute or two, as the page says.
+`curl` prints `000` until then.
+|xref:module-03-exposing-apps.adoc#_what_matters[What Matters]: each Gateway gets its own load balancer and needs its own certificate.
+Then the custom domains reference block.
+
+|xref:module-04-scaling-nodes.adoc#ex-module-04-scaling-nodes-2[Scaling Nodes Exercise 2] (ARO): the first `scale-lab` Machine becomes a node.
+|5 to 10 minutes (estimate).
+|The diagram and table in xref:module-04-scaling-nodes.adoc#_two_ways_to_add_nodes[Two Ways to Add Nodes], and xref:module-04-scaling-nodes.adoc#nodes-as-code[node pools as code].
+
+|xref:module-04-scaling-nodes.adoc#ex-module-04-scaling-nodes-3[Scaling Nodes Exercise 3]: new nodes boot and join.
+|Several minutes, as the page says; 5 to 10 minutes (estimate).
+|The "What is happening" list in the exercise, which the page tells attendees to read while they wait, and App Teams Will Notice.
+
+|xref:module-04-scaling-nodes.adoc#ex-module-04-scaling-nodes-4[Scaling Nodes Exercise 4] (ROSA): AutoNode's node class appears, then Karpenter's nodes join.
+|A few minutes for the node class, as the page says, then a node boot of 5 to 10 minutes (estimate).
+|Where Each Wins, and the exercise's notes on spot capacity and node expiry.
+
+|xref:module-04-observability.adoc#ex-module-04-observability-2[Observability Exercises 2 and 3]: user workload monitoring starts and scrapes the sample application.
+|1 to 3 minutes to start (estimate), then a minute before the first scrape, as the page says.
+|The diagram and table in xref:module-04-observability.adoc#_what_you_build_and_what_ships[What You Build and What Ships].
+
+|xref:module-04-observability.adoc#ex-module-04-observability-5[Observability Exercise 5]: the Logging Operator installs.
+|2 to 5 minutes (estimate).
+|xref:module-04-observability.adoc#_what_matters[What Matters]: Alertmanager sends no notifications until you configure a receiver.
+
+|xref:module-04-observability.adoc#ex-module-04-observability-6[Observability Exercise 6]: the first logs reach CloudWatch or Azure Monitor Logs.
+|A few minutes (estimate); the page says a new Log Analytics table can take several minutes.
+|The reference blocks on ROSA control plane logs and ARO audit logs.
+|===
+
+Upgrades has no long waits, because no upgrade runs; that is the place for the demo in <<_upgrades_without_a_live_upgrade,Upgrades Without a Live Upgrade>>.
+
+== Common Failures
+
+=== Errors the Exercises Expect
+
+Some messages look like failures but are part of the exercise.
+Tell attendees before they ask.
+
+[cols="2,2,3",options="header"]
+|===
+|Message |Where |Why it is expected
+
+|A `PodSecurity "restricted:latest"` warning
+|Workload Security Exercises 1 and 2, and `oc run` in Pod Networking Exercise 2
+|It comes from the namespace's `warn` label and blocks nothing.
+
+|`CrashLoopBackOff`
+|Workload Security Exercise 1
+|The root image cannot write its directory as the user ID OpenShift assigns.
+
+|No new pod, and a `FailedCreate` event
+|Workload Security Exercise 2
+|The pinned user ID is outside the namespace's range, so admission rejects the pod.
+
+|`NoCredentialsError` or `ClientAuthenticationError`
+|Pod Cloud Credentials Exercise 1
+|The pod has no cloud credentials yet.
+
+|`503` on plain HTTP
+|Exposing an App Exercise 2
+|An edge Route refuses plain HTTP until the redirect is set.
+
+|`503` from the Gateway on ARO
+|Exposing an App Exercise 4
+|The Gateway's DNS record is not published on the default `aroapp.io` domain, so the page sends the request to the Gateway's address instead.
+
+|`000`, and `command terminated with exit code 28`
+|Pod Networking and Policy Exercises 3 and 4
+|The client is blocked, and curl times out.
+
+|`You may not request a new project via this API`
+|Access and Tenancy Exercise 4
+|Self-provisioning has just been turned off.
+
+|A warning about a missing `last-applied-configuration` annotation
+|Access and Tenancy Exercise 2 (ARO), Observability Exercise 5
+|It is harmless.
+
+|The ClusterVersion label is refused on ROSA and accepted on ARO
+|Who Manages What Exercise 4
+|A managed webhook protects it on ROSA; ARO protects its platform through the deny assignment instead.
+
+|`the server doesn't have a resource type "machinesets"`
+|Scaling Nodes Exercise 1 (ROSA)
+|ROSA keeps machine pools outside the cluster.
+
+|`Upgradeable=False` with the reason `AdminAckRequired`
+|Upgrades Exercise 1
+|It is an acknowledgment gate for the next minor version only.
+
+|An empty list of removed APIs
+|Upgrades Exercise 4
+|Nothing on the cluster calls an API scheduled for removal.
+|===
+
+=== Failures and Fixes
+
+[cols="2,2,3",options="header"]
+|===
+|Symptom |Likely cause |Fix
+
+3+h|Logging in and the terminal
+
+|`oc login` to the ARO cluster times out.
+|The network allows only port 443, and the ARO API listens on 6443.
+|Allow outbound port 6443 from workstations, as xref:setup-requirements.adoc#_network_and_image_access[Network and Image Access] says.
+
+|The `oc login` command from `rosa create admin` fails right away.
+|The new admin is not ready yet.
+|Wait about a minute and run it again.
+
+|`rosa create admin` says the cluster already has a `cluster-admin` user.
+|You created the temporary admin before the day.
+|Run the `oc login` command you handed out.
+
+|`rosa` commands cannot find or change the cluster.
+|The `rosa` CLI is not logged in to the Red Hat organization that owns the cluster, or the account lacks permission to manage it in OpenShift Cluster Manager.
+|Log in with a token from console.redhat.com for that organization, and grant the permission xref:setup-requirements.adoc#_attendee_accounts_projects_and_roles[Setup] lists.
+
+|`aws` steps fail, or AWS lookups return nothing.
+|The `aws` CLI uses credentials for another account.
+|Configure credentials for the account that owns the cluster, and check them as <<_setup_checklist,Setup Checklist>> shows.
+
+|A command fails because a variable such as `CLUSTER` is empty.
+|The attendee opened a new terminal.
+|Set the variables again, as <<_after_a_closed_terminal,After a Closed Terminal>> shows.
+
+|Output looks like the other platform's.
+|An attendee with both clusters ran the step in the other cluster's terminal.
+|Each terminal has its own kubeconfig file.
+`oc whoami` shows `cluster-admin` on ROSA and `kube:admin` on ARO.
+
+|A command never returns.
+|It watches for changes (`--watch` or `-w`), or `oc rollout status` waits for a pod that cannot start.
+|Press Ctrl+C.
+For a rollout, see <<_repairing_the_sample_application,Repairing the Sample Application>>.
+
+3+h|Module 1: The Service Model
+
+|On ROSA, creating the `openshift-gitops-operator` namespace is refused.
+|The attendee is logged in as `dedicated-admin`, which cannot create other `openshift-` namespaces.
+|Use the `cluster-admin` login from Before You Start.
+The Gateway API in Module 3 needs it too.
+
+|On ARO, `redhat-operators` is missing from the catalog sources, and OpenShift GitOps or Logging never installs.
+|The cluster has no Red Hat pull secret, or it was added after creation and the default sources are still disabled.
+|Run the OperatorHub check in xref:module-01-what-ships.adoc#ex-module-01-what-ships-5[What Ships Exercise 5], and add the pull secret as Setup links.
+
+|The `gitops-hello` Application does not sync, or its pod stays in `ImagePullBackOff`.
+|Cluster egress blocks `github.com`, which Argo CD in the cluster clones the repository from, or `registry.access.redhat.com`, which the pod's image comes from.
+|Allow both in the cluster's egress.
+
+3+h|Access and Tenancy
+
+|`rosa create idp` rejects the developer password.
+|ROSA requires at least 14 characters, with upper case, lower case, and digits or symbols.
+|Choose a password that meets the rule, and use the same one in the developer terminal.
+
+|On ARO, an `az ad app` command right after creating the app says the resource does not exist.
+|Entra ID has not made the new application available yet.
+|Wait 30 seconds and run it again.
+
+|On ARO, the authentication Operator never starts progressing.
+|The identity provider configuration has an error.
+|Read the Operator's Degraded message with the command in xref:module-02-access-and-tenancy.adoc#ex-module-02-access-and-tenancy-2[Exercise 2].
+
+|Sign-in fails: Entra ID refuses consent on ARO, or the htpasswd login is refused on ROSA.
+|On ARO, the tenant blocks user consent.
+On ROSA, the provider is not ready yet, or `rosa create idp` did not run.
+|On ARO, a tenant administrator grants admin consent for the app, or allows user consent.
+On ROSA, wait two minutes and try again.
+Otherwise, use the <<_if_identity_provider_sign_in_fails,identity provider fallback>>.
+
+|A new project has no quota.
+|An API server had not picked up the project template yet.
+|Wait a minute, and create a project with a new name, such as `dev-team-2`.
+
+|Project requests fail with `templates.template.openshift.io "project-request" not found`.
+|The template was deleted while API servers still used it.
+|Remove `spec.projectRequestTemplate` first and wait for the API servers to restart, as the end of Exercise 4 says.
+
+|The developer does not see the `team-a` project.
+|It can take a minute to appear.
+|Wait a minute and list the projects again.
+
+3+h|Pod Cloud Credentials
+
+|On ROSA, `AccessDenied` right after creating the role.
+|IAM has not finished propagating the new role.
+|Wait a few seconds and try again.
+
+|On ARO, `/me request is only valid with delegated authentication flow`.
+|`az` is logged in as a service principal.
+|Use the `az ad sp show` step that follows on the page.
+
+|On ARO, an authorization error when creating the container or listing blobs.
+|The role assignment or federated credential has not applied yet.
+|Wait a minute and try again.
+
+|On ARO, `echo "$OIDC_ISSUER"` prints nothing.
+|The cluster was created with a service principal and has no workload identity.
+|The attendee reads the rest of Exercise 1, and later the ARO tab of Observability Exercise 6.
+For the next delivery, create the cluster with managed identities; a service principal cluster cannot be converted.
+
+|After the switch to ECR or ACR, the new pod stays in `ImagePullBackOff` and `oc rollout status` does not return.
+|The worker role policy (ROSA) or the pull secret (ARO) did not work.
+|Press Ctrl+C, roll back as <<_repairing_the_sample_application,Repairing the Sample Application>> shows, and continue with the ghcr.io image.
+
+3+h|Module 3: Networking
+
+|The GatewayClass is never accepted.
+|On versions that install the Service Mesh 3 Operator from the Red Hat catalog, ARO needs its pull secret, and the cluster must not already have an OpenShift Service Mesh 2 subscription.
+|Check both before the day, as xref:setup-requirements.adoc#_operators_and_cluster_components[Operators and Cluster Components] says.
+
+|The Route returns `503` or times out, and keeps doing so after Pod Networking Exercise 3.
+|The default-deny policy is in place without the allow policies.
+|Apply the three allow policies from xref:module-03-pod-networking.adoc#ex-module-03-pod-networking-3[Exercise 3].
+Observability needs `allow-from-monitoring` too.
+
+3+h|Module 4: Day-2 Operations
+
+|Pods stay `Pending`, and no new node joins.
+|The cloud account has no quota left for the new nodes.
+|Check quotas before the day, as the <<_setup_checklist,Setup Checklist>> says.
+During the session, have the attendee read the rest of the exercise and run the clean-up in Exercise 6.
+
+|`OpenshiftEC2NodeClass` never appears after turning on AutoNode.
+|The cluster is older than 4.22, or `rosa` is older than 1.2.61.
+|Setup asks for both.
+Until then, the attendee reads the exercise.
+
+|`rosa list upgrades` lists no versions.
+|No update is available for the cluster.
+|Read Upgrades Exercise 3 without running it, as the page says.
+
+|Requests to `/` return `500`, and `SampleAppObjectStoreErrors` fires.
+|The attendee skipped Pod Cloud Credentials, so the application has no bucket or container to read.
+|Nothing to fix: the page expects it, and the alert firing shows that it works.
+
+|On ROSA, the log forwarder is ready but no logs arrive, and the collector log shows `InvalidIdentityTokenException` or `AccessDenied`.
+|The role's trust policy does not match the cluster's OIDC provider or the service account name.
+|Correct the trust policy from xref:module-04-observability.adoc#ex-module-04-observability-6[Exercise 6].
+
+|On ARO, the collector log shows `AADSTS700211` or `AADSTS700213`.
+|The federated credential's issuer, subject or audience does not match the collector's token, whose audience is `openshift`.
+|Correct the federated credential from Exercise 6.
+
+|On ARO, the Log Analytics query returns no rows.
+|The first records in a new table can take several minutes.
+|Wait and query again.
+|===
+
+=== If Identity Provider Sign-in Fails
+
+Exercises 3 to 5 of xref:module-02-access-and-tenancy.adoc[Access and Tenancy] use a developer terminal, which needs a working sign-in through the identity provider.
+If sign-in fails, for example because the Entra ID tenant blocks user consent or `rosa create idp` could not run, the attendee can run the developer's steps in the administrator terminal instead, impersonating the developer with `--as` and `--as-group`.
+The page's own validation of Exercises 4 and 5 was done this way.
+Name the groups explicitly, because impersonation may not add the developer's OpenShift Group membership.
+
+NOTE: *Not validated:* the impersonation commands below, which do not appear on the Access and Tenancy page.
+
+`DEV_USER` must be set in the administrator terminal, as Exercise 2 does on both platforms.
+Exercise 3 needs a real sign-in, so the attendee reads it instead; its `oc get users` and `oc get identities` stay empty, because nobody signed in.
+
+In xref:module-02-access-and-tenancy.adoc#ex-module-02-access-and-tenancy-4[Exercise 4], create the first project as the developer:
+
+[source,bash]
+----
+oc new-project dev-sandbox \
+  --as "$DEV_USER" \
+  --as-group system:authenticated \
+  --as-group system:authenticated:oauth
+----
+
+After the template is in place, create the second project the same way:
+
+[source,bash]
+----
+oc new-project dev-team \
+  --as "$DEV_USER" \
+  --as-group system:authenticated \
+  --as-group system:authenticated:oauth
+----
+
+Read its quota and limits as the administrator:
+
+[source,bash]
+----
+oc describe quota \
+  --namespace dev-team
+----
+
+[source,bash]
+----
+oc describe limitrange \
+  --namespace dev-team
+----
+
+After the self-provisioner binding is removed, try once more.
+The request is refused with `You may not request a new project via this API`:
+
+[source,bash]
+----
+oc new-project dev-another \
+  --as "$DEV_USER" \
+  --as-group system:authenticated \
+  --as-group system:authenticated:oauth
+----
+
+In xref:module-02-access-and-tenancy.adoc#ex-module-02-access-and-tenancy-5[Exercise 5], check what the developer sees as a member of `team-a`:
+
+[source,bash]
+----
+oc get projects \
+  --as "$DEV_USER" \
+  --as-group system:authenticated \
+  --as-group team-a
+----
+
+[source,bash]
+----
+oc auth can-i create deployments \
+  --namespace team-a \
+  --as "$DEV_USER" \
+  --as-group team-a
+----
+
+== Getting an Attendee Back on Track
+
+=== After a Closed Terminal
+
+Every exercise runs in the terminal opened in xref:module-01-who-manages-what.adoc#before-you-start[Before You Start], with the variables set there.
+The kubeconfig file keeps the login, so in a new terminal the attendee runs only the `export` steps again, as that section says:
+
+[tabs]
+======
+ROSA (AWS)::
++
+--
+[source,bash]
+----
+export KUBECONFIG=~/.kube/rosa
+----
+
+[source,bash]
+----
+export CLUSTER=<rosa-cluster-name>
+----
+--
+ARO (Azure)::
++
+--
+[source,bash]
+----
+export KUBECONFIG=~/.kube/aro
+----
+
+[source,bash]
+----
+export CLUSTER=<aro-cluster-name>
+----
+
+[source,bash]
+----
+export RESOURCE_GROUP=<resource-group>
+----
+--
+======
+
+Then check the login, which also shows which cluster the terminal points at:
+
+[source,bash]
+----
+oc whoami
+----
+
+ROSA shows `cluster-admin` and ARO shows `kube:admin`.
+On a second day, the login itself may have expired, because OAuth access tokens are valid for 24 hours by default.
+If `oc whoami` says the attendee is not logged in, log in again as in Before You Start: on ROSA with the `oc login` command from `rosa create admin`, and on ARO with the API URL and password lookups and `oc login`.
+The developer terminal from xref:module-02-access-and-tenancy.adoc#ex-module-02-access-and-tenancy-3[Access and Tenancy Exercise 3] has its own kubeconfig file and variables, set the same way.
+
+A new terminal also loses values that one exercise sets and a later exercise on the same page uses.
+Run the step that set them again:
+
+[cols="2,2,2",options="header"]
+|===
+|Value |Set in |Used in
+
+|`DEV_USER`
+|Access and Tenancy Exercise 2
+|Exercise 5, and the identity provider fallback
+
+|`AWS_REGION` and `ACCOUNT_ID` (ROSA), `LOCATION` (ARO)
+|Pod Cloud Credentials Exercise 1
+|Exercise 2
+
+|`APPS_DOMAIN`
+|Exposing an App Exercise 1
+|Exercises 3 and 4
+
+|`NODE_IP` (ROSA), `MANAGED_RG` (ARO)
+|Pod Networking and Policy Exercise 1
+|Exercise 5
+
+|The `probe` function, and `ROUTE_HOST`
+|Pod Networking and Policy Exercise 2
+|Exercises 3 and 4
+
+|`APP_HOST`
+|Observability Exercise 3
+|Exercise 6, to send requests
+|===
+
+Do not run the `STORAGE_ACCOUNT` or `ACR` steps of Pod Cloud Credentials again: they make a new name from the current time.
+If the terminal closed partway through that page, find the existing name in the attendee's resource group, where it starts with `sampleapp`, and set the variable to it.
+No later page needs these two values.
+
+=== Ready Checks
+
+From Pod Cloud Credentials onward, every page changes the same sample application, so check it before each of them.
+
+NOTE: *Not validated:* these checks, which are read-only.
+
+Before xref:module-02-cloud-credentials.adoc[Pod Cloud Credentials], the sample application runs the fixed image:
+
+[source,bash]
+----
+oc get deployment sample-app \
+  --namespace sample-app \
+  --output wide
+----
+
+`READY` shows `1/1`, and `IMAGES` shows `ghcr.io/shpwrck/ocp-cloud-workshop/sample-app:1.0`, not `1.0-root`.
+
+Before xref:module-03-exposing-apps.adoc[Exposing an App], the application and its Service run:
+
+[source,bash]
+----
+oc get deployment,service \
+  --namespace sample-app
+----
+
+The Deployment shows `1/1`, and the `sample-app` Service has port `8080/TCP`.
+
+Before xref:module-03-pod-networking.adoc[Pod Networking and Policy], the Route from Exposing an App Exercise 2 exists:
+
+[source,bash]
+----
+oc get route sample-app \
+  --namespace sample-app
+----
+
+Its termination shows `edge/Redirect`.
+
+Before xref:module-04-scaling-nodes.adoc[Scaling Nodes], the network policies from Pod Networking and Policy are in place:
+
+[source,bash]
+----
+oc get networkpolicies \
+  --namespace sample-app
+----
+
+The list shows `default-deny-ingress`, `allow-from-ingress`, `allow-from-monitoring` and `allow-same-namespace`.
+
+Before xref:module-04-upgrades.adoc[Upgrades], the Scaling Nodes clean-up has finished:
+
+[source,bash]
+----
+oc get deployment sample-app \
+  --namespace sample-app
+----
+
+[source,bash]
+----
+oc get nodes \
+  -l workshop=scale-lab
+----
+
+The Deployment shows `2/2`, and no `scale-lab` nodes are left once their removal has finished.
+
+Before xref:module-04-observability.adoc[Observability], the application and its Route run, and monitoring may reach it:
+
+[source,bash]
+----
+oc get deployment,route \
+  --namespace sample-app
+----
+
+[source,bash]
+----
+oc get networkpolicy allow-from-monitoring \
+  --namespace sample-app
+----
+
+=== Repairing the Sample Application
+
+If the new pod stays in `ImagePullBackOff` after the switch to ECR or ACR in xref:module-02-cloud-credentials.adoc#ex-module-02-cloud-credentials-2[Pod Cloud Credentials Exercise 2], the old pod keeps serving, and `oc rollout status` waits until the rollout's deadline.
+
+NOTE: *Not validated:* rolling back a failed registry switch, which was not run on a cluster.
+
+Press Ctrl+C and roll back to the previous image:
+
+[source,bash]
+----
+oc rollout undo deployment/sample-app \
+  --namespace sample-app
+----
+
+The attendee then continues with the ghcr.io image, which every later page works with.
+
+If the application still runs the root image, or under `anyuid`, run the last steps of xref:module-02-workload-security.adoc#ex-module-02-workload-security-4[Workload Security Exercise 4]: undo the grant, then switch back to the fixed image.
+
+If the application is missing, for example for an attendee who joins late, rebuild it from the pages:
+
+. Create the namespace and apply the manifest in xref:module-02-workload-security.adoc#ex-module-02-workload-security-1[Workload Security Exercise 1].
+. Switch to the fixed image as in xref:module-02-workload-security.adoc#ex-module-02-workload-security-3[Workload Security Exercise 3].
+. Run the steps the attendee missed on later pages: the credentials in Pod Cloud Credentials, the Route in Exposing an App Exercise 2, and the policies in Pod Networking and Policy Exercise 3.
+
+Without the credentials, the application answers `500` on `/`, which Observability expects and explains.
+
+== Upgrades Without a Live Upgrade
+
+The xref:module-04-upgrades.adoc[Upgrades] page inspects and schedules upgrades but does not run one, because a real upgrade takes an hour or more, so attendees never see the drain and PodDisruptionBudget behavior it describes.
+If you want the room to see one, run an optional facilitator demo on a cluster of your own that is one patch release behind: start its upgrade at the beginning of the day, and during Module 4 show `oc adm upgrade` while the update progresses, the cluster Operators reporting `PROGRESSING`, and the nodes rolling, through the machine config pools on ARO or the machine pool upgrade that follows the control plane on ROSA.
+If you cannot spare a cluster, show a recording of a real upgrade instead.
+During your dry run, also check whether the ROSA `scale-lab` machine pool from Scaling Nodes can be created one patch release behind and upgraded in place, which would give a short, real node pool upgrade.
+No upgrade was run when the workshop was validated, so rehearse whichever you choose.
+
+== After the Workshop
+
+The clusters, and the cloud resources attendees created, are billed for as long as they exist.
+Clean up each cloud account in the order xref:setup-requirements.adoc#_cost_and_cleanup[Cost and Cleanup] gives, including the clusters you used for the dry run.
+On ROSA, detach the ECR read policy from the worker IAM role, but do not delete the role: other ROSA clusters in the account share it.
+
+These are the names the exercises give the resources, to help find them:
+
+[cols="1,2,2",options="header"]
+|===
+|Cloud |Resource and name |Created in
+
+|ROSA
+|IAM role `sample-app-<cluster>`, S3 bucket `sample-app-<account-id>-<cluster>`
+|Pod Cloud Credentials Exercise 1
+
+|ROSA
+|ECR repository `sample-app-<cluster>`, and the `AmazonEC2ContainerRegistryReadOnly` policy on the worker role
+|Pod Cloud Credentials Exercise 2
+
+|ROSA
+|IAM role `rosa-karpenter-<cluster>`
+|Scaling Nodes Exercise 4
+
+|ROSA
+|IAM role `<cluster>-logging`, log group `workshop-<cluster>.application`
+|Observability Exercise 6
+
+|ARO
+|Entra ID app registration `aro-workshop-<cluster>`
+|Access and Tenancy Exercise 2
+
+|ARO
+|Storage account `sampleapp` followed by a timestamp, managed identity `sample-app-<cluster>`
+|Pod Cloud Credentials Exercise 1
+
+|ARO
+|Container registry `sampleapp` followed by a timestamp
+|Pod Cloud Credentials Exercise 2
+
+|ARO
+|Log Analytics workspace `sample-app-logs`, data collection endpoint `sample-app-dce` and rule `sample-app-dcr`, managed identity `sample-app-logging`
+|Observability Exercise 6
+|===
