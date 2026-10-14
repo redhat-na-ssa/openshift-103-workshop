@@ -1,6 +1,6 @@
 = Upgrades
 
-NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026.
+NOTE: Validated on ROSA 4.20 and ARO 4.21 in October 2026.
 Steps and statements that were not checked on a live cluster carry a *Not validated* note.
 The comparison tables and summaries come from vendor documentation.
 
@@ -13,16 +13,16 @@ A real upgrade takes an hour or more, so this section inspects and schedules upg
 The timeline shows what you run on each platform, in order, and what happens without you.
 
 .Upgrade steps per platform
-image::module-04-upgrade-timeline.svg[Upgrade steps on EKS, AKS, ROSA HCP and ARO, colored by whether you run the step or it runs automatically.,width=100%]
+image::module-04-upgrade-timeline.svg[Upgrade steps on EKS, AKS, ROSA and ARO, colored by whether you run the step or it runs automatically.,width=100%]
 
 The chart shows which parts of the platform move in the same update as the Kubernetes control plane, and which you update separately.
 
 .What moves together
-image::module-04-what-moves-together.svg[Matrix of platform components against EKS, AKS, ROSA HCP and ARO, showing which components move with the control plane.,width=100%]
+image::module-04-what-moves-together.svg[Matrix of platform components against EKS, AKS, ROSA and ARO, showing which components move with the control plane.,width=100%]
 
 On ROSA and ARO, the CNI, DNS, ingress, storage drivers and monitoring are platform Operators.
 They are tested together as one OpenShift release, so there is no compatibility matrix to check.
-The difference between the two is the nodes: ROSA HCP updates each machine pool separately, while standard ARO rolls the workers as part of the cluster update.
+The difference between the two is the nodes: ROSA updates each machine pool separately, while standard ARO rolls the workers as part of the cluster update.
 
 == On EKS and AKS
 
@@ -387,7 +387,7 @@ oc get apirequestcount <resource>.<version>.<group> \
   | sort -u
 ----
 
-The list can be empty even when workloads call deprecated APIs: it was empty on both a new ROSA HCP cluster and a new ARO cluster when this workshop was tested.
+The list can be empty even when workloads call deprecated APIs: it was empty on both a new ROSA cluster and a new ARO cluster when this workshop was tested.
 Treat an empty result as no data, and also check your manifests against the https://kubernetes.io/docs/reference/using-api/deprecation-guide/[Kubernetes deprecated API migration guide].
 
 ==== Pod disruption budgets
@@ -432,7 +432,7 @@ No upgrade was run.
 
 What happens next depends on the platform:
 
-* ROSA HCP drains each machine pool node for at most the pool's node drain grace period, then removes the node anyway.
+* ROSA drains each machine pool node for at most the pool's node drain grace period, then removes the node anyway.
 * Standard ARO waits on the node until the budget allows the eviction, so the update stalls on that node.
 With an `UpgradeConfig`, the managed upgrade operator forces the drain after `PDBForceDrainTimeout` minutes.
 * EKS managed node group updates fail with a pod eviction error unless you force them.
@@ -482,7 +482,7 @@ In extreme cases you get 72 hours to apply a critical security patch, after whic
 
 == What Matters
 
-* ROSA HCP upgrades the control plane and each machine pool separately.
+* ROSA upgrades the control plane and each machine pool separately.
 Machine pools can trail the control plane by up to two minor versions, so you choose when nodes reboot.
 * Standard ARO upgrades the control plane and workers together, and you start every update yourself.
 * A new minor version needs a channel change and sometimes an administrator acknowledgment.
@@ -508,7 +508,7 @@ Test updates on a non-production cluster first.
 |SRE watches the upgrade.
 |EKS can roll the control plane back one minor version within 7 days.
 
-|ROSA schedules and runs upgrades for you, and ROSA HCP lets nodes trail the control plane.
+|ROSA schedules and runs upgrades for you, and lets nodes trail the control plane.
 |EKS upgrade insights and AKS also flag deprecated API use before an upgrade.
 |===
 
@@ -516,7 +516,7 @@ Test updates on a non-production cluster first.
 
 * Every node drains and reboots during an update, so every pod restarts at least once.
 Applications need at least two replicas and a budget that allows one disruption to stay up.
-* A budget that allows no disruptions holds up the update on ARO, and is overridden after the grace period on ROSA HCP.
+* A budget that allows no disruptions holds up the update on ARO, and is overridden after the grace period on ROSA.
 * Each Kubernetes minor version removes some deprecated APIs.
 Manifests and Helm charts that use them fail after the update, and the API request counts, when populated, show who still calls them.
 
@@ -530,7 +530,7 @@ Manifests and Helm charts that use them fail after the update, and the API reque
 ** https://learn.microsoft.com/azure/aks/auto-upgrade-cluster[Auto-upgrade channels]
 ** https://learn.microsoft.com/azure/aks/planned-maintenance[Planned maintenance]
 * ROSA
-** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/upgrading/rosa-hcp-upgrading[Upgrading ROSA HCP]
+** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/upgrading/rosa-hcp-upgrading[Upgrading ROSA]
 ** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/introduction_to_rosa/policies-and-service-definition[ROSA service definition]
 * ARO
 ** https://learn.microsoft.com/azure/openshift/howto-upgrade[Upgrade an ARO cluster]

@@ -38,7 +38,7 @@
   <!-- Lane B: provisioning -->
   <rect x="10" y="220" width="940" height="200" rx="8" fill="#f4faf6" stroke="#bfdcc9"/>
   <text x="26" y="246" font-size="16" font-weight="bold">Provisioning: a controller picks each node for the pods that are waiting</text>
-  <text x="26" y="268" font-size="13" fill="#52606d">Karpenter and EKS Auto Mode, AKS node auto-provisioning, the Red Hat build of Karpenter on ROSA HCP 4.22</text>
+  <text x="26" y="268" font-size="13" fill="#52606d">Karpenter and EKS Auto Mode, AKS node auto-provisioning, the Red Hat build of Karpenter on ROSA 4.22</text>
 
   <rect x="26" y="288" width="200" height="72" rx="6" fill="#ffffff" stroke="#2e7d4f" stroke-width="1.5"/>
   <text x="126" y="318" text-anchor="middle" font-weight="bold">Pods are Pending</text>

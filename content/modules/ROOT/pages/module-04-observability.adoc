@@ -1,6 +1,6 @@
 = Observability
 
-NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026.
+NOTE: Validated on ROSA 4.20 and ARO 4.21 in October 2026.
 Steps and statements that were not checked on a live cluster carry a *Not validated* note.
 The comparison tables and summaries come from vendor documentation.
 
@@ -37,7 +37,7 @@ image::module-04-observability-stack.svg[On EKS and AKS you install collectors a
 
 |Control plane logs
 |A switch on the cluster, to CloudWatch or diagnostic settings
-|ROSA HCP: a log forwarder in OpenShift Cluster Manager. ARO: the API server audit log, through the Logging Operator
+|ROSA: a log forwarder in OpenShift Cluster Manager. ARO: the API server audit log, through the Logging Operator
 |===
 
 == On EKS and AKS
@@ -359,7 +359,7 @@ spec:
 EOF
 ----
 
-On ROSA HCP the `openshift-logging` namespace already exists, and the command only adds the label.
+On ROSA the `openshift-logging` namespace already exists, and the command only adds the label.
 On ARO the command creates it.
 `oc apply` warns that the namespace is missing the `last-applied-configuration` annotation; that warning is harmless.
 
@@ -979,7 +979,7 @@ User workload monitoring covers your applications, and you may need to turn it o
 * Application logging (Vector, optionally Loki for in-cluster storage) is an optional Operator that you install, upgrade and run.
 * Log forwarding uses the same short-lived credentials as your applications: an IAM role through STS on ROSA, a managed identity through workload identity on ARO.
 * Azure Monitor Container Insights reaches ARO only through Azure Arc.
-* ROSA HCP control plane logs, such as the API server audit log, are not on your nodes.
+* ROSA control plane logs, such as the API server audit log, are not on your nodes.
 You forward them to CloudWatch or S3 with a log forwarder in OpenShift Cluster Manager.
 
 == Where Each Wins
@@ -1015,8 +1015,8 @@ Structured JSON logs make queries in CloudWatch and Log Analytics much easier.
 ** https://learn.microsoft.com/azure/aks/monitor-aks[Monitor AKS]
 * ROSA
 ** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/monitoring/configuring-user-workload-monitoring[User workload monitoring on ROSA]
-** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/logging/rosa-forwarding-control-plane-logs[Forwarding ROSA HCP control plane logs]
-** https://cloud.redhat.com/experts/o11y/openshift-logging6-rosa-hcp/[Logging to CloudWatch on ROSA HCP (Cloud Experts)]
+** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/logging/rosa-forwarding-control-plane-logs[Forwarding ROSA control plane logs]
+** https://cloud.redhat.com/experts/o11y/openshift-logging6-rosa-hcp/[Logging to CloudWatch on ROSA (Cloud Experts)]
 * ARO
 ** https://learn.microsoft.com/azure/azure-monitor/containers/kubernetes-monitoring-enable-arc[Azure Monitor for Arc-enabled clusters]
 ** https://learn.microsoft.com/azure/azure-monitor/logs/custom-logs-migrate[Migrating from the HTTP Data Collector API]
