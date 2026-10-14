@@ -40,7 +40,7 @@ image::module-04-observability-stack.svg["On EKS and AKS you install collectors 
 |ROSA: a log forwarder in OpenShift Cluster Manager. ARO: the API server audit log, through the Logging Operator
 |===
 
-The optional box in the diagram is Prometheus remote write: the cluster's Prometheus can also send metrics to Amazon Managed Service for Prometheus or Azure Monitor managed Prometheus, which this workshop does not set up.
+The optional box in the diagram is Prometheus remote write, which this workshop does not set up: on ROSA the cluster's Prometheus can send metrics to Amazon Managed Service for Prometheus, and on ARO you check with support first (see What Matters).
 
 == On EKS and AKS
 
@@ -975,8 +975,164 @@ oc logs \
 
 Older guides use the `azureMonitor` output type with a workspace shared key.
 It sends through the HTTP Data Collector API, which Microsoft stopped supporting in September 2026, and the output is deprecated in OpenShift Logging 6.6.
+
+.In production: API audit logs on ARO (reference only)
+[%collapsible]
+====
+The same forwarder can send the API server audit logs to Log Analytics, for Microsoft Sentinel or your security team.
+Give them their own table: they are sensitive, they need the `collect-audit-logs` cluster role, and their volume adds noticeable Log Analytics charges.
+A `kubeAPIAudit` filter on the pipeline can drop the events you do not need.
+
+NOTE: *Not validated:* forwarding audit logs from ARO, which was not run on a cluster.
+
+Grant the collector's service account the audit role:
+
+[source,bash]
+----
+oc adm policy add-cluster-role-to-user \
+  collect-audit-logs \
+  --serviceaccount logging-collector \
+  --namespace openshift-logging
+----
+
+Create a second custom table, for example `AroAuditLogs_CL`, and add a matching stream and data flow to the data collection rule, as you did for `SampleAppLogs_CL`.
+Then add these entries to the `inputs`, `outputs` and `pipelines` lists of the `workshop` forwarder:
+
+[source,yaml]
+----
+spec:
+  inputs:
+  - name: api-audit
+    type: audit
+    audit:
+      sources:
+      - kubeAPI
+      - openshiftAPI
+  outputs:
+  - name: log-analytics-audit
+    type: azureLogsIngestion
+    azureLogsIngestion:
+      url: <dce-url>
+      dcrImmutableId: <dcr-immutable-id>
+      streamName: Custom-AroAuditLogs_CL
+      authentication:
+        type: workloadIdentity
+        workloadIdentity:
+          tenantId: <tenant-id>
+          clientId: <client-id>
+          token:
+            from: serviceAccount
+  pipelines:
+  - name: audit-to-log-analytics
+    inputRefs:
+    - api-audit
+    outputRefs:
+    - log-analytics-audit
+----
+====
 --
 ======
+
+.In production: ROSA control plane and audit logs (reference only)
+[%collapsible]
+====
+ROSA control plane logs, including the API server's record of every request, leave through a log forwarder that Red Hat runs outside your cluster, to a CloudWatch log group or an S3 bucket.
+Turn it on when you create the cluster: it cannot capture logs from before it was enabled.
+Forwarding and storing these logs adds CloudWatch or S3 charges.
+
+NOTE: *Not validated:* the control plane log forwarder, which was not run on a cluster.
+
+The commands use the variables from the ROSA tab of Exercise 6.
+For CloudWatch, create the log group:
+
+[source,bash]
+----
+aws logs create-log-group \
+  --log-group-name "rosa-${CLUSTER}-control-plane"
+----
+
+Red Hat's central log distribution role writes through a role in your account, whose name must start with `CustomerLogDistribution-`.
+Write the role's trust policy, with the principal from the Red Hat documentation:
+
+[source,bash]
+----
+cat > log-distribution-trust.json <<'EOF'
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {
+      "AWS":
+        "arn:aws:iam::859037107838:role/ROSA-CentralLogDistributionRole-241c1a86"
+    },
+    "Action": "sts:AssumeRole"
+  }]
+}
+EOF
+----
+
+[source,bash]
+----
+aws iam create-role \
+  --role-name "CustomerLogDistribution-${CLUSTER}" \
+  --assume-role-policy-document file://log-distribution-trust.json
+----
+
+Allow it to write to the log group:
+
+[source,bash]
+----
+cat > log-distribution-policy.json <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Action": ["logs:CreateLogStream", "logs:PutLogEvents"],
+    "Resource": "${LOG_GROUPS}:rosa-${CLUSTER}-control-plane:*"
+  }, {
+    "Effect": "Allow",
+    "Action": ["logs:DescribeLogGroups", "logs:DescribeLogStreams"],
+    "Resource": "*"
+  }]
+}
+EOF
+----
+
+[source,bash]
+----
+aws iam put-role-policy \
+  --role-name "CustomerLogDistribution-${CLUSTER}" \
+  --policy-name control-plane-logs \
+  --policy-document file://log-distribution-policy.json
+----
+
+Write the forwarder's configuration.
+The `api` group records every request made to the cluster, and `authentication` records logins and token requests:
+
+[source,bash]
+----
+cat > control-plane-logs.yaml <<EOF
+cloudwatch:
+  cloudwatch_log_role_arn: "arn:aws:iam::${ACCOUNT_ID}:role/CustomerLogDistribution-${CLUSTER}"
+  cloudwatch_log_group_name: "rosa-${CLUSTER}-control-plane"
+  groups:
+    - api
+    - authentication
+EOF
+----
+
+Create the forwarder on an existing cluster.
+`rosa create cluster` takes the same `--log-fwd-config` flag, which is how you turn it on at creation:
+
+[source,bash]
+----
+rosa create log-forwarder \
+  --cluster "$CLUSTER" \
+  --log-fwd-config control-plane-logs.yaml
+----
+
+S3 needs no IAM role: a bucket policy lets Red Hat's role write objects, and the configuration file names the bucket in an `s3` section instead.
+====
 
 .EKS and AKS (reference only)
 [%collapsible]
@@ -1039,11 +1195,16 @@ The cloud resources (the IAM role and log group on AWS, the workspace, rule, end
 
 * Platform monitoring is preconfigured and managed by Red Hat.
 User workload monitoring covers your applications, and you may need to turn it on.
+* Alertmanager sends no notifications by default, and Red Hat SRE watches the platform with its own tooling.
+On day one, configure a receiver, such as PagerDuty, Slack or a webhook, for the platform and user alerts your team owns; on ARO, also set Azure Resource Health alerts on the cluster resource.
+* For fleet or long-term metrics on ROSA, the platform Prometheus can remote write to Amazon Managed Service for Prometheus with SigV4 and add a cluster ID label to each series.
+Do not run a second Prometheus instance of your own: ROSA does not support it.
 * Application logging (Vector, optionally Loki for in-cluster storage) is an optional Operator that you install, upgrade and run.
 * Log forwarding uses the same short-lived credentials as your applications: an IAM role through STS on ROSA, a managed identity through workload identity on ARO.
-* Azure Monitor Container Insights reaches ARO only through Azure Arc.
-* ROSA control plane logs, such as the API server audit log, are not on your nodes.
-You forward them to CloudWatch or S3 with a log forwarder in OpenShift Cluster Manager.
+* Azure Monitor Container Insights and managed Prometheus, whose metrics Azure Managed Grafana reads, reach ARO through Azure Arc, which Microsoft lists as supported for ARO.
+ARO's support policy does not list remote write among the allowed changes to the default Prometheus, so check with support before you send its metrics to Azure Monitor that way.
+* ROSA control plane logs, such as the API server audit log, are not on your nodes: you forward them to CloudWatch or S3 with a log forwarder in OpenShift Cluster Manager.
+Turn it on when you create the cluster, because it cannot capture logs from before it was enabled.
 
 == Where Each Wins
 
@@ -1052,7 +1213,8 @@ You forward them to CloudWatch or S3 with a log forwarder in OpenShift Cluster M
 |ROSA and ARO win |EKS and AKS win
 
 |Useful metrics, dashboards and platform alerts from the first minute.
-|One-click managed backends with long-term storage and nothing in the cluster to run.
+|Managed metrics backends with long-term storage are native, with nothing in the cluster to run.
+ROSA reaches them with remote write, and ARO through Azure Arc.
 
 |The same monitoring and logging stack, and the same `ServiceMonitor` objects, on both clouds.
 |Native cloud console integration; on ARO, Azure Monitor needs Arc or a log forwarder you build.

@@ -39,6 +39,10 @@ The EKS and AKS column describes their standard modes; EKS Auto Mode and AKS Aut
 |The cloud provider, plus each add-on vendor.
 |One case covers the cloud and the platform.
 
+|Infrastructure as code
+|The cluster, node pools and add-ons are resources in one cloud API, described with Terraform, CloudFormation or Bicep.
+|ROSA: OCM-side settings (machine pools, IdPs, upgrades, AutoNode) go in Terraform with the `rhcs` provider, beside the AWS provider. ARO: azurerm or Bicep owns only the cluster resource. Cluster objects, including ARO's OAuth and MachineSets, go in Git.
+
 3+h|Module 2: Access and Workload Security
 
 |Cluster login

@@ -569,6 +569,37 @@ spec:
       kubernetes.io/metadata.name: sample-app
 ----
 
+=== Restricting Egress (Reference Only)
+
+NOTE: *Not validated:* this section, which no exercise runs.
+
+NetworkPolicy in this module controls incoming traffic.
+To limit which destinations outside the cluster a project's pods can reach, by CIDR or by DNS name, OVN-Kubernetes offers the EgressFirewall.
+A project has at most one, named `default`, and the first rule that matches a connection wins, so allow rules go before the final deny.
+A deny for `0.0.0.0/0` also blocks the cluster's API servers, so pods that call the Kubernetes API need an allow rule for them, by address or with a `nodeSelector` rule.
+Lookups through the cluster DNS service are not affected.
+A `dnsName` rule follows the name by polling DNS at its TTL, so use it for hosts whose addresses rarely change.
+Wildcard names depend on improved DNS resolution for egress firewall rules, which is a Technology Preview feature.
+
+This egress firewall allows one external host and denies everything else:
+
+[source,yaml]
+----
+apiVersion: k8s.ovn.org/v1
+kind: EgressFirewall
+metadata:
+  name: default
+  namespace: <project>
+spec:
+  egress:
+  - type: Allow
+    to:
+      dnsName: api.example.com
+  - type: Deny
+    to:
+      cidrSelector: 0.0.0.0/0
+----
+
 === Clean Up
 
 Remove the test client:
@@ -613,10 +644,19 @@ NOTE: *Not validated:* making the ROSA default ingress private after the cluster
 |Depends on the option
 |Ingress: yes; API: plan it at create
 |Plan it at create
+
+|Outbound path
+|Your VPC route tables
+|`--outbound-type`: load balancer, NAT gateway or user-defined routing; can change later
+|Your VPC route tables, through a NAT gateway or your own firewall
+|`--outbound-type UserDefinedRouting` at create, with private API and ingress only
 |===
 
 ROSA workers always reach the hosted control plane over AWS PrivateLink, public cluster or not.
 ROSA also offers clusters with no internet egress at all (egress zero).
+
+On ARO, egress lockdown (on by default for new clusters) carries the endpoints the service needs through the service itself, so your firewall only has to allow the optional ones, such as `registry.redhat.io`, `quay.io` and `api.openshift.com` for update checks.
+The ARO support policy does not allow an HTTPS proxy in the path of the service's own traffic, such as Azure Resource Manager and service logging (Geneva).
 
 == What Matters
 
@@ -625,6 +665,7 @@ ROSA also offers clusters with no internet egress at all (egress zero).
 * NetworkPolicy works with nothing to enable. A default-deny policy also blocks the router and monitoring until you allow the router's policy group and the user workload monitoring namespace.
 * AdminNetworkPolicy adds cluster-wide rules that project administrators cannot override. Keep its subjects away from `openshift-*` namespaces, which the platform and SRE need.
 * Egress IPs give a project a fixed source address, with cloud-specific limits: on AWS the capacity depends on the instance type, and on ARO namespace egress IPs need a private cluster created with user-defined routing. Public ARO clusters cannot use them.
+* An EgressFirewall, one per project, limits which destinations outside the cluster its pods can reach, by CIDR or by DNS name. DNS-name rules follow a host's addresses only as often as its TTL, so they suit hosts whose addresses rarely change.
 * A private API is an install-time choice on ROSA and ARO, and so is private ingress on ARO. ROSA workers always reach the hosted control plane over AWS PrivateLink.
 
 == Where Each Wins
@@ -636,8 +677,8 @@ ROSA also offers clusters with no internet egress at all (egress zero).
 |No pod address planning in your VPC or virtual network (as on Azure CNI Overlay, the AKS default; unlike the VPC CNI).
 |With the VPC CNI or an Azure CNI pod subnet, pods are first-class network citizens: routable addresses, security groups for pods (EKS), flow logs by pod address.
 
-|NetworkPolicy, AdminNetworkPolicy and BaselineAdminNetworkPolicy on by default, nothing to enable; egress IPs built in (on ARO, only on private clusters with user-defined routing).
-|Cilium on AKS adds an eBPF dataplane, L7 and FQDN policy.
+|NetworkPolicy, AdminNetworkPolicy and BaselineAdminNetworkPolicy on by default, nothing to enable; a built-in per-project egress firewall by CIDR or DNS name; egress IPs built in (on ARO, only on private clusters with user-defined routing).
+|Cilium on AKS adds an eBPF dataplane and, with Advanced Container Networking Services, L7 policy and FQDN policy through a DNS proxy that tracks address changes. EKS Auto Mode adds DNS-based policies.
 
 |A supported private pattern that keeps SRE access working.
 |Endpoint visibility can change after the cluster is created.
@@ -666,6 +707,8 @@ ROSA also offers clusters with no internet egress at all (egress zero).
 * ARO
 ** https://learn.microsoft.com/azure/openshift/concepts-ovn-kubernetes[OVN-Kubernetes in ARO]
 ** https://learn.microsoft.com/azure/openshift/howto-create-private-cluster-4x[Private ARO clusters]
+** https://learn.microsoft.com/azure/openshift/howto-restrict-egress[Restrict egress traffic in ARO]
 * OpenShift
 ** https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/network_security/admin-network-policy[AdminNetworkPolicy]
+** https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/network_security/egress-firewall[Egress firewall]
 ** https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/ovn-kubernetes_network_plugin/configuring-egress-ips-ovn[Egress IPs]

@@ -6,7 +6,7 @@ The comparison tables and summaries come from vendor documentation.
 
 On EKS and AKS, the cloud provider runs the control plane and you run almost everything else.
 On ROSA and ARO, Red Hat site reliability engineers (SRE) and the cloud provider also run the worker operating system and the platform components, and some settings you are used to changing are no longer yours.
-This section draws that line for all four platforms, and covers support, cost and backup, because they follow from the same line.
+This section draws that line for all four platforms, and covers support, cost, backup and infrastructure as code, because they follow from the same line.
 
 == On EKS and AKS
 
@@ -333,6 +333,11 @@ az rest \
 
 The deny assignment blocks every write by everyone else, including subscription owners.
 Only the exempt principals, such as the ARO resource provider, may change the resources.
+
+NOTE: Azure Policy assigned at the subscription or management group still applies to this managed resource group.
+A policy that blocks SRE maintenance there, such as one that requires tags on the resource group, makes the cluster unsupported.
+If a tagging policy applies, it may put at most 10 user-defined tags on the resources in it.
+Exempt this resource group from such policies; see the https://learn.microsoft.com/azure/openshift/support-policies-v4#cluster-management[ARO support policy].
 --
 ======
 
@@ -433,6 +438,8 @@ On ROSA and ARO, the platform components are part of the service, so one case co
 
 * On ROSA, the control plane runs in a Red Hat account, as EKS runs it in an AWS account; your workers reach it through AWS PrivateLink, where EKS uses cross-account network interfaces. On ARO it runs in your subscription, locked by a deny assignment.
 * Some cluster settings are SRE-owned. Changes to them are refused or reverted, so automation that worked on EKS or AKS may fail here. Test cluster-wide automation against a ROSA or ARO cluster before rolling it out.
+* On ROSA, Red Hat is not responsible for what you do as `cluster-admin`: removing or replacing a Red Hat-managed component can move the cluster to limited support, and SRE does not support installing another Prometheus instance. Scope your own agents, webhooks and policy engines, such as Kyverno or Gatekeeper, away from the `openshift-*` and `kube-*` namespaces, which are reserved for Red Hat components.
+* On ARO, subscription and management group Azure Policy still reaches the managed resource group. A policy that blocks SRE maintenance there, such as required tags, makes the cluster unsupported, so exempt that resource group.
 * Application backup is yours on every platform. SRE backs up etcd for its own disaster recovery, not for restores you request, and never your volumes.
 
 === Backup and Restore
@@ -577,6 +584,16 @@ The pricing pages in the references have current numbers.
 * Instance prices are the same, but on ROSA and ARO the platform's own pods (router, monitoring, registry, networking) use part of every cluster's worker capacity, and ARO needs at least three workers. The OpenShift fee scales with worker vCPUs, so commitments on it are a major lever on larger clusters, alongside compute commitments.
 * ROSA and ARO both carry a financially backed SLA and joint support: one case reaches both the cloud provider and Red Hat.
 
+=== Where Your Infrastructure as Code Lives
+
+On EKS and AKS, the cluster, its node pools and its add-ons are resources in one cloud API, described with Terraform, CloudFormation or Bicep.
+On ROSA and ARO, that description splits.
+
+* ROSA: AWS resources, such as the VPC and IAM roles, stay with the AWS provider. Machine pools, identity providers, upgrades and AutoNode live in OpenShift Cluster Manager (OCM), outside the cluster API, so GitOps cannot reach them. Manage them with the `rosa` CLI, the OCM console or API, or the https://registry.terraform.io/providers/terraform-redhat/rhcs/latest/docs[Red Hat `rhcs` Terraform provider].
+* ROSA: grant people access to those OCM settings per cluster with OCM roles, such as Cluster editor, Machine pool editor and Identity provider editor.
+* ARO: azurerm or Bicep owns the cluster resource only. In azurerm, changing the worker profile or the version forces a new cluster, so treat them as install-time settings.
+* Both: objects inside the cluster, including ARO's MachineSets, autoscalers and OAuth identity providers, belong in Git, applied with OpenShift GitOps.
+
 == Where Each Wins
 
 [cols="1,1",options="header"]
@@ -622,5 +639,6 @@ One vendor to deal with when you use only AWS or Microsoft add-ons.
 ** https://learn.microsoft.com/azure/openshift/responsibility-matrix[ARO responsibility matrix]
 ** https://learn.microsoft.com/azure/openshift/concepts-classic-hosted-control-planes-comparison[ARO standard and hosted control planes compared]
 ** https://learn.microsoft.com/azure/openshift/support-policies-v4[ARO support policies]
+** https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/redhat_openshift_cluster[azurerm_redhat_openshift_cluster (Terraform)]
 ** https://azure.microsoft.com/pricing/details/openshift/[ARO pricing]
 ** https://cloud.redhat.com/experts/misc/oadp/aro/[OADP on ARO (Cloud Experts)]

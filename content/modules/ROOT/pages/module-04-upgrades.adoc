@@ -29,10 +29,10 @@ Operators you add from the Software Catalog (GitOps, Logging, OADP) support thei
 == On EKS and AKS
 
 * EKS: upgrade the control plane one minor version at a time, update add-ons, then roll node groups or let Auto Mode replace nodes.
-Extended support is on by default and costs more per hour.
+Each version gets 14 months of standard support, then 12 months of extended support, which is on by default and costs more per hour.
 EKS can roll the control plane back one minor version within 7 days.
 * AKS: auto-upgrade channels and planned maintenance windows automate the control plane and node images.
-AKS long-term support keeps a version for two years.
+Each version is supported for one year, and AKS long-term support keeps it for two years.
 
 == On ROSA and ARO
 
@@ -317,6 +317,8 @@ spec:
 Do not create it on your ARO cluster in this workshop: it would start a real update at that time.
 ====
 
+If Terraform or Bicep describes your clusters, read xref:module-04-scaling-nodes.adoc#nodes-as-code[node pools as code] in Scaling Nodes first, which says which tool owns the version and the node pools on each platform.
+
 .EKS and AKS (reference only)
 [%collapsible]
 ====
@@ -556,7 +558,13 @@ In extreme cases you get 72 hours to apply a critical security patch, after whic
 Machine pools can trail the control plane by up to two minor versions, so you choose when nodes are replaced.
 Each replacement adds a new node before removing an old one, so the pool needs room in your EC2 quota and subnet.
 * Standard ARO upgrades the control plane and workers together, and you start every update yourself.
+* ARO patch releases ship about weekly, and nodes get OS fixes only through them.
+Set a regular patch rhythm, for example an `UpgradeConfig` for each update that starts it in your maintenance window.
 * A new minor version needs a channel change and sometimes an administrator acknowledgment.
+* *How long a version lasts:* ROSA supports each minor version for about 18 months after general availability.
+Even minor versions from 4.16 extend to 24 months with the Extended Update Support add-on, which the subscription includes, once you move the cluster to the `eus` channel group with `rosa edit cluster` and its `--channel-group` flag.
+* ARO ends each minor version about 18 months after OpenShift's general availability, on the date in the ARO release calendar, and a cluster past that date drops to Limited Support, with no SLA.
+Even minor versions from 4.16 extend to 24 months with Extended Update Support Term 1, which the subscription includes, on an `eus-4.y` channel.
 * [[upgrades-without-you]]*When the platform upgrades without you:* on both services, Red Hat may apply a critical security fix, on ARO after a 72-hour notice.
 On ROSA, a control plane past its end of life is moved to the next supported minor version; EKS does the same at the end of extended support.
 Otherwise a minor version never moves on its own.
@@ -575,7 +583,10 @@ Test updates on a non-production cluster first.
 |Newer Kubernetes versions sooner.
 
 |Upgrade-blocking checks and API usage counts catch problems before they start.
-|AKS maintenance windows and auto-upgrade channels; AKS long-term support for two years.
+|AKS maintenance windows and auto-upgrade channels.
+
+|Extended Update Support to 24 months on even minor versions, included in the ROSA and ARO subscriptions.
+|AKS long-term support for two years.
 
 |SRE watches the upgrade.
 |EKS can roll the control plane back one minor version within 7 days.

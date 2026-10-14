@@ -384,6 +384,18 @@ az aks nodepool add \
 ----
 ====
 
+[#nodes-as-code]
+.In production: node pools as code
+[NOTE]
+====
+On AKS, node pools are part of the cluster resource in Bicep or Terraform; on ROSA and ARO they are not.
+On ROSA, machine pools and the cluster and pool versions are OpenShift Cluster Manager resources, which the Red Hat `rhcs` Terraform provider manages beside the AWS provider; raising a `version` there schedules an upgrade.
+On ARO, Terraform or Bicep owns the cluster resource only.
+Its worker profile and version are install-time settings, and in the azurerm provider changing either forces a new cluster, so leave them alone after install and add them to `ignore_changes` if a plan after an upgrade proposes a replacement.
+ARO's MachineSets, MachineAutoscalers, ClusterAutoscaler and OAuth configuration live in the cluster, as do Karpenter NodePools on ROSA.
+Keep them in Git and apply them with OpenShift GitOps, which you installed in xref:module-01-what-ships.adoc[What Ships and How You Extend It].
+====
+
 [#ex-module-04-scaling-nodes-3]
 === Exercise 3: Scale the Sample Application Past Capacity
 

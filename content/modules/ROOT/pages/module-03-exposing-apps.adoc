@@ -477,7 +477,7 @@ To reach the Gateway by name, create the DNS record in a zone you manage.
 ======
 
 The Gateway serves plain HTTP because nothing gave it a certificate.
-Unlike a Route, a Gateway listener needs a certificate that you provide, for example from cert-manager.
+Unlike a Route, a Gateway listener needs a certificate that you provide, for example from cert-manager, as in <<production-custom-domains,In production: custom domains and certificates>>.
 
 Each Gateway costs its own load balancer on ROSA, and its own public IP and rules on the cluster's Azure load balancer on ARO, so remove this one:
 
@@ -519,6 +519,81 @@ The ROSA load balancer type was read from its host name and annotations, not che
 * ALB and NGINX annotations do nothing here. Route behavior is set with `haproxy.router.openshift.io/*` annotations instead, for example timeouts and rewrites.
 * On ROSA, SRE owns the default ingress controller's settings, and `rosa edit ingress` changes only its visibility and component routes. For other needs you add another ingress controller, or the AWS Load Balancer Operator for ALBs.
 * OpenShift supports the Gateway API from 4.19. Each Gateway needs its own certificate. It gets its own load balancer on ROSA, a Classic Load Balancer rather than a Network Load Balancer like the router's, and its own public IP and rules on the cluster's Azure load balancer on ARO. The ROSA and ARO documentation do not cover it yet, it needs `cluster-admin` (not `dedicated-admin` on ROSA), and on ARO's default domain you manage its DNS yourself, so check it on your clusters before you rely on it.
+* ARO has no Application Gateway or Application Gateway for Containers add-on like AKS, so a WAF sits in front of the router: Front Door Premium with Private Link to the internal router, which needs private ingress visibility chosen at create, or Application Gateway pointed at the router. Private apps can use a second IngressController with an internal load balancer.
+
+[#production-custom-domains]
+.In production: custom domains and certificates (reference only)
+[%collapsible]
+====
+Production apps use their own host names, so each needs a DNS record and a certificate that renews itself.
+Install the cert-manager Operator for Red Hat OpenShift and create an ACME issuer with a DNS-01 solver: Route 53 through an IAM role on ROSA, with the IRSA annotation from xref:module-02-cloud-credentials.adoc[Pod Cloud Credentials], or Azure DNS on ARO, where Red Hat documents a service principal.
+A Route serves the issued secret through `spec.tls.externalCertificate`, and a Gateway listener names it in `certificateRefs`, so a Gateway's Certificate goes in `openshift-ingress`.
+For DNS, point a record for each host at the router's load balancer (a CNAME on ROSA, an A record on ARO), or let the External DNS Operator create records from Routes after you check that it works with your cluster's cloud credentials.
+On ROSA, use the AWS Load Balancer Operator instead of the router when you need an ALB with an ACM certificate or AWS WAF.
+The Cloud Experts guides for https://cloud.redhat.com/experts/rosa/dynamic-certificates/[ROSA] and https://cloud.redhat.com/experts/aro/cert-manager/[ARO] walk through the issuer setup.
+
+NOTE: *Not validated:* cert-manager, the External DNS Operator and the AWS Load Balancer Operator, which were not run on a cluster.
+
+This Certificate asks for a custom host's certificate from a ClusterIssuer named `letsencrypt-dns01`, which you set up as the guides show:
+
+[source,yaml]
+----
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: sample-app-custom
+  namespace: sample-app
+spec:
+  secretName: sample-app-custom-tls
+  dnsNames:
+  - sample-app.example.com
+  issuerRef:
+    kind: ClusterIssuer
+    name: letsencrypt-dns01
+----
+
+The router serves the secret only after its service account may read it:
+
+[source,bash]
+----
+oc create role secret-reader \
+  --verb get,list,watch \
+  --resource secrets \
+  --resource-name sample-app-custom-tls \
+  --namespace sample-app
+----
+
+[source,bash]
+----
+oc create rolebinding secret-reader-binding \
+  --role secret-reader \
+  --serviceaccount openshift-ingress:router \
+  --namespace sample-app
+----
+
+This Route serves the secret for the custom host:
+
+[source,yaml]
+----
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: sample-app-custom
+  namespace: sample-app
+spec:
+  host: sample-app.example.com
+  to:
+    kind: Service
+    name: sample-app
+  port:
+    targetPort: 8080
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+    externalCertificate:
+      name: sample-app-custom-tls
+----
+====
 
 == Where Each Wins
 
@@ -541,7 +616,7 @@ The ROSA load balancer type was read from its host name and annotations, not che
 
 == App Teams Will Notice
 
-* Their app gets a host name like `sample-app-sample-app.apps...` without asking for DNS. They can still set a custom host name, which then needs DNS and a certificate.
+* Their app gets a host name like `sample-app-sample-app.apps...` without asking for DNS. They can still set a custom host name, which then needs DNS and a certificate, as in <<production-custom-domains,In production: custom domains and certificates>>.
 * The router's default timeout is 30 seconds. Long requests need the `haproxy.router.openshift.io/timeout` annotation on the Route.
 * The first namespace to claim a host name owns it. Another project cannot take over the same host.
 * Ingress manifests from EKS or AKS need their class and annotations reviewed, not just applied.
@@ -561,3 +636,4 @@ The ROSA load balancer type was read from its host name and annotations, not che
 * OpenShift (ARO uses the OpenShift documentation)
 ** https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/ingress_and_load_balancing/routes[Routes]
 ** https://docs.redhat.com/en/documentation/openshift_container_platform/4.22/html/ingress_and_load_balancing/configuring-gateway-api[Configuring Gateway API]
+** https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/security_and_compliance/cert-manager-operator-for-red-hat-openshift[cert-manager Operator for Red Hat OpenShift]

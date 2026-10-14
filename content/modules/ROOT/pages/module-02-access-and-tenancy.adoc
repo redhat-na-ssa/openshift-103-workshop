@@ -236,6 +236,7 @@ TENANT_ID=$(az account show \
   --output tsv)
 ----
 
+On a cluster that already has identity providers, add this entry to the existing `identityProviders` list instead, because applying this spec replaces the whole list.
 Point the OAuth server at Entra ID:
 
 [source,bash]
@@ -673,10 +674,15 @@ az role assignment create \
 
 * ROSA recommends the `dedicated-admin` role over `cluster-admin` for day-to-day administration: grant it with `rosa grant user dedicated-admin`. It can manage projects, quotas, Operators and network policy, but not privileged workloads or SRE-owned namespaces. ARO has no `dedicated-admin`; you start from kubeadmin and grant `cluster-admin` yourself.
 * Remove the `rosa create admin` user and the kubeadmin user once real administrators can log in, or keep them only as break-glass access.
+* On ARO, Azure RBAC on the cluster resource still grants cluster-admin: anyone allowed `listCredentials` (the kubeadmin password, `az aro list-credentials`) or `listAdminCredentials` (`az aro get-admin-kubeconfig`), which Contributor and Owner include, gets admin access. Deleting the kubeadmin secret cannot be undone and does not close the admin kubeconfig path, so gate both actions with a custom role or a PIM-eligible assignment, as you would `listClusterAdminCredential` on AKS.
 * Every logged-in user can create projects by default, through the self-provisioner role. Decide on day one whether to keep that.
 * The project template covers only project requests. If your teams' namespaces come from GitOps or infrastructure as code, put quotas and limits there, as you do on EKS and AKS.
 * Group membership comes from `oc adm groups`, from the identity provider's group claims at login (Entra ID, OIDC), or from LDAP group sync. OpenShift does not read IAM or Azure RBAC.
+* An OpenID identity provider's client secret expires (`az ad app credential reset` makes it valid for one year by default), and then every sign-in through that provider fails, on ARO and ROSA alike. Track the expiry and rotate early: on ARO, add a new secret with `--append` and update the secret in `openshift-config`; on ROSA, check how to update the provider's secret in OpenShift Cluster Manager.
+* Removing a leaver from the identity provider does not end their sessions: OAuth access tokens stay valid for 24 hours by default, and their User and Identity objects stay. Delete their OAuthAccessToken objects, User and Identity, and on ARO consider a shorter `accessTokenMaxAgeSeconds` in the OAuth resource.
+* OpenShift has no equivalent of the PIM-eligible Azure role assignments that AKS teams use for just-in-time admin access. The closest pattern is PIM for Groups with Entra ID group claims bound to an OpenShift role, and the claims refresh only when the user logs in again.
 * ROSA can skip the OAuth server and use an external OIDC provider such as Entra ID directly, which is closer to the EKS and AKS model. It must be chosen when the cluster is created and cannot be reverted. ARO offers external authentication only on its hosted control planes preview.
+* CI pipelines and a central Argo CD should not use an OAuth login: give each a ServiceAccount, a RoleBinding scoped to the projects it deploys to, and a token, where EKS uses an IAM role plus an access entry. ROSA clusters created with external authentication can also use your OIDC provider for this machine-to-machine access.
 
 == Where Each Wins
 
