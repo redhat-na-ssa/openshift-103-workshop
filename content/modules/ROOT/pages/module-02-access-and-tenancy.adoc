@@ -46,12 +46,23 @@ image::module-02-login-flow.svg["Login flow on EKS, AKS, ROSA and ARO",link=self
 You work as two people on each cluster: a cluster administrator, and a developer who logs in through an identity provider.
 Use separate terminals so the two logins don't overwrite each other.
 
+.Exercises on this page
+* <<ex-module-02-access-and-tenancy-1>>
+* <<ex-module-02-access-and-tenancy-2>>
+* <<ex-module-02-access-and-tenancy-3>>
+* <<ex-module-02-access-and-tenancy-4>>
+* <<ex-module-02-access-and-tenancy-5>>
+
+[#ex-module-02-access-and-tenancy-1]
 === Exercise 1: Log in as the cluster administrator
 
 If you already logged in to both clusters in Module 1, keep those terminals and skip to Exercise 2.
 
-==== ROSA
-
+[tabs]
+======
+ROSA (AWS)::
++
+--
 Give this terminal its own kubeconfig file:
 
 [source,bash]
@@ -79,9 +90,10 @@ rosa create admin \
 
 The command prints an `oc login` command with a generated password.
 Wait about a minute, then run that command.
-
-==== ARO
-
+--
+ARO (Azure)::
++
+--
 Give this terminal its own kubeconfig file:
 
 [source,bash]
@@ -127,8 +139,8 @@ oc login "$API_URL" \
   --username kubeadmin \
   --password "$KUBEADMIN_PASSWORD"
 ----
-
-==== Both clusters
+--
+======
 
 Check who you are:
 
@@ -164,13 +176,17 @@ az aks get-credentials \
 There is no separate login step and no shared administrator password, unless you use the AKS local account, which most teams disable.
 ====
 
+[#ex-module-02-access-and-tenancy-2]
 === Exercise 2: Add an identity provider
 
 NOTE: *Not validated:* signing in through either identity provider, which the validation environments do not allow.
 On ARO, the steps up to and including the authentication Operator rollout were validated.
 
-==== ROSA
-
+[tabs]
+======
+ROSA (AWS)::
++
+--
 NOTE: *Not validated:* `rosa create idp`, which needs the `rosa` CLI logged in to the cluster's organization.
 
 On ROSA, you add identity providers with the `rosa` CLI, and Red Hat applies them to the cluster.
@@ -198,9 +214,10 @@ rosa create idp \
 ----
 
 The provider is usually ready within two minutes.
-
-==== ARO
-
+--
+ARO (Azure)::
++
+--
 On ARO, you configure the cluster's OAuth resource yourself.
 This exercise adds Microsoft Entra ID, the identity provider your AKS users already have.
 
@@ -363,6 +380,8 @@ Set its user name, which is your email address or UPN:
 ----
 export DEV_USER=<your-entra-email>
 ----
+--
+======
 
 .EKS and AKS (reference only)
 [%collapsible]
@@ -388,6 +407,7 @@ az role assignment create \
 ----
 ====
 
+[#ex-module-02-access-and-tenancy-3]
 === Exercise 3: Log in as the developer
 
 NOTE: *Not validated:* this exercise, which needs a working identity provider login.
@@ -403,8 +423,11 @@ export KUBECONFIG=~/.kube/rosa-dev
 
 Use `~/.kube/aro-dev` on ARO.
 
-==== ROSA
-
+[tabs]
+======
+ROSA (AWS)::
++
+--
 In the developer terminal, set the same variables as in the administrator terminal:
 
 [source,bash]
@@ -431,16 +454,17 @@ oc login "$API_URL" \
   --username "$DEV_USER" \
   --password "$DEV_PASSWORD"
 ----
-
-==== ARO
-
+--
+ARO (Azure)::
++
+--
 Open the console URL from Exercise 2 in a private browser window.
 Choose *entraID*, sign in with your Entra ID account, and accept the consent prompt.
 
 Then get a CLI token: open the user menu at the top right, choose *Copy login command*, choose *entraID* again, and choose *Display Token*.
 Run the `oc login --token=...` command it shows in the developer terminal.
-
-==== Both clusters
+--
+======
 
 In the developer terminal, check who you are and what you can see:
 
@@ -471,6 +495,7 @@ oc get identities
 OpenShift creates a User for each person and an Identity that links it to the identity provider account.
 EKS and AKS keep no such objects: the user exists only in IAM or Entra ID.
 
+[#ex-module-02-access-and-tenancy-4]
 === Exercise 4: Let the developer create a project
 
 In the developer terminal, create a project:
@@ -638,6 +663,7 @@ kubectl create quota default-quota \
 Tools such as Capsule, the Hierarchical Namespace Controller or a Kyverno generate policy fill the gap that project templates fill on OpenShift.
 ====
 
+[#ex-module-02-access-and-tenancy-5]
 === Exercise 5: Give a team a project
 
 In the administrator terminal, create a group and add the developer to it:
@@ -719,7 +745,7 @@ az role assignment create \
 * Every logged-in user can create projects by default, through the self-provisioner role. Decide on day one whether to keep that.
 * The project template covers only project requests. If your teams' namespaces come from GitOps or infrastructure as code, put quotas and limits there, as you do on EKS and AKS.
 * Group membership comes from `oc adm groups`, from the identity provider's group claims at login (Entra ID, OIDC), or from LDAP group sync. OpenShift does not read IAM or Azure RBAC.
-* ROSA HCP can skip the OAuth server and use an external OIDC provider such as Entra ID directly, which is closer to the EKS and AKS model. It must be chosen when the cluster is created and cannot be reverted. ARO offers external authentication only on its hosted control planes preview.
+* ROSA can skip the OAuth server and use an external OIDC provider such as Entra ID directly, which is closer to the EKS and AKS model. It must be chosen when the cluster is created and cannot be reverted. ARO offers external authentication only on its hosted control planes preview.
 
 == Where Each Wins
 
@@ -768,7 +794,7 @@ Decide whether to offer these, or to keep builds in the CI system your teams alr
 * ROSA
 ** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/authentication_and_authorization/sd-configuring-identity-providers[Configuring identity providers]
 ** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/authentication_and_authorization/using-rbac[Granting cluster-admin and dedicated-admin]
-** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/install_clusters/rosa-hcp-sts-creating-a-cluster-ext-auth[HCP with external authentication]
+** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/install_clusters/rosa-hcp-sts-creating-a-cluster-ext-auth[External authentication]
 ** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/building_applications/projects[Projects on ROSA]
 * ARO
 ** https://learn.microsoft.com/azure/openshift/configure-azure-ad-cli[Configure Entra ID authentication]
