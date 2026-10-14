@@ -616,7 +616,7 @@ The pricing pages in the references have current numbers.
 ** https://learn.microsoft.com/azure/aks/free-standard-pricing-tiers[AKS pricing tiers]
 ** https://learn.microsoft.com/azure/backup/azure-kubernetes-service-backup-overview[Azure Backup for AKS]
 * ROSA
-** https://docs.openshift.com/rosa/rosa_policy/rosa-policy-responsibility-matrix.html[ROSA responsibility matrix]
+** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/introduction_to_rosa/policies-and-service-definition#rosa-policy-responsibility-matrix[ROSA responsibility matrix]
 ** https://docs.aws.amazon.com/rosa/latest/userguide/rosa-architecture-models.html[ROSA architecture models]
 ** https://aws.amazon.com/rosa/pricing/[ROSA pricing]
 ** https://docs.aws.amazon.com/rosa/latest/userguide/rosa-support.html[ROSA support]

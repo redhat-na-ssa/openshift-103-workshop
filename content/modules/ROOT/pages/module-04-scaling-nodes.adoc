@@ -874,7 +874,7 @@ A PodDisruptionBudget that allows no disruptions, or a pod with local storage, k
 * ROSA
 ** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/cluster_administration/managing-compute-nodes-using-machine-pools[Managing compute nodes with machine pools]
 ** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/cluster_administration/rosa-cluster-autoscaling-hcp[Cluster autoscaling on ROSA]
-** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/cluster_administration/rosa-nodes-autonode-managing[Red Hat build of Karpenter on ROSA]
+** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/cluster_administration/managing-compute-nodes-using-red-hat-build-of-karpenter[Red Hat build of Karpenter on ROSA]
 ** https://www.redhat.com/en/blog/introducing-red-hat-build-karpenter[Introducing the Red Hat build of Karpenter]
 * ARO
 ** https://learn.microsoft.com/azure/openshift/howto-infrastructure-nodes[MachineSets on ARO]
