@@ -1,0 +1,30 @@
+# Gitleaks configuration for this workshop.
+#
+# Keeps every built-in gitleaks rule and adds a rule for hard-coded
+# passwords. Workshop content contains a few placeholder passwords and demo
+# tokens on purpose; each one is allowlisted below by its exact value, so
+# any other password or token still fails the scan.
+#
+# Run locally:
+#   gitleaks git --config .gitleaks.toml .
+#   gitleaks dir --config .gitleaks.toml .
+
+title = "Workshop gitleaks config"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "hardcoded-password"
+description = "Password written as a literal value in YAML, a shell variable or a CLI flag"
+regex = '''(?i)(?:--[\w-]*(?:passw(?:or)?d|passwd)(?:=|[ \t]+)|\b[\w.-]*(?:passw(?:or)?d|passwd|sshpass)[\w.-]*["']?[ \t]*[:=][ \t]*)["']?([^\s"'`$\\{}()<>|#,;\[\]]{3,})'''
+secretGroup = 1
+keywords = ["pass"]
+
+[[rules.allowlists]]
+description = "Placeholder passwords used in the workshop content"
+regexTarget = "secret"
+regexes = [
+  # htpasswd developer password that attendees set in Module 2
+  '''^Workshop\-Dev\-2026$''',
+]
