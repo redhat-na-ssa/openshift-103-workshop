@@ -1,5 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="560" height="756" viewBox="0 0 560 756">
-<rect x="0" y="0" width="560" height="756" fill="#ffffff"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="560" height="772" viewBox="0 0 560 772">
+<rect x="0" y="0" width="560" height="772" fill="#ffffff"/>
 <text x="16" y="30" font-family="Helvetica, Arial, sans-serif" font-size="18" font-weight="bold" text-anchor="start" fill="#151515">Why my pod failed on OpenShift</text>
 <rect x="16" y="48" width="528" height="58" rx="6" fill="#fff1f0" stroke="#c9190b" stroke-width="1.5"/>
 <text x="280.0" y="72.83333333333333" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Deployment shows 0 pods; ReplicaSet event</text>
@@ -13,8 +13,8 @@
 <text x="148.0" y="182.83333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">fixed ID, such as 1000</text>
 <line x1="254" y1="170" x2="281" y2="170" stroke="#4d5258" stroke-width="1.6"/><polygon points="288,170 280,165.5 280,174.5" fill="#4d5258"/>
 <rect x="290" y="140" width="254" height="60" rx="6" fill="#eef6ec" stroke="#3e8635" stroke-width="1.5"/>
-<text x="417.0" y="165.83333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Remove it and let the</text>
-<text x="417.0" y="182.83333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">namespace's range apply</text>
+<text x="417.0" y="165.83333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Remove it, or set</text>
+<text x="417.0" y="182.83333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">hostUsers: false (restricted-v3)</text>
 <line x1="24" y1="106" x2="24" y2="244" stroke="#4d5258" stroke-width="1.4"/>
 <line x1="24" y1="244" x2="35" y2="244" stroke="#4d5258" stroke-width="1.6"/><polygon points="42,244 34,239.5 34,248.5" fill="#4d5258"/>
 <rect x="44" y="214" width="208" height="60" rx="6" fill="#f3f4f5" stroke="#6a6e73" stroke-width="1.5"/>
@@ -65,6 +65,7 @@
 <rect x="290" y="618" width="254" height="60" rx="6" fill="#eef6ec" stroke="#3e8635" stroke-width="1.5"/>
 <text x="417.0" y="643.8333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">Make them group-0</text>
 <text x="417.0" y="660.8333333333334" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="middle" fill="#151515">readable in the image</text>
-<text x="16" y="712" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="start" fill="#4d5258">Granting the anyuid SCC makes both kinds of failure go away, by running the</text>
-<text x="16" y="730" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="start" fill="#4d5258">container as root. Use it as a last resort.</text>
+<text x="16" y="712" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="start" fill="#4d5258">Granting the anyuid SCC fixes only the fixed-ID and root-only causes, by running</text>
+<text x="16" y="730" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="start" fill="#4d5258">the container as root. It does not allow privileged pods, host access or extra</text>
+<text x="16" y="748" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="normal" text-anchor="start" fill="#4d5258">capabilities. Use it as a last resort.</text>
 </svg>

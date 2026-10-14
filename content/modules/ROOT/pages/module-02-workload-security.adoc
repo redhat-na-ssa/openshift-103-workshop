@@ -312,7 +312,9 @@ oc logs deployment/sample-app \
   --namespace sample-app
 ----
 
-It runs under `anyuid`, as user ID 0: real root on the node, contained only by SELinux and the dropped capabilities.
+It runs under `anyuid`, as user ID 0: real root on the node.
+Unlike `restricted-v2`, `anyuid` drops only the `MKNOD` capability and allows privilege escalation, so the container keeps CRI-O's default capabilities, such as `CHOWN`, `DAC_OVERRIDE`, `SETUID` and `SETGID`.
+SELinux and the lack of host access are what still contain it.
 The namespace's Pod Security Admission labels changed as well:
 
 [source,bash]
@@ -349,7 +351,12 @@ oc rollout status deployment/sample-app \
   --namespace sample-app
 ----
 
-Use `anyuid` only for images you cannot change, and grant it to one dedicated service account, never to `default`.
+When an image or chart needs a fixed user ID, use the narrowest option that works:
+
+. Set `hostUsers: false` in the pod spec. `restricted-v3` then admits user IDs from 1000 to 65534 inside a Linux user namespace, with no grant at all.
+. Grant `nonroot-v2` to one dedicated service account, for any non-root user ID with all capabilities dropped. On ROSA, a `dedicated-admin` can grant only `nonroot`, its older and less strict version.
+. Grant `anyuid` only for images that must run as user ID 0, and only to one dedicated service account, never to `default`.
+
 Before granting any SCC, you can ask which one the application's pods would get:
 
 [source,bash]
@@ -376,6 +383,7 @@ The next section gives it cloud credentials.
 * SCCs are granted to service accounts, users and groups through RBAC, not set per namespace. For Deployments, only the pod's service account counts.
 * A fixed `runAsUser` outside the namespace's range is rejected at admission. A root image that needs to write as root is admitted and then crashes. Learn to tell the two apart: no pods and a `FailedCreate` event, or a pod in `CrashLoopBackOff`.
 * OpenShift 4.20 and later also ship `restricted-v3`, which runs pods in a Linux user namespace. Pods use it only if they set `hostUsers: false`; everything else still lands on `restricted-v2`.
+* For a fixed user ID, use the narrowest option: `hostUsers: false` with `restricted-v3`, then `nonroot-v2` (`nonroot` on ROSA as `dedicated-admin`), and `anyuid` only for images that need root. `anyuid` keeps the default capabilities and allows privilege escalation.
 * Pod Security Admission runs too, but OpenShift enforces `privileged` cluster-wide and syncs only the `warn` and `audit` labels from the SCCs. Upstream tooling that reads those labels still works.
 * Never edit the default SCCs; create a custom SCC if you need one. On ROSA, a managed webhook blocks changes to the default SCCs, and `dedicated-admin` can grant only `anyuid` and `nonroot`.
 
