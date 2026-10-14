@@ -216,10 +216,25 @@ oc get packagemanifests \
 
 == Cost and Cleanup
 
-ROSA and ARO clusters cost money while they run.
-At the end of the workshop, delete the cloud resources attendees created: IAM roles and policies (including the Karpenter and log forwarding roles from Module 4), S3 buckets, ECR repositories, CloudWatch log groups, managed identities, storage accounts, container registries, Log Analytics workspaces, and data collection rules and endpoints.
-Also detach the ECR read policy from the ROSA worker IAM role, which other ROSA clusters in the account share, and delete the Entra ID app registration for the ARO identity provider.
-Then delete the clusters, following:
+The clusters, and the cloud resources attendees create during the workshop, are billed for as long as they exist.
+After the workshop, clean up each cloud account in this order.
 
-* https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/install_clusters/index[Deleting ROSA with HCP clusters]
-* https://learn.microsoft.com/azure/openshift/howto-understand-managed-identities[Deleting ARO clusters with managed identities]
+[tabs]
+======
+ROSA (AWS)::
++
+--
+. Detach the ECR read policy from the ROSA worker IAM role. Other ROSA clusters in the account share that role, so do not delete it.
+. Delete the IAM roles and policies attendees created, including the Karpenter and log forwarding roles from Module 4.
+. Delete the S3 buckets, ECR repositories and CloudWatch log groups attendees created.
+. Delete the cluster, following https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/install_clusters/index[Deleting ROSA with HCP clusters].
+--
+ARO (Azure)::
++
+--
+. Delete the Entra ID app registration for the ARO identity provider.
+. Delete the managed identities, storage accounts and container registries attendees created.
+. Delete the Log Analytics workspaces, and the data collection rules and endpoints.
+. Delete the cluster, following https://learn.microsoft.com/azure/openshift/howto-understand-managed-identities[Deleting ARO clusters with managed identities].
+--
+======

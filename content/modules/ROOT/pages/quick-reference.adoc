@@ -1,0 +1,183 @@
+= Quick Reference
+
+This page sums up the workshop: the habits that change when you move from EKS or AKS to ROSA or ARO, the commands worth keeping at hand, and the traps to remember.
+Each row points back to the module that covers it.
+
+NOTE: The commands here are copied from the modules, which mark anything that was not validated on a live cluster.
+
+== Habits That Change
+
+[cols="2,3,4",options="header"]
+|===
+|Topic |On EKS and AKS |On ROSA and ARO
+
+3+h|Module 1: The Service Model
+
+|Control plane
+|Run by AWS or Microsoft, out of sight.
+|ROSA: in Red Hat's AWS account, like EKS. ARO: in your subscription, locked by a deny assignment.
+
+|Node OS and platform components
+|You roll out node images and every add-on version.
+|SRE patches them together, in the same upgrade as the cluster.
+
+|Add-ons
+|You pick, install and version each one.
+|Platform plumbing ships as cluster Operators. Anything else comes from the Software Catalog, and you run it.
+
+|Platform health
+|You check each add-on.
+|One view: the cluster Operators.
+
+|Backup
+|AWS Backup or Azure Backup, as a managed service.
+|The OADP Operator, which you install and run.
+
+|Support
+|The cloud provider, plus each add-on vendor.
+|One case covers the cloud and the platform.
+
+3+h|Module 2: Access and Workload Security
+
+|Cluster access
+|IAM or Entra ID mapped to Kubernetes RBAC.
+|OpenShift OAuth with an identity provider. On ROSA, `dedicated-admin` for day-to-day administration.
+
+|Pod security
+|Pod Security Admission labels per namespace.
+|Security context constraints: pods run as a random user ID with no capabilities, by default.
+
+|Pod cloud credentials
+|IRSA or EKS Pod Identity, AKS workload identity.
+|ROSA: the IRSA service account annotation. ARO: workload identity, on clusters created with managed identities.
+
+3+h|Module 3: Networking
+
+|Exposing an app
+|Ingress with the ALB controller or AKS app routing.
+|A Route on the router that ships. An Ingress without a class still becomes a Route.
+
+|Pod network
+|Pods take VPC or virtual network addresses.
+|OVN-Kubernetes overlay. Pods never use VPC addresses; outside the cluster you see node addresses.
+
+|Network policy
+|You enable a policy engine.
+|Works out of the box. AdminNetworkPolicy adds cluster-wide rules.
+
+3+h|Module 4: Day-2 Operations
+
+|Node scaling
+|Cluster Autoscaler or Karpenter, or node pools.
+|ROSA: machine pools through the `rosa` CLI. ARO: MachineSets in the cluster.
+
+|Upgrades
+|Control plane, then node groups and node images.
+|ROSA: control plane first, then each machine pool. ARO: the whole cluster at once, started by you. No rollback on either.
+
+|Metrics
+|You install Prometheus or use a managed service.
+|Platform monitoring ships. Turn on user workload monitoring for your apps.
+
+|Logs
+|Fluent Bit, the CloudWatch agent or Container insights.
+|The Logging Operator, using the same short-lived cloud credentials as your apps.
+|===
+
+== Commands to Keep
+
+=== On Both Clusters
+
+Which release the cluster runs, and its update history:
+
+[source,bash]
+----
+oc get clusterversion
+----
+
+Whether every platform component is healthy:
+
+[source,bash]
+----
+oc get clusteroperators
+----
+
+Where the control plane runs:
+
+[source,bash]
+----
+oc get infrastructure cluster \
+  -o jsonpath='{.status.controlPlaneTopology}{"\n"}'
+----
+
+Which Operators the Software Catalog offers:
+
+[source,bash]
+----
+oc get packagemanifests \
+  --namespace openshift-marketplace
+----
+
+=== Per Cloud
+
+[tabs]
+======
+ROSA (AWS)::
++
+--
+Describe the cluster: its control plane, version and IAM roles:
+
+[source,bash]
+----
+rosa describe cluster \
+  --cluster <cluster-name>
+----
+
+List the machine pools that hold your worker nodes:
+
+[source,bash]
+----
+rosa list machinepools \
+  --cluster <cluster-name>
+----
+
+Show the default ingress settings, which you change through `rosa`, not in the cluster:
+
+[source,bash]
+----
+rosa list ingresses \
+  --cluster <cluster-name>
+----
+--
+ARO (Azure)::
++
+--
+Describe the cluster and find its managed resource group:
+
+[source,bash]
+----
+az aro show \
+  --resource-group <resource-group> \
+  --name <cluster-name> \
+  --query clusterProfile
+----
+
+List the MachineSets that hold your worker nodes:
+
+[source,bash]
+----
+oc get machinesets \
+  --namespace openshift-machine-api
+----
+--
+======
+
+== Remember
+
+* Some cluster settings belong to SRE. Changes to them are refused or reverted, so test cluster-wide automation on a ROSA or ARO cluster first.
+* Catalog Operators such as GitOps and Logging are yours to run: their capacity, configuration and updates.
+* An Ingress that still names the `alb` or AKS app routing class is ignored. Drop the class, or use a Route.
+* A default-deny network policy also blocks the router and monitoring until you allow them.
+* Pod cloud credentials apply only to pods created after you annotate the service account. Restart the workload.
+* ARO workload identity needs a cluster created with managed identities. A service principal cluster cannot be converted.
+* Application backup is always yours. SRE's etcd backups are for their own recovery.

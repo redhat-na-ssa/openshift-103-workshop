@@ -9,4 +9,6 @@ asciidoc:
     lab_name: "OpenShift Cloud Workshop"
     release-version: master
     page-pagination: true
+    # provider tabs: picking ROSA or ARO switches every tab set on the page
+    tabs-sync-option: ''
     page-links: []
