@@ -71,7 +71,6 @@ Attendees install these Operators during the exercises:
 |Red Hat OpenShift Logging
 |4
 |Channel `stable-6.6`. Forwards application logs to CloudWatch and to Azure Monitor Logs through the Logs Ingestion API.
-|Forwards application logs to CloudWatch and Azure Monitor Logs.
 
 |Red Hat OpenShift Service Mesh 3
 |3

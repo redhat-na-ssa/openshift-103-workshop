@@ -1,6 +1,6 @@
 = Upgrades
 
-NOTE: The exercises in this section are written but not yet validated on ROSA and ARO.
+NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026, except the steps that use the `rosa` CLI, which include Exercise 3.
 
 On EKS you upgrade the control plane, then each add-on against a compatibility matrix, then the nodes.
 On ROSA and ARO one release moves Kubernetes, the node OS and every platform Operator together, with checks that block an upgrade when something is not ready.

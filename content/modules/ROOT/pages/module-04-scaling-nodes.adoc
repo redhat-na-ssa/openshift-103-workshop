@@ -1,6 +1,6 @@
 = Scaling Nodes
 
-NOTE: The exercises in this section are written but not yet validated on ROSA and ARO.
+NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026, except the steps that use the `rosa` or `aws` CLI and Exercise 4, which needs ROSA HCP 4.22.
 
 EKS Auto Mode, Karpenter and AKS node auto-provisioning pick an instance type for each batch of pending pods, mix spot and on-demand capacity, and consolidate nodes.
 ROSA and ARO scale in groups of identical nodes: machine pools on ROSA, MachineSets on ARO, with the cluster autoscaler.
@@ -302,6 +302,7 @@ oc get machines \
 ----
 
 Press Ctrl+C when its phase is `Running`.
+The new node is in the same availability zone as the MachineSet you copied.
 
 .EKS and AKS (reference only)
 [%collapsible]
@@ -425,6 +426,7 @@ rosa list machinepools \
 
 New nodes take several minutes to boot, install and join.
 Read the rest of this exercise while you wait, then press Ctrl+C when all pods are `Running`.
+For a minute, pods from the previous rollout can still run on the regular workers while they are replaced.
 
 What is happening:
 

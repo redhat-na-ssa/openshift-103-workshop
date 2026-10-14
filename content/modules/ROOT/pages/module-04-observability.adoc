@@ -1,6 +1,6 @@
 = Observability
 
-NOTE: The exercises in this section are written but not yet validated on ROSA and ARO.
+NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026, except the steps that use the `rosa`, `aws` or `az` CLI. The CloudWatch forwarder was checked up to the collector assuming its IAM role, and the Azure Monitor forwarder only against the API schema.
 
 On EKS and AKS you choose a monitoring and logging stack and wire it up, usually CloudWatch or Azure Monitor with managed Prometheus.
 ROSA and ARO ship Prometheus, Alertmanager and console dashboards, with platform alerts tuned by SRE.
@@ -190,6 +190,7 @@ EOF
 ----
 
 The network policy from xref:module-03-pod-networking.adoc[Pod Networking and Policy] already lets user workload monitoring reach the application.
+Wait a minute, so that Prometheus scrapes the application at least once before you send requests.
 
 Send some requests through the application's route:
 
@@ -206,6 +207,8 @@ for i in $(seq 1 100); do
   curl -s -o /dev/null "https://${APP_HOST}/"
 done
 ----
+
+If you skipped xref:module-02-cloud-credentials.adoc[Pod Cloud Credentials], every request to `/` returns `500`, because the application has no bucket or container to read.
 
 In the console, open *Observe* > *Metrics* and run this query for the request rate by status code:
 
@@ -300,6 +303,7 @@ EOF
 
 In the console, open *Observe* > *Alerting* > *Alerting rules* and filter on *Source: User*.
 The rule is listed and `Inactive` while the application reads its bucket or container without errors.
+Without the Module 2 credentials it fires after a minute, which shows it working.
 
 User-defined alerts go to the platform Alertmanager by default.
 Sending them to your team's channels means configuring Alertmanager receivers, which you can delegate to projects with a separate user workload Alertmanager.
@@ -345,6 +349,7 @@ EOF
 ----
 
 On ROSA HCP the `openshift-logging` namespace already exists, and the command only adds the label.
+On ARO the command creates it.
 `oc apply` warns that the namespace is missing the `last-applied-configuration` annotation; that warning is harmless.
 
 Wait for the Operator to install:
@@ -945,6 +950,8 @@ oc delete clusterlogforwarder workshop \
 ----
 
 Keep the ServiceMonitor and the alert rule; they cost nothing.
+The Logging Operator stays installed too.
+If you remove it later, deleting its Subscription and ClusterServiceVersion leaves its CRDs and cluster roles behind, which is harmless.
 The cloud resources (the IAM role and log group on AWS, the workspace, rule, endpoint and identity on Azure) are listed in the cleanup part of the xref:setup-requirements.adoc[Setup Requirements].
 
 == What Matters
