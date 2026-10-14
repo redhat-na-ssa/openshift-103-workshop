@@ -553,7 +553,7 @@ image::module-03-private-clusters.svg[Where the control plane runs and how priva
 |
 |EKS
 |AKS
-|ROSA with HCP
+|ROSA
 |ARO
 
 |Private API
@@ -575,7 +575,7 @@ image::module-03-private-clusters.svg[Where the control plane runs and how priva
 |Plan it at create
 |===
 
-ROSA with HCP workers always reach the hosted control plane over AWS PrivateLink, public cluster or not.
+ROSA workers always reach the hosted control plane over AWS PrivateLink, public cluster or not.
 ROSA also offers clusters with no internet egress at all (egress zero).
 
 == What Matters
@@ -585,7 +585,7 @@ ROSA also offers clusters with no internet egress at all (egress zero).
 * NetworkPolicy works with nothing to enable. A default-deny policy also blocks the router and monitoring until you allow their policy groups.
 * AdminNetworkPolicy adds cluster-wide rules that project administrators cannot override. Keep its subjects away from `openshift-*` namespaces, which the platform and SRE need.
 * Egress IPs give a project a fixed source address, with cloud-specific limits: on AWS the capacity depends on the instance type, and on ARO namespace egress IPs need user-defined routing.
-* Private clusters are an install-time choice on ROSA and ARO. ROSA with HCP workers always reach the hosted control plane over AWS PrivateLink.
+* Private clusters are an install-time choice on ROSA and ARO. ROSA workers always reach the hosted control plane over AWS PrivateLink.
 
 == Where Each Wins
 
@@ -620,7 +620,7 @@ ROSA also offers clusters with no internet egress at all (egress zero).
 ** https://learn.microsoft.com/azure/aks/azure-cni-powered-by-cilium[Azure CNI powered by Cilium]
 ** https://learn.microsoft.com/azure/aks/private-clusters[Private AKS clusters]
 * ROSA
-** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/install_clusters/rosa-hcp-aws-private-creating-cluster[Private ROSA HCP clusters]
+** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/install_clusters/rosa-hcp-aws-private-creating-cluster[Private ROSA clusters]
 ** https://cloud.redhat.com/experts/rosa/egress-firewall/[Egress firewall on ROSA (Cloud Experts)]
 * ARO
 ** https://learn.microsoft.com/azure/openshift/concepts-ovn-kubernetes[OVN-Kubernetes in ARO]
