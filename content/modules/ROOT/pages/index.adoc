@@ -1,4 +1,4 @@
-= Home
+= Introduction
 
 This workshop is for platform engineers who already run Amazon EKS or Azure AKS and now operate Red Hat OpenShift Service on AWS (ROSA) or Azure Red Hat OpenShift (ARO).
 
@@ -12,9 +12,9 @@ endif::[]
 == How the Workshop Works
 
 You do the hands-on work on a ROSA cluster and an ARO cluster.
-In this workshop, ROSA always means ROSA with hosted control planes (HCP), the architecture for new ROSA clusters.
+In this workshop, ROSA always means ROSA with hosted control planes (HCP), the default architecture for new ROSA clusters; ROSA classic is not covered.
 Where the steps differ between the two, they appear in tabs: pick *ROSA (AWS)* or *ARO (Azure)* once, and every page follows your choice.
-Each step also shows how you would do the same task on EKS or AKS, as a reference block you read but do not run.
+Where it helps, a step also shows how you would do the same task on EKS or AKS, as a reference block you read but do not run.
 No EKS or AKS cluster is needed.
 
 One sample application runs through Modules 2 to 4.
