@@ -44,7 +44,7 @@ On ROSA and ARO, the last column names the cluster Operator that owns the capabi
 |Shared file storage
 |You install the EFS CSI add-on
 |Ships: Azure Files
-|ROSA: you install the EFS CSI Driver Operator. ARO: Azure Files, off by default on managed-identity clusters
+|ROSA: you install the EFS CSI Driver Operator. ARO: Azure Files ships on service-principal clusters, and is off by default on managed-identity clusters
 
 |Image registry
 |ECR, outside the cluster
@@ -101,6 +101,9 @@ Show the update channel and the version history:
 oc get clusterversion version \
   -o jsonpath='{.spec.channel}{"\n"}'
 ----
+
+On ROSA the channel is set by the service and follows your cluster's minor version, such as `stable-4.20`.
+On ARO it is empty until you set one, because you start ARO upgrades yourself; Module 4 covers this.
 
 [source,bash]
 ----
@@ -164,6 +167,7 @@ Compare the two lists.
 On ROSA HCP there is no `etcd` Operator, and the Operators that manage machines are missing, because the control plane runs in Red Hat's account.
 Control plane components such as `kube-apiserver` still report their status here, but their pods are not in your cluster.
 On ARO every Operator runs in your cluster, on the control plane nodes.
+ARO also adds its own `aro` Operator, which the service uses to monitor and repair the cluster from inside it.
 
 .EKS and AKS (reference only)
 [%collapsible]
@@ -230,6 +234,7 @@ On ROSA the default class is backed by the EBS CSI driver, with gp3 volumes.
 On ARO the default class is backed by the Azure Disk CSI driver.
 Both create `ReadWriteOnce` volumes.
 For `ReadWriteMany` storage on ROSA you install the AWS EFS CSI Driver Operator and give it an IAM role.
+ARO clusters created with a service principal also ship an `azurefile-csi` class for `ReadWriteMany` volumes.
 ARO clusters created with managed identities do not offer Azure Files by default.
 
 The CSI drivers themselves are managed by the `storage` cluster Operator through a ClusterCSIDriver resource:
@@ -459,9 +464,9 @@ Keep the OpenShift GitOps Operator installed; later modules do not depend on it,
 
 * Platform components are owned by Operators. Editing their resources directly is reverted; you change them through the Operator's configuration resource, such as the IngressController, and only where SRE allows it.
 * One health view: `oc get clusteroperators` replaces checking each add-on. A `DEGRADED` platform Operator is SRE's to fix, but you will see it first.
-* Storage: ROSA ships the EBS CSI driver with a default gp3 StorageClass. Shared (RWX) storage needs the EFS CSI Driver Operator and an IAM role. ARO ships Azure Disk as the default; Azure Files is disabled by default on clusters created with managed identities.
+* Storage: ROSA ships the EBS CSI driver with a default gp3 StorageClass. Shared (RWX) storage needs the EFS CSI Driver Operator and an IAM role. ARO ships Azure Disk as the default; Azure Files ships on clusters created with a service principal and is disabled by default on clusters created with managed identities.
 * ARO needs a Red Hat pull secret before it can install Operators from the Software Catalog.
-* On ROSA, the `dedicated-admin` role can install Operators, so you do not need `cluster-admin` to extend the platform.
+* On ROSA, the `dedicated-admin` role can install Operators into `openshift-operators` and into projects you create, so you do not need `cluster-admin` to extend the platform. It cannot create other `openshift-` namespaces, such as the one Exercise 6 uses.
 * Catalog Operators such as OpenShift GitOps run on your worker nodes and are yours to operate: their capacity, their configuration and approving their updates.
 * Helm still works on ROSA and ARO. Use it for vendor software that has no Operator.
 
