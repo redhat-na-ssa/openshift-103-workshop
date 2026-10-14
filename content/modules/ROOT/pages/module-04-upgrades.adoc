@@ -395,8 +395,11 @@ oc get apirequestcounts -o json \
       | @tsv'
 ----
 
-NOTE: *Not validated:* this command.
-Both validation clusters had no request counts, so it had nothing to show.
+The list is often empty, and that is a real answer.
+OpenShift flags only the APIs it has scheduled for removal in a coming release, and on 4.20 and 4.21 every API scheduled so far has already been removed.
+An empty list means nothing on the cluster calls an API that is about to disappear; it fills in when a future release schedules more removals.
+
+NOTE: The command ran on both validation clusters and returned nothing, as expected.
 
 To see who calls one of them, look at its users, for example:
 
@@ -410,8 +413,8 @@ oc get apirequestcount <resource>.<version>.<group> \
   | sort -u
 ----
 
-The list can be empty even when workloads call deprecated APIs: it was empty on both a new ROSA cluster and a new ARO cluster when this workshop was tested.
-Treat an empty result as no data, and also check your manifests against the https://kubernetes.io/docs/reference/using-api/deprecation-guide/[Kubernetes deprecated API migration guide].
+Request counts show only what has already called an API, so a workload that runs rarely, or is not deployed yet, does not appear.
+Also check your manifests and Helm charts against the https://kubernetes.io/docs/reference/using-api/deprecation-guide/[Kubernetes deprecated API migration guide].
 
 ==== Pod disruption budgets
 
@@ -555,7 +558,7 @@ Test updates on a non-production cluster first.
 Applications need at least two replicas and a budget that allows one disruption to stay up.
 * A budget that allows no disruptions holds up the update on both, unless a ROSA machine pool has a node drain grace period.
 * Each Kubernetes minor version removes some deprecated APIs.
-Manifests and Helm charts that use them fail after the update, and the API request counts, when populated, show who still calls them.
+Manifests and Helm charts that use them fail after the update, and the API request counts show who still calls them.
 
 == References
 
