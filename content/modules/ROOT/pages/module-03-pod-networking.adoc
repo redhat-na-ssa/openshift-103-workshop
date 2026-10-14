@@ -1,5 +1,6 @@
 = Pod Networking and Policy
 
+[.validation]
 NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026.
 Steps and statements that were not checked on a live cluster carry a *Not validated* note.
 The comparison tables and summaries come from vendor documentation.
@@ -9,7 +10,7 @@ ROSA and ARO run OVN-Kubernetes as an overlay: pod addresses never appear in the
 This section explains the packet path, then applies network policy at two levels: per project, and cluster-wide.
 
 .Where pod addresses come from, what a database in the same network sees, and where filtering happens
-image::module-03-packet-path.svg["Pod packet path with the Amazon VPC CNI, Azure CNI Overlay and OVN-Kubernetes",width=100%]
+image::module-03-packet-path.svg["Pod packet path with the Amazon VPC CNI, Azure CNI Overlay and OVN-Kubernetes",width=100%,link=self,window=_blank]
 
 == On EKS and AKS
 
@@ -87,6 +88,7 @@ ROSA (AWS)::
 --
 Show the cluster's address ranges, in the `Machine CIDR`, `Service CIDR` and `Pod CIDR` lines:
 
+[.validation]
 NOTE: *Not validated:* `rosa describe cluster`, which needs a `rosa` login to the cluster's Red Hat organization.
 
 [source,bash]
@@ -98,6 +100,7 @@ rosa describe cluster \
 Look up both addresses in the VPC.
 The pod's address finds nothing, and the node's address finds its network interface:
 
+[.validation]
 NOTE: *Not validated:* the VPC lookup, which needs AWS credentials for the account that owns the cluster.
 
 [source,bash]
@@ -365,7 +368,7 @@ NetworkPolicy belongs to whoever administers the project.
 An AdminNetworkPolicy belongs to the cluster administrator, and OVN-Kubernetes evaluates it before any NetworkPolicy:
 
 .The three policy tiers
-image::module-03-policy-tiers.svg[Order in which OVN-Kubernetes evaluates network policy tiers,width=100%]
+image::module-03-policy-tiers.svg["Order in which OVN-Kubernetes evaluates network policy tiers",width=100%,link=self,window=_blank]
 
 Create a project that holds sensitive data, and label it:
 
@@ -510,6 +513,7 @@ ROSA (AWS)::
 --
 Find the NAT gateway addresses in the cluster's VPC:
 
+[.validation]
 NOTE: *Not validated:* the NAT gateway lookup, which needs AWS credentials for the account that owns the cluster.
 
 [source,bash]
@@ -547,6 +551,7 @@ The validation run confirmed that the pod's address is one of these.
 
 === Fixed Egress Addresses (Reference Only)
 
+[.validation]
 NOTE: *Not validated:* this section, which no exercise runs.
 
 To give one project its own source address, OVN-Kubernetes offers egress IPs.
@@ -571,6 +576,7 @@ spec:
 
 === Restricting Egress (Reference Only)
 
+[.validation]
 NOTE: *Not validated:* this section, which no exercise runs.
 
 NetworkPolicy in this module controls incoming traffic.
@@ -615,8 +621,9 @@ A private API is an install-time choice on ROSA and ARO, as is private ingress o
 What changes is where the control plane runs and how you, and the provider's SRE team, reach it:
 
 .Where the control plane runs and how private API access works
-image::module-03-private-clusters.svg[Where the control plane runs and how private API access works,width=100%]
+image::module-03-private-clusters.svg["Where the control plane runs and how private API access works",width=100%,link=self,window=_blank]
 
+[.validation]
 NOTE: *Not validated:* making the ROSA default ingress private after the cluster is created.
 
 [cols="1,1,1,1,1",options="header"]

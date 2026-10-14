@@ -3,6 +3,7 @@
 This page sums up the workshop: the habits that change when you move from EKS or AKS to ROSA or ARO, the commands worth keeping at hand, and the traps to remember.
 Each row points back to the module that covers it.
 
+[.validation]
 NOTE: The commands here are copied from the modules, which mark anything that was not validated on a live cluster.
 
 == Habits That Change
@@ -157,7 +158,7 @@ Where the control plane runs:
 [source,bash]
 ----
 oc get infrastructure cluster \
-  -o jsonpath='{.status.controlPlaneTopology}{"\n"}'
+  --output jsonpath='{.status.controlPlaneTopology}{"\n"}'
 ----
 
 Which Operators the Software Catalog offers:
@@ -200,7 +201,7 @@ oc get deployment <name> \
       --namespace <project> \
       --serviceaccount <service-account> \
       --groups system:authenticated \
-      -f -
+      --filename -
 ----
 
 Let one dedicated service account run images as their own user:
@@ -256,7 +257,7 @@ The cluster version's conditions, including Upgradeable:
 
 [source,bash]
 ----
-oc get clusterversion version -o json \
+oc get clusterversion version --output json \
   | jq '.status.conditions'
 ----
 
@@ -266,7 +267,7 @@ Whether a log forwarder is ready:
 ----
 oc get clusterlogforwarder <name> \
   --namespace openshift-logging \
-  -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+  --output jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
 ----
 
 === Per Cloud
@@ -276,6 +277,7 @@ oc get clusterlogforwarder <name> \
 ROSA (AWS)::
 +
 --
+[.validation]
 NOTE: *Not validated:* the `rosa` commands below, which need a `rosa` login to the cluster's Red Hat organization.
 
 Describe the cluster: its control plane, version and IAM roles:

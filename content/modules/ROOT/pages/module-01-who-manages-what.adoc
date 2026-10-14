@@ -1,5 +1,6 @@
 = Who Manages What
 
+[.validation]
 NOTE: Validated on ROSA HCP 4.20 and 4.21 and ARO 4.21 in October 2026.
 Steps and statements that were not checked on a live cluster carry a *Not validated* note.
 The comparison tables and summaries come from vendor documentation.
@@ -43,7 +44,7 @@ az aks show \
 
 The diagram shows where the control plane and the nodes of each platform run, and who operates them.
 
-image::module-01-architecture.svg["Where the control plane and nodes run on EKS, AKS, ROSA and ARO"]
+image::module-01-architecture.svg["Where the control plane and nodes run on EKS, AKS, ROSA and ARO",link=self,window=_blank]
 
 Two things stand out:
 
@@ -55,7 +56,7 @@ This workshop uses standard ARO.
 
 == The Responsibility Line
 
-image::module-01-responsibility.svg["Who is responsible for each area on EKS, AKS, ROSA and ARO"]
+image::module-01-responsibility.svg["Who is responsible for each area on EKS, AKS, ROSA and ARO",link=self,window=_blank]
 
 Read the chart by row:
 
@@ -108,6 +109,7 @@ Set the cluster name:
 export CLUSTER=<rosa-cluster-name>
 ----
 
+[.validation]
 NOTE: *Not validated:* `rosa create admin`, which needs the `rosa` CLI logged in to the cluster's organization.
 Logging in with the credentials it prints was validated.
 
@@ -232,7 +234,7 @@ The Infrastructure resource records where the control plane runs:
 [source,bash]
 ----
 oc get infrastructure cluster \
-  -o jsonpath='{.status.controlPlaneTopology}{"\n"}'
+  --output jsonpath='{.status.controlPlaneTopology}{"\n"}'
 ----
 
 ROSA shows `External`, because the control plane runs outside the cluster.
@@ -407,12 +409,13 @@ ARO protects its platform through the deny assignment on the Azure side and its 
 On both, changes the service does not support can take the cluster out of support.
 ROSA calls this _limited support_: SRE stops proactive monitoring and the SLA no longer applies until the cause is fixed.
 
+[.validation]
 NOTE: *Not validated:* the `Limited Support` section, because the workshop's ROSA cluster was not in limited support.
 
 If your ROSA cluster is in limited support, `rosa describe cluster` shows a `Limited Support` section with the reasons.
 
 [#ex-module-01-who-manages-what-5]
-=== Exercise 5: Know Your Support Path
+=== Exercise 5 (Read Only): Know Your Support Path
 
 [cols="1,2,2",options="header"]
 |===
@@ -476,6 +479,7 @@ On ROSA and ARO you install the OpenShift API for Data Protection (OADP) Operato
 OADP is configured with one DataProtectionApplication resource.
 These samples show its shape on each cloud; this workshop does not run them.
 
+[.validation]
 NOTE: *Not validated:* the two OADP samples below, which were not applied to a cluster.
 
 .Sample OADP configuration for ROSA

@@ -7,50 +7,50 @@
 <text x="14" y="32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="15" font-weight="bold" fill="#1f1f1e">Ships, upgraded with the cluster</text>
 <rect x="12" y="50" width="238" height="44" rx="6" ry="6" fill="#fbe1d6" stroke="#eb6834" stroke-width="1.5"/>
 <text x="24" y="69" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" fill="#1f1f1e">Pod network</text>
-<text x="24" y="86" font-family="Red Hat Mono, Menlo, Consolas, monospace" font-size="11.5" fill="#52514e">network</text>
+<text x="24" y="86" font-family="Red Hat Mono, Menlo, Consolas, monospace" font-size="12" fill="#52514e">network</text>
 <rect x="12" y="102" width="238" height="44" rx="6" ry="6" fill="#fbe1d6" stroke="#eb6834" stroke-width="1.5"/>
 <text x="24" y="121" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" fill="#1f1f1e">Cluster DNS</text>
-<text x="24" y="138" font-family="Red Hat Mono, Menlo, Consolas, monospace" font-size="11.5" fill="#52514e">dns</text>
+<text x="24" y="138" font-family="Red Hat Mono, Menlo, Consolas, monospace" font-size="12" fill="#52514e">dns</text>
 <rect x="12" y="154" width="238" height="44" rx="6" ry="6" fill="#fbe1d6" stroke="#eb6834" stroke-width="1.5"/>
 <text x="24" y="173" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" fill="#1f1f1e">Ingress router</text>
-<text x="24" y="190" font-family="Red Hat Mono, Menlo, Consolas, monospace" font-size="11.5" fill="#52514e">ingress</text>
+<text x="24" y="190" font-family="Red Hat Mono, Menlo, Consolas, monospace" font-size="12" fill="#52514e">ingress</text>
 <rect x="12" y="206" width="238" height="44" rx="6" ry="6" fill="#fbe1d6" stroke="#eb6834" stroke-width="1.5"/>
 <text x="24" y="225" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" fill="#1f1f1e">Block storage, default class</text>
-<text x="24" y="242" font-family="Red Hat Mono, Menlo, Consolas, monospace" font-size="11.5" fill="#52514e">storage</text>
+<text x="24" y="242" font-family="Red Hat Mono, Menlo, Consolas, monospace" font-size="12" fill="#52514e">storage</text>
 <rect x="12" y="258" width="238" height="44" rx="6" ry="6" fill="#fbe1d6" stroke="#eb6834" stroke-width="1.5"/>
 <text x="24" y="277" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" fill="#1f1f1e">Image registry</text>
-<text x="24" y="294" font-family="Red Hat Mono, Menlo, Consolas, monospace" font-size="11.5" fill="#52514e">image-registry</text>
+<text x="24" y="294" font-family="Red Hat Mono, Menlo, Consolas, monospace" font-size="12" fill="#52514e">image-registry</text>
 <rect x="12" y="310" width="238" height="44" rx="6" ry="6" fill="#fbe1d6" stroke="#eb6834" stroke-width="1.5"/>
 <text x="24" y="329" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" fill="#1f1f1e">Metrics and alerts</text>
-<text x="24" y="346" font-family="Red Hat Mono, Menlo, Consolas, monospace" font-size="11.5" fill="#52514e">monitoring</text>
+<text x="24" y="346" font-family="Red Hat Mono, Menlo, Consolas, monospace" font-size="12" fill="#52514e">monitoring</text>
 <rect x="12" y="362" width="238" height="44" rx="6" ry="6" fill="#fbe1d6" stroke="#eb6834" stroke-width="1.5"/>
 <text x="24" y="381" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" fill="#1f1f1e">Web console</text>
-<text x="24" y="398" font-family="Red Hat Mono, Menlo, Consolas, monospace" font-size="11.5" fill="#52514e">console</text>
+<text x="24" y="398" font-family="Red Hat Mono, Menlo, Consolas, monospace" font-size="12" fill="#52514e">console</text>
 <rect x="284" y="0" width="262" height="424" rx="8" ry="8" fill="#f4f4f2" stroke="#c9c8c2" stroke-width="1"/>
 <rect x="284" y="0" width="262" height="6" rx="0" ry="0" fill="#7a5ec8"/>
 <text x="298" y="32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="15" font-weight="bold" fill="#1f1f1e">Ships, you configure it</text>
 <rect x="296" y="50" width="238" height="44" rx="6" ry="6" fill="#e9e3f7" stroke="#7a5ec8" stroke-width="1.5"/>
 <text x="308" y="69" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" fill="#1f1f1e">Node autoscaling</text>
-<text x="308" y="86" font-family="Red Hat Mono, Menlo, Consolas, monospace" font-size="11.5" fill="#52514e">machine pools (Module 4)</text>
+<text x="308" y="86" font-family="Red Hat Mono, Menlo, Consolas, monospace" font-size="12" fill="#52514e">machine pools (Module 4)</text>
 <rect x="296" y="102" width="238" height="44" rx="6" ry="6" fill="#e9e3f7" stroke="#7a5ec8" stroke-width="1.5"/>
 <text x="308" y="121" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" fill="#1f1f1e">Ingress settings</text>
-<text x="308" y="138" font-family="Red Hat Mono, Menlo, Consolas, monospace" font-size="11.5" fill="#52514e">IngressController (ARO)</text>
+<text x="308" y="138" font-family="Red Hat Mono, Menlo, Consolas, monospace" font-size="12" fill="#52514e">IngressController (ARO)</text>
 <rect x="296" y="154" width="238" height="44" rx="6" ry="6" fill="#e9e3f7" stroke="#7a5ec8" stroke-width="1.5"/>
 <text x="308" y="173" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" fill="#1f1f1e">Identity providers</text>
-<text x="308" y="190" font-family="Red Hat Mono, Menlo, Consolas, monospace" font-size="11.5" fill="#52514e">OAuth (Module 2)</text>
+<text x="308" y="190" font-family="Red Hat Mono, Menlo, Consolas, monospace" font-size="12" fill="#52514e">OAuth (Module 2)</text>
 <rect x="568" y="0" width="262" height="424" rx="8" ry="8" fill="#f4f4f2" stroke="#c9c8c2" stroke-width="1"/>
 <rect x="568" y="0" width="262" height="6" rx="0" ry="0" fill="#2a78d6"/>
 <text x="582" y="32" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="15" font-weight="bold" fill="#1f1f1e">From the Software Catalog</text>
 <rect x="580" y="50" width="238" height="44" rx="6" ry="6" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1.5"/>
 <text x="592" y="69" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" fill="#1f1f1e">GitOps</text>
-<text x="592" y="86" font-family="Red Hat Mono, Menlo, Consolas, monospace" font-size="11.5" fill="#52514e">OpenShift GitOps</text>
+<text x="592" y="86" font-family="Red Hat Mono, Menlo, Consolas, monospace" font-size="12" fill="#52514e">OpenShift GitOps</text>
 <rect x="580" y="102" width="238" height="44" rx="6" ry="6" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1.5"/>
 <text x="592" y="121" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" fill="#1f1f1e">Log forwarding</text>
-<text x="592" y="138" font-family="Red Hat Mono, Menlo, Consolas, monospace" font-size="11.5" fill="#52514e">Logging (Module 4)</text>
+<text x="592" y="138" font-family="Red Hat Mono, Menlo, Consolas, monospace" font-size="12" fill="#52514e">Logging (Module 4)</text>
 <rect x="580" y="154" width="238" height="44" rx="6" ry="6" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1.5"/>
 <text x="592" y="173" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" fill="#1f1f1e">Shared file storage (ROSA)</text>
-<text x="592" y="190" font-family="Red Hat Mono, Menlo, Consolas, monospace" font-size="11.5" fill="#52514e">EFS CSI Driver</text>
+<text x="592" y="190" font-family="Red Hat Mono, Menlo, Consolas, monospace" font-size="12" fill="#52514e">EFS CSI Driver</text>
 <rect x="580" y="206" width="238" height="44" rx="6" ry="6" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1.5"/>
 <text x="592" y="225" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" fill="#1f1f1e">Backup</text>
-<text x="592" y="242" font-family="Red Hat Mono, Menlo, Consolas, monospace" font-size="11.5" fill="#52514e">OADP</text>
+<text x="592" y="242" font-family="Red Hat Mono, Menlo, Consolas, monospace" font-size="12" fill="#52514e">OADP</text>
 </svg>

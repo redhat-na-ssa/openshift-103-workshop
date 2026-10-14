@@ -1,5 +1,6 @@
 = What Ships and How You Extend It
 
+[.validation]
 NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026.
 Steps and statements that were not checked on a live cluster carry a *Not validated* note.
 The comparison tables and summaries come from vendor documentation.
@@ -19,7 +20,7 @@ This section tours what ships, then shows how you add more through the Software 
 On ROSA and ARO, every capability a production cluster needs arrives in one of three ways.
 The diagram sorts them; the names in code font are the cluster Operators or resources you look up in the exercises.
 
-image::module-01-what-ships.svg["How platform capabilities arrive on ROSA and ARO: shipped and upgraded with the cluster, shipped and configured by you, or added from the Software Catalog"]
+image::module-01-what-ships.svg["How platform capabilities arrive on ROSA and ARO: shipped and upgraded with the cluster, shipped and configured by you, or added from the Software Catalog",link=self,window=_blank]
 
 === Ships, Upgraded with the Cluster
 
@@ -106,6 +107,7 @@ On ARO you get them only by connecting the cluster to Azure Arc and installing e
 * Flux (GitOps): supported on any CNCF-certified cluster.
 * Key Vault Secrets Provider: Microsoft recommends the Arc extension on ARO over installing the open source driver yourself.
 
+[.validation]
 NOTE: *Not validated:* connecting ARO to Azure Arc, which was not run on a cluster.
 
 Connect the cluster to Arc before you install any extension:
@@ -155,7 +157,7 @@ Show the update channel and the version history:
 [source,bash]
 ----
 oc get clusterversion version \
-  -o jsonpath='{.spec.channel}{"\n"}'
+  --output jsonpath='{.spec.channel}{"\n"}'
 ----
 
 On ROSA the channel is set by the service and follows your cluster's minor version, such as `stable-4.20`.
@@ -164,7 +166,7 @@ On ARO it is empty until you set one, because you start ARO upgrades yourself; M
 [source,bash]
 ----
 oc get clusterversion version \
-  -o json \
+  --output json \
   | jq -r '.status.history[] | .version + "  " + .state'
 ----
 
@@ -213,6 +215,7 @@ On a healthy cluster every Operator shows `True`, `False`, `False`.
 This one command covers every platform component that ships with the cluster, where EKS and AKS have you check each add-on's Deployment and version.
 Operators you add from the Software Catalog, such as GitOps, Logging or OADP, are not in this list.
 
+[.validation]
 NOTE: *Not validated:* this listing, which is read-only.
 
 Their ClusterServiceVersions report their health instead; the selector skips the copies that OLM places in every namespace:
@@ -354,6 +357,7 @@ kubectl get storageclass
 [#ex-module-01-what-ships-5]
 === Exercise 5: Browse the Software Catalog
 
+[.validation]
 NOTE: *Not validated:* where the Software Catalog appears in the web console, because the console was not opened during validation.
 
 The Software Catalog lists Operators from catalog sources.
@@ -370,6 +374,7 @@ oc get catalogsources \
 ARO only shows Red Hat's catalogs when the cluster has a Red Hat pull secret.
 If `redhat-operators` is missing on ARO, either the cluster has no Red Hat pull secret, or it was added after creation and the sources are still disabled.
 
+[.validation]
 NOTE: *Not validated:* the OperatorHub check, which is read-only.
 
 On ARO, check which default sources are disabled:
@@ -377,7 +382,7 @@ On ARO, check which default sources are disabled:
 [source,bash]
 ----
 oc get operatorhub cluster \
-  -o jsonpath='{.spec.sources}{"\n"}'
+  --output jsonpath='{.spec.sources}{"\n"}'
 ----
 
 For the fix, see the xref:setup-requirements.adoc[Setup Requirements].
@@ -388,7 +393,7 @@ Find the OpenShift GitOps Operator and its default channel:
 ----
 oc get packagemanifest openshift-gitops-operator \
   --namespace openshift-marketplace \
-  -o jsonpath='{.status.defaultChannel}{"\n"}'
+  --output jsonpath='{.status.defaultChannel}{"\n"}'
 ----
 
 [#ex-module-01-what-ships-6]
@@ -408,7 +413,7 @@ Create the OperatorGroup:
 
 [source,bash]
 ----
-oc apply -f - <<EOF
+oc apply --filename - <<EOF
 apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
 metadata:
@@ -423,7 +428,7 @@ Create the Subscription:
 
 [source,bash]
 ----
-oc apply -f - <<EOF
+oc apply --filename - <<EOF
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
@@ -502,7 +507,7 @@ Its finalizer makes deleting the Application also delete what it deployed; witho
 
 [source,bash]
 ----
-oc apply -f - <<EOF
+oc apply --filename - <<EOF
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -547,9 +552,10 @@ Its address is the host of this route:
 ----
 oc get route openshift-gitops-server \
   --namespace openshift-gitops \
-  -o jsonpath='{.spec.host}{"\n"}'
+  --output jsonpath='{.spec.host}{"\n"}'
 ----
 
+[.validation]
 NOTE: *Not validated:* the console login itself.
 The route answered and Argo CD offered the OpenShift login, but nobody signed in through a browser.
 
@@ -557,6 +563,7 @@ Log in with *Log in via OpenShift*, using your cluster credentials.
 
 === Clean Up
 
+[.validation]
 NOTE: *Not validated:* the cascading delete through the finalizer.
 
 Delete the application, which also removes what it deployed:

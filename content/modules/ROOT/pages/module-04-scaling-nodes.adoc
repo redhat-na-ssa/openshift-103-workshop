@@ -1,6 +1,7 @@
 = Scaling Nodes
 
-NOTE: Validated on ROSA 4.20 and ARO 4.21 in October 2026.
+[.validation]
+NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026.
 Steps and statements that were not checked on a live cluster carry a *Not validated* note.
 The comparison tables and summaries come from vendor documentation.
 
@@ -16,7 +17,7 @@ In this section you add an autoscaling group of nodes to your cluster, push the 
 Every platform in this workshop offers one or both of these models.
 
 .Group autoscaling and provisioning
-image::module-04-scaling-models.svg["Group autoscaling grows pre-defined groups of identical nodes. Provisioning picks an instance type for each batch of pending pods.",width=100%]
+image::module-04-scaling-models.svg["Group autoscaling grows pre-defined groups of identical nodes. Provisioning picks an instance type for each batch of pending pods.",width=100%,link=self,window=_blank]
 
 [cols="2,2,2,2,2",options="header"]
 |===
@@ -102,6 +103,7 @@ ARO also shows three control plane nodes, which run in your subscription but whi
 ROSA (AWS)::
 +
 --
+[.validation]
 NOTE: *Not validated:* `rosa list machinepools`.
 The `oc` command after it was validated.
 
@@ -179,6 +181,7 @@ The group starts small and the cluster autoscaler grows it when pods are pending
 ROSA (AWS)::
 +
 --
+[.validation]
 NOTE: *Not validated:* the ROSA steps of this exercise, which need the `rosa` CLI, including a machine pool that starts at zero nodes.
 
 A machine pool on ROSA lives in one subnet, so in one availability zone.
@@ -241,7 +244,7 @@ Pick the first worker MachineSet:
 ----
 SOURCE_MS=$(oc get machinesets \
   --namespace openshift-machine-api \
-  -o jsonpath='{.items[0].metadata.name}')
+  --output jsonpath='{.items[0].metadata.name}')
 ----
 
 [source,bash]
@@ -278,10 +281,10 @@ Create the new MachineSet from the copy:
 ----
 oc get machineset "$SOURCE_MS" \
   --namespace openshift-machine-api \
-  -o json \
+  --output json \
   | jq --arg name scale-lab \
       -f scale-lab-ms.jq \
-  | oc create -f -
+  | oc create --filename -
 ----
 
 The new MachineSet keeps the VM size of the one you copied, which is on ARO's list of supported worker sizes.
@@ -298,7 +301,7 @@ If there is none, create it with short scale-down timers for the workshop:
 
 [source,bash]
 ----
-cat <<'EOF' | oc apply -f -
+oc apply --filename - <<'EOF'
 apiVersion: autoscaling.openshift.io/v1
 kind: ClusterAutoscaler
 metadata:
@@ -317,7 +320,7 @@ An extra MachineSet may scale from zero on Azure, but ARO's support policy requi
 
 [source,bash]
 ----
-cat <<'EOF' | oc apply -f -
+oc apply --filename - <<'EOF'
 apiVersion: autoscaling.openshift.io/v1beta1
 kind: MachineAutoscaler
 metadata:
@@ -339,8 +342,8 @@ Watch the first Machine become a node:
 ----
 oc get machines \
   --namespace openshift-machine-api \
-  -l machine.openshift.io/cluster-api-machineset=scale-lab \
-  -w
+  --selector machine.openshift.io/cluster-api-machineset=scale-lab \
+  --watch
 ----
 
 Press Ctrl+C when its phase is `Running`.
@@ -399,6 +402,7 @@ Keep them in Git and apply them with OpenShift GitOps, which you installed in xr
 [#ex-module-04-scaling-nodes-3]
 === Exercise 3: Scale the Sample Application Past Capacity
 
+[.validation]
 NOTE: *Not validated:* this exercise on ROSA, which needs the machine pool from Exercise 2.
 It was validated on ARO, and the ROSA behavior described below comes from Red Hat's documentation.
 
@@ -454,7 +458,7 @@ Some pods stay `Pending`:
 ----
 oc get pods \
   --namespace sample-app \
-  -o wide
+  --output wide
 ----
 
 The cluster autoscaler records its decision as an event on the pending pods:
@@ -471,9 +475,9 @@ Watch the new nodes join:
 [source,bash]
 ----
 oc get nodes \
-  -l workshop=scale-lab \
+  --selector workshop=scale-lab \
   -L node.kubernetes.io/instance-type \
-  -w
+  --watch
 ----
 
 On ROSA you can also watch the pool's node count from outside the cluster:
@@ -516,13 +520,14 @@ AKS reports scale-ups as pod events, as OpenShift does, and also in the cluster 
 ----
 kubectl get configmap cluster-autoscaler-status \
   --namespace kube-system \
-  -o yaml
+  --output yaml
 ----
 ====
 
 [#ex-module-04-scaling-nodes-4]
 === Exercise 4: Let Karpenter Pick the Nodes (ROSA Only)
 
+[.validation]
 NOTE: *Not validated:* this whole exercise.
 The validation cluster ran ROSA 4.20, and AutoNode needs 4.22 and the `rosa` and `aws` CLIs.
 
@@ -537,7 +542,7 @@ Collect the cluster's OIDC issuer and your AWS account ID:
 ----
 OIDC_PROVIDER=$(oc get authentication.config.openshift.io \
   cluster \
-  -o jsonpath='{.spec.serviceAccountIssuer}' \
+  --output jsonpath='{.spec.serviceAccountIssuer}' \
   | sed 's|^https://||')
 ----
 
@@ -625,7 +630,7 @@ It allows three instance types and both spot and on-demand capacity, and caps th
 
 [source,bash]
 ----
-cat <<'EOF' | oc apply -f -
+oc apply --filename - <<'EOF'
 apiVersion: karpenter.sh/v1
 kind: NodePool
 metadata:
@@ -672,7 +677,7 @@ Watch Karpenter claim nodes for the pending pods:
 
 [source,bash]
 ----
-oc get nodeclaims -w
+oc get nodeclaims --watch
 ----
 
 Press Ctrl+C when the node claims are `Ready`, then see which instance types and capacity types it chose:
@@ -680,7 +685,7 @@ Press Ctrl+C when the node claims are `Ready`, then see which instance types and
 [source,bash]
 ----
 oc get nodes \
-  -l karpenter.sh/nodepool=karpenter-lab \
+  --selector karpenter.sh/nodepool=karpenter-lab \
   -L node.kubernetes.io/instance-type \
   -L karpenter.sh/capacity-type
 ----
@@ -716,7 +721,7 @@ List the nodes with their OS image and kernel:
 
 [source,bash]
 ----
-oc get nodes -o wide
+oc get nodes --output wide
 ----
 
 Every node runs Red Hat Enterprise Linux CoreOS at the version that belongs to an OpenShift release.
@@ -809,6 +814,7 @@ oc scale deployment/sample-app \
 ROSA (AWS)::
 +
 --
+[.validation]
 NOTE: *Not validated:* the ROSA cleanup steps, which need the `rosa` CLI.
 
 If you skipped Exercise 4, delete the machine pool instead:
@@ -849,6 +855,7 @@ oc delete machineset scale-lab \
   --namespace openshift-machine-api
 ----
 
+[.validation]
 NOTE: *Not validated:* deleting the ClusterAutoscaler.
 
 If you created the ClusterAutoscaler in Exercise 2, delete it:

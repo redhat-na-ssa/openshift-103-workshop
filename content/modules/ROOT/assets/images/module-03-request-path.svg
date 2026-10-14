@@ -9,112 +9,112 @@
 <text x="604.0" y="33.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="15" font-weight="bold" fill="#7d1007" text-anchor="middle">ARO</text>
 <rect x="6" y="64" width="164" height="56" rx="6" fill="#ffffff" stroke="#8a8d90" stroke-width="1.5"/>
 <text x="88.0" y="82.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" fill="#151515" text-anchor="middle">Client</text>
-<text x="88.0" y="100.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#151515" text-anchor="middle">DNS: you add it</text>
-<text x="88.0" y="114.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#151515" text-anchor="middle">(for example ExternalDNS)</text>
+<text x="88.0" y="100.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#151515" text-anchor="middle">DNS: you add it</text>
+<text x="88.0" y="114.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#151515" text-anchor="middle">(for example ExternalDNS)</text>
 <rect x="178" y="64" width="164" height="56" rx="6" fill="#ffffff" stroke="#8a8d90" stroke-width="1.5"/>
 <text x="260.0" y="82.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" fill="#151515" text-anchor="middle">Client</text>
-<text x="260.0" y="100.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#151515" text-anchor="middle">DNS: the add-on with</text>
-<text x="260.0" y="114.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#151515" text-anchor="middle">Azure DNS, or you</text>
+<text x="260.0" y="100.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#151515" text-anchor="middle">DNS: the add-on with</text>
+<text x="260.0" y="114.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#151515" text-anchor="middle">Azure DNS, or you</text>
 <rect x="350" y="64" width="164" height="56" rx="6" fill="#ffffff" stroke="#8a8d90" stroke-width="1.5"/>
 <text x="432.0" y="82.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" fill="#151515" text-anchor="middle">Client</text>
-<text x="432.0" y="100.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#151515" text-anchor="middle">DNS: *.apps wildcard,</text>
-<text x="432.0" y="114.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#151515" text-anchor="middle">already in place</text>
+<text x="432.0" y="100.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#151515" text-anchor="middle">DNS: *.apps wildcard,</text>
+<text x="432.0" y="114.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#151515" text-anchor="middle">already in place</text>
 <rect x="522" y="64" width="164" height="56" rx="6" fill="#ffffff" stroke="#8a8d90" stroke-width="1.5"/>
 <text x="604.0" y="82.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" fill="#151515" text-anchor="middle">Client</text>
-<text x="604.0" y="100.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#151515" text-anchor="middle">DNS: *.apps wildcard,</text>
-<text x="604.0" y="114.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#151515" text-anchor="middle">already in place</text>
+<text x="604.0" y="100.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#151515" text-anchor="middle">DNS: *.apps wildcard,</text>
+<text x="604.0" y="114.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#151515" text-anchor="middle">already in place</text>
 <line x1="88.0" y1="122" x2="88.0" y2="140.0" stroke="#6a6e73" stroke-width="1.6"/>
 <polygon points="88.0,148 84.0,140.0 92.0,140.0" fill="#6a6e73"/>
 <rect x="6" y="150" width="164" height="70" rx="6" fill="#fdf7e7" stroke="#c58c00" stroke-width="1.5"/>
 <text x="88.0" y="175.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" fill="#5c4000" text-anchor="middle">Application LB</text>
-<text x="88.0" y="193.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#5c4000" text-anchor="middle">one per Ingress group,</text>
-<text x="88.0" y="207.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#5c4000" text-anchor="middle">created by the controller</text>
+<text x="88.0" y="193.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#5c4000" text-anchor="middle">one per Ingress group,</text>
+<text x="88.0" y="207.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#5c4000" text-anchor="middle">created by the controller</text>
 <line x1="260.0" y1="122" x2="260.0" y2="140.0" stroke="#6a6e73" stroke-width="1.6"/>
 <polygon points="260.0,148 256.0,140.0 264.0,140.0" fill="#6a6e73"/>
 <rect x="178" y="150" width="164" height="70" rx="6" fill="#e6f7f6" stroke="#009596" stroke-width="1.5"/>
 <text x="260.0" y="175.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" fill="#003737" text-anchor="middle">Azure Load Balancer</text>
-<text x="260.0" y="193.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#003737" text-anchor="middle">public IP per controller,</text>
-<text x="260.0" y="207.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#003737" text-anchor="middle">created by the add-on</text>
+<text x="260.0" y="193.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#003737" text-anchor="middle">public IP per controller,</text>
+<text x="260.0" y="207.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#003737" text-anchor="middle">created by the add-on</text>
 <line x1="432.0" y1="122" x2="432.0" y2="140.0" stroke="#6a6e73" stroke-width="1.6"/>
 <polygon points="432.0,148 428.0,140.0 436.0,140.0" fill="#6a6e73"/>
 <rect x="350" y="150" width="164" height="70" rx="6" fill="#f3faf2" stroke="#3e8635" stroke-width="1.5"/>
 <text x="432.0" y="175.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" fill="#1e4f18" text-anchor="middle">AWS Network LB</text>
-<text x="432.0" y="193.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#1e4f18" text-anchor="middle">created at install,</text>
-<text x="432.0" y="207.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#1e4f18" text-anchor="middle">shared by every Route</text>
+<text x="432.0" y="193.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1e4f18" text-anchor="middle">created at install,</text>
+<text x="432.0" y="207.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1e4f18" text-anchor="middle">shared by every Route</text>
 <line x1="604.0" y1="122" x2="604.0" y2="140.0" stroke="#6a6e73" stroke-width="1.6"/>
 <polygon points="604.0,148 600.0,140.0 608.0,140.0" fill="#6a6e73"/>
 <rect x="522" y="150" width="164" height="70" rx="6" fill="#f3faf2" stroke="#3e8635" stroke-width="1.5"/>
 <text x="604.0" y="175.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" fill="#1e4f18" text-anchor="middle">Azure Standard LB</text>
-<text x="604.0" y="193.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#1e4f18" text-anchor="middle">created at install, in the</text>
-<text x="604.0" y="207.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#1e4f18" text-anchor="middle">managed resource group</text>
+<text x="604.0" y="193.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1e4f18" text-anchor="middle">created at install, in the</text>
+<text x="604.0" y="207.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1e4f18" text-anchor="middle">managed resource group</text>
 <line x1="88.0" y1="222" x2="88.0" y2="240.0" stroke="#6a6e73" stroke-width="1.6"/>
 <polygon points="88.0,248 84.0,240.0 92.0,240.0" fill="#6a6e73"/>
 <rect x="6" y="250" width="164" height="86" rx="6" fill="#fdf7e7" stroke="#c58c00" stroke-width="1.5" stroke-dasharray="6 4"/>
 <text x="88.0" y="276.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" fill="#5c4000" text-anchor="middle">No in-cluster proxy</text>
-<text x="88.0" y="294.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#5c4000" text-anchor="middle">ALB terminates TLS</text>
-<text x="88.0" y="308.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#5c4000" text-anchor="middle">(ACM certificate) and</text>
-<text x="88.0" y="322.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#5c4000" text-anchor="middle">sends to pod IPs</text>
+<text x="88.0" y="294.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#5c4000" text-anchor="middle">ALB terminates TLS</text>
+<text x="88.0" y="308.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#5c4000" text-anchor="middle">(ACM certificate) and</text>
+<text x="88.0" y="322.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#5c4000" text-anchor="middle">sends to pod IPs</text>
 <line x1="260.0" y1="222" x2="260.0" y2="240.0" stroke="#6a6e73" stroke-width="1.6"/>
 <polygon points="260.0,248 256.0,240.0 264.0,240.0" fill="#6a6e73"/>
 <rect x="178" y="250" width="164" height="86" rx="6" fill="#e6f7f6" stroke="#009596" stroke-width="1.5"/>
 <text x="260.0" y="276.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" fill="#003737" text-anchor="middle">Managed NGINX</text>
-<text x="260.0" y="294.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#003737" text-anchor="middle">or an Istio-based Gateway;</text>
-<text x="260.0" y="308.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#003737" text-anchor="middle">TLS from Key Vault</text>
-<text x="260.0" y="322.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#003737" text-anchor="middle">or cert-manager</text>
+<text x="260.0" y="294.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#003737" text-anchor="middle">or an Istio-based Gateway;</text>
+<text x="260.0" y="308.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#003737" text-anchor="middle">TLS from Key Vault</text>
+<text x="260.0" y="322.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#003737" text-anchor="middle">or cert-manager</text>
 <line x1="432.0" y1="222" x2="432.0" y2="240.0" stroke="#6a6e73" stroke-width="1.6"/>
 <polygon points="432.0,248 428.0,240.0 436.0,240.0" fill="#6a6e73"/>
 <rect x="350" y="250" width="164" height="86" rx="6" fill="#f3faf2" stroke="#3e8635" stroke-width="1.5"/>
 <text x="432.0" y="276.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" fill="#1e4f18" text-anchor="middle">OpenShift router</text>
-<text x="432.0" y="294.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#1e4f18" text-anchor="middle">HAProxy, run by the</text>
-<text x="432.0" y="308.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#1e4f18" text-anchor="middle">Ingress Operator; TLS from</text>
-<text x="432.0" y="322.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#1e4f18" text-anchor="middle">the default *.apps cert</text>
+<text x="432.0" y="294.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1e4f18" text-anchor="middle">HAProxy, run by the</text>
+<text x="432.0" y="308.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1e4f18" text-anchor="middle">Ingress Operator; TLS from</text>
+<text x="432.0" y="322.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1e4f18" text-anchor="middle">the default *.apps cert</text>
 <line x1="604.0" y1="222" x2="604.0" y2="240.0" stroke="#6a6e73" stroke-width="1.6"/>
 <polygon points="604.0,248 600.0,240.0 608.0,240.0" fill="#6a6e73"/>
 <rect x="522" y="250" width="164" height="86" rx="6" fill="#f3faf2" stroke="#3e8635" stroke-width="1.5"/>
 <text x="604.0" y="276.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" fill="#1e4f18" text-anchor="middle">OpenShift router</text>
-<text x="604.0" y="294.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#1e4f18" text-anchor="middle">HAProxy, run by the</text>
-<text x="604.0" y="308.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#1e4f18" text-anchor="middle">Ingress Operator; TLS from</text>
-<text x="604.0" y="322.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#1e4f18" text-anchor="middle">the default *.apps cert</text>
+<text x="604.0" y="294.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1e4f18" text-anchor="middle">HAProxy, run by the</text>
+<text x="604.0" y="308.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1e4f18" text-anchor="middle">Ingress Operator; TLS from</text>
+<text x="604.0" y="322.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#1e4f18" text-anchor="middle">the default *.apps cert</text>
 <line x1="88.0" y1="338" x2="88.0" y2="356.0" stroke="#6a6e73" stroke-width="1.6"/>
 <polygon points="88.0,364 84.0,356.0 92.0,356.0" fill="#6a6e73"/>
 <rect x="6" y="366" width="164" height="50" rx="6" fill="#f2f2f2" stroke="#8a8d90" stroke-width="1.5"/>
 <text x="88.0" y="388.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" fill="#151515" text-anchor="middle">Service</text>
-<text x="88.0" y="406.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#151515" text-anchor="middle">lists the pod endpoints</text>
+<text x="88.0" y="406.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#151515" text-anchor="middle">lists the pod endpoints</text>
 <line x1="260.0" y1="338" x2="260.0" y2="356.0" stroke="#6a6e73" stroke-width="1.6"/>
 <polygon points="260.0,364 256.0,356.0 264.0,356.0" fill="#6a6e73"/>
 <rect x="178" y="366" width="164" height="50" rx="6" fill="#f2f2f2" stroke="#8a8d90" stroke-width="1.5"/>
 <text x="260.0" y="388.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" fill="#151515" text-anchor="middle">Service</text>
-<text x="260.0" y="406.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#151515" text-anchor="middle">lists the pod endpoints</text>
+<text x="260.0" y="406.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#151515" text-anchor="middle">lists the pod endpoints</text>
 <line x1="432.0" y1="338" x2="432.0" y2="356.0" stroke="#6a6e73" stroke-width="1.6"/>
 <polygon points="432.0,364 428.0,356.0 436.0,356.0" fill="#6a6e73"/>
 <rect x="350" y="366" width="164" height="50" rx="6" fill="#f2f2f2" stroke="#8a8d90" stroke-width="1.5"/>
 <text x="432.0" y="388.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" fill="#151515" text-anchor="middle">Service</text>
-<text x="432.0" y="406.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#151515" text-anchor="middle">lists the pod endpoints</text>
+<text x="432.0" y="406.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#151515" text-anchor="middle">lists the pod endpoints</text>
 <line x1="604.0" y1="338" x2="604.0" y2="356.0" stroke="#6a6e73" stroke-width="1.6"/>
 <polygon points="604.0,364 600.0,356.0 608.0,356.0" fill="#6a6e73"/>
 <rect x="522" y="366" width="164" height="50" rx="6" fill="#f2f2f2" stroke="#8a8d90" stroke-width="1.5"/>
 <text x="604.0" y="388.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" fill="#151515" text-anchor="middle">Service</text>
-<text x="604.0" y="406.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#151515" text-anchor="middle">lists the pod endpoints</text>
+<text x="604.0" y="406.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#151515" text-anchor="middle">lists the pod endpoints</text>
 <line x1="88.0" y1="418" x2="88.0" y2="436.0" stroke="#6a6e73" stroke-width="1.6"/>
 <polygon points="88.0,444 84.0,436.0 92.0,436.0" fill="#6a6e73"/>
 <rect x="6" y="446" width="164" height="50" rx="6" fill="#f2f2f2" stroke="#8a8d90" stroke-width="1.5"/>
 <text x="88.0" y="468.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" fill="#151515" text-anchor="middle">Pod</text>
-<text x="88.0" y="486.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#151515" text-anchor="middle">VPC address</text>
+<text x="88.0" y="486.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#151515" text-anchor="middle">VPC address</text>
 <line x1="260.0" y1="418" x2="260.0" y2="436.0" stroke="#6a6e73" stroke-width="1.6"/>
 <polygon points="260.0,444 256.0,436.0 264.0,436.0" fill="#6a6e73"/>
 <rect x="178" y="446" width="164" height="50" rx="6" fill="#f2f2f2" stroke="#8a8d90" stroke-width="1.5"/>
 <text x="260.0" y="468.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" fill="#151515" text-anchor="middle">Pod</text>
-<text x="260.0" y="486.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#151515" text-anchor="middle">overlay or VNet address</text>
+<text x="260.0" y="486.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#151515" text-anchor="middle">overlay or VNet address</text>
 <line x1="432.0" y1="418" x2="432.0" y2="436.0" stroke="#6a6e73" stroke-width="1.6"/>
 <polygon points="432.0,444 428.0,436.0 436.0,436.0" fill="#6a6e73"/>
 <rect x="350" y="446" width="164" height="50" rx="6" fill="#f2f2f2" stroke="#8a8d90" stroke-width="1.5"/>
 <text x="432.0" y="468.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" fill="#151515" text-anchor="middle">Pod</text>
-<text x="432.0" y="486.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#151515" text-anchor="middle">overlay address</text>
+<text x="432.0" y="486.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#151515" text-anchor="middle">overlay address</text>
 <line x1="604.0" y1="418" x2="604.0" y2="436.0" stroke="#6a6e73" stroke-width="1.6"/>
 <polygon points="604.0,444 600.0,436.0 608.0,436.0" fill="#6a6e73"/>
 <rect x="522" y="446" width="164" height="50" rx="6" fill="#f2f2f2" stroke="#8a8d90" stroke-width="1.5"/>
 <text x="604.0" y="468.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="13" font-weight="bold" fill="#151515" text-anchor="middle">Pod</text>
-<text x="604.0" y="486.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="11" font-weight="normal" fill="#151515" text-anchor="middle">overlay address</text>
+<text x="604.0" y="486.5" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#151515" text-anchor="middle">overlay address</text>
 <rect x="40" y="514" width="16" height="13" rx="3" fill="#fdf7e7" stroke="#c58c00" stroke-width="1.5"/>
 <text x="63" y="525" font-family="Red Hat Text, Helvetica, Arial, sans-serif" font-size="12" font-weight="normal" fill="#4d5258" text-anchor="start">You install and run it</text>
 <rect x="265" y="514" width="16" height="13" rx="3" fill="#e6f7f6" stroke="#009596" stroke-width="1.5"/>

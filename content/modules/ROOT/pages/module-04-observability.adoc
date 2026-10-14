@@ -1,6 +1,7 @@
 = Observability
 
-NOTE: Validated on ROSA 4.20 and ARO 4.21 in October 2026.
+[.validation]
+NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026.
 Steps and statements that were not checked on a live cluster carry a *Not validated* note.
 The comparison tables and summaries come from vendor documentation.
 
@@ -13,7 +14,7 @@ In this section you look at what monitoring ships, add the sample application's 
 == What You Build and What Ships
 
 .Observability stacks
-image::module-04-observability-stack.svg["On EKS and AKS you install collectors and agents that send to managed cloud services. On ROSA and ARO, monitoring ships in the cluster and you add the Logging Operator to send logs to CloudWatch or Log Analytics.",width=100%]
+image::module-04-observability-stack.svg["On EKS and AKS you install collectors and agents that send to managed cloud services. On ROSA and ARO, monitoring ships in the cluster and you add the Logging Operator to send logs to CloudWatch or Log Analytics.",width=100%,link=self,window=_blank]
 
 [cols="2,3,3",options="header"]
 |===
@@ -85,7 +86,7 @@ Count the alert rules that come with the platform:
 ----
 oc get prometheusrules \
   --all-namespaces \
-  -o json \
+  --output json \
   | jq '[.items[].spec.groups[].rules[]
       | select(.alert)] | length'
 ----
@@ -93,6 +94,7 @@ oc get prometheusrules \
 Well over a hundred rules cover the nodes, the control plane and every platform Operator.
 You did not write or install any of them, and they are updated with each OpenShift release.
 
+[.validation]
 NOTE: *Not validated:* the console steps in this exercise.
 The commands above were validated.
 
@@ -160,7 +162,7 @@ If it does not exist, create it:
 
 [source,bash]
 ----
-cat <<'EOF' | oc apply -f -
+oc apply --filename - <<'EOF'
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -186,7 +188,7 @@ Wait for the user workload Prometheus to start:
 ----
 oc get pods \
   --namespace openshift-user-workload-monitoring \
-  -w
+  --watch
 ----
 
 Press Ctrl+C when the `prometheus-user-workload` and `thanos-ruler-user-workload` pods are `Running`.
@@ -199,7 +201,7 @@ Tell user workload monitoring to scrape it:
 
 [source,bash]
 ----
-cat <<'EOF' | oc apply -f -
+oc apply --filename - <<'EOF'
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -225,7 +227,7 @@ Send some requests through the application's route:
 ----
 APP_HOST=$(oc get route sample-app \
   --namespace sample-app \
-  -o jsonpath='{.spec.host}')
+  --output jsonpath='{.spec.host}')
 ----
 
 [source,bash]
@@ -237,6 +239,7 @@ done
 
 If you skipped xref:module-02-cloud-credentials.adoc[Pod Cloud Credentials], every request to `/` returns `500`, because the application has no bucket or container to read.
 
+[.validation]
 NOTE: *Not validated:* the console.
 The queries below were validated through the Thanos Querier, with the command at the end of this exercise.
 
@@ -267,7 +270,7 @@ The same queries work from the command line, through the Thanos Querier route th
 ----
 THANOS_HOST=$(oc get route thanos-querier \
   --namespace openshift-monitoring \
-  -o jsonpath='{.spec.host}')
+  --output jsonpath='{.spec.host}')
 ----
 
 [source,bash]
@@ -311,7 +314,7 @@ Alert when the application fails to read from its object store, which uses the c
 
 [source,bash]
 ----
-cat <<'EOF' | oc apply -f -
+oc apply --filename - <<'EOF'
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
@@ -332,6 +335,7 @@ spec:
 EOF
 ----
 
+[.validation]
 NOTE: *Not validated:* the console view.
 The rule itself was validated: it loads and fires, as the `ALERTS` metric shows.
 
@@ -353,7 +357,7 @@ Create the namespace, OperatorGroup and Subscription:
 
 [source,bash]
 ----
-cat <<'EOF' | oc apply -f -
+oc apply --filename - <<'EOF'
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -393,7 +397,7 @@ Wait for the Operator to install:
 ----
 oc get csv \
   --namespace openshift-logging \
-  -w
+  --watch
 ----
 
 Press Ctrl+C when the `cluster-logging` ClusterServiceVersion shows `Succeeded`.
@@ -425,6 +429,7 @@ The collector sends the sample application's logs to your cloud's log service: C
 ROSA (AWS)::
 +
 --
+[.validation]
 NOTE: *Not validated:* the `rosa` and `aws` steps, and delivery to CloudWatch.
 The log forwarder and its collector were validated with a placeholder IAM role, up to the collector calling AWS STS.
 
@@ -454,7 +459,7 @@ AWS_REGION=$(rosa describe cluster \
 ----
 OIDC_PROVIDER=$(oc get authentication.config.openshift.io \
   cluster \
-  -o jsonpath='{.spec.serviceAccountIssuer}' \
+  --output jsonpath='{.spec.serviceAccountIssuer}' \
   | sed 's|^https://||')
 ----
 
@@ -557,7 +562,7 @@ It reads only the `sample-app` namespace and writes to a log group named `worksh
 
 [source,bash]
 ----
-cat <<EOF | oc apply -f -
+oc apply --filename - <<EOF
 apiVersion: observability.openshift.io/v1
 kind: ClusterLogForwarder
 metadata:
@@ -601,7 +606,7 @@ Check that the forwarder is ready and its collector pods run:
 ----
 oc get clusterlogforwarder workshop \
   --namespace openshift-logging \
-  -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+  --output jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
 ----
 
 [source,bash]
@@ -637,6 +642,7 @@ oc logs \
 ARO (Azure)::
 +
 --
+[.validation]
 NOTE: *Not validated:* this exercise end to end.
 The validation ARO cluster used a service principal, not managed identity, so it has no OIDC issuer for workload identity.
 Only the log forwarder manifest was checked, against the cluster's API schema.
@@ -676,7 +682,7 @@ LOCATION=$(az aro show \
 ----
 OIDC_ISSUER=$(oc get authentication.config.openshift.io \
   cluster \
-  -o jsonpath='{.spec.serviceAccountIssuer}')
+  --output jsonpath='{.spec.serviceAccountIssuer}')
 ----
 
 Create a Log Analytics workspace and a custom table for the application's logs:
@@ -883,7 +889,7 @@ Create the log forwarder:
 
 [source,bash]
 ----
-cat <<EOF | oc apply -f -
+oc apply --filename - <<EOF
 apiVersion: observability.openshift.io/v1
 kind: ClusterLogForwarder
 metadata:
@@ -927,7 +933,7 @@ Check that the forwarder is ready and its collector pods run:
 ----
 oc get clusterlogforwarder workshop \
   --namespace openshift-logging \
-  -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+  --output jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
 ----
 
 [source,bash]
@@ -983,6 +989,7 @@ The same forwarder can send the API server audit logs to Log Analytics, for Micr
 Give them their own table: they are sensitive, they need the `collect-audit-logs` cluster role, and their volume adds noticeable Log Analytics charges.
 A `kubeAPIAudit` filter on the pipeline can drop the events you do not need.
 
+[.validation]
 NOTE: *Not validated:* forwarding audit logs from ARO, which was not run on a cluster.
 
 Grant the collector's service account the audit role:
@@ -1040,6 +1047,7 @@ ROSA control plane logs, including the API server's record of every request, lea
 Turn it on when you create the cluster: it cannot capture logs from before it was enabled.
 Forwarding and storing these logs adds CloudWatch or S3 charges.
 
+[.validation]
 NOTE: *Not validated:* the control plane log forwarder, which was not run on a cluster.
 
 The commands use the variables from the ROSA tab of Exercise 6.
