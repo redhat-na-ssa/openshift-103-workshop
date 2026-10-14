@@ -68,7 +68,7 @@ oc get prometheusrules \
       | select(.alert)] | length'
 ----
 
-Several hundred rules cover the nodes, the control plane and every platform Operator.
+Well over a hundred rules cover the nodes, the control plane and every platform Operator.
 You did not write or install any of them, and they are updated with each OpenShift release.
 
 In the web console, open *Observe* > *Dashboards* and pick *Kubernetes / Compute Resources / Namespace (Pods)*, then the `sample-app` namespace.

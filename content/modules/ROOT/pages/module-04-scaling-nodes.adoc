@@ -91,13 +91,15 @@ rosa list machinepools \
   --cluster "$CLUSTER"
 ----
 
-The cluster itself has no MachineSets:
+The cluster itself has no Machine API at all:
 
 [source,bash]
 ----
 oc get machinesets \
   --namespace openshift-machine-api
 ----
+
+The command fails with `the server doesn't have a resource type "machinesets"`.
 
 ==== ARO
 
