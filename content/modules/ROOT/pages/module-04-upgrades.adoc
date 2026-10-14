@@ -35,6 +35,7 @@ AKS long-term support keeps a version for two years.
 == On ROSA and ARO
 
 Run each exercise in both your ROSA and ARO terminals unless it says otherwise.
+Where the steps differ, they appear in a *ROSA (AWS)* tab and an *ARO (Azure)* tab.
 
 The ROSA steps use the `CLUSTER` variable from Module 2.
 If you open a new ROSA terminal, set it again:
@@ -44,6 +45,14 @@ If you open a new ROSA terminal, set it again:
 export CLUSTER=<your-rosa-cluster-name>
 ----
 
+.Exercises on this page
+* <<ex-module-04-upgrades-1>>
+* <<ex-module-04-upgrades-2>>
+* <<ex-module-04-upgrades-3>>
+* <<ex-module-04-upgrades-4>>
+* <<ex-module-04-upgrades-5>>
+
+[#ex-module-04-upgrades-1]
 === Exercise 1: See Where the Cluster Stands
 
 Show the cluster's version, update channel and available updates:
@@ -66,8 +75,11 @@ That is an acknowledgment gate, covered in Exercise 4, and it blocks only the ne
 The update channel decides which versions are offered.
 Patch releases arrive in the current channel, and a new minor version needs a channel change, which never happens on its own.
 
-==== ROSA
-
+[tabs]
+======
+ROSA (AWS)::
++
+--
 NOTE: *Not validated:* the `rosa` commands in this part, and the claim that machine pools can trail the control plane by two minor versions.
 
 On ROSA the channel and the list of updates come from OpenShift Cluster Manager.
@@ -97,9 +109,10 @@ rosa list machinepools \
 ----
 
 You would change the channel with `rosa edit cluster` and its `--channel` flag, not with `oc`.
-
-==== ARO
-
+--
+ARO (Azure)::
++
+--
 On ARO the channel is a field of the cluster's ClusterVersion, and it is not set by default.
 
 NOTE: *Not validated:* setting the channel, which was not run on the validation cluster.
@@ -114,6 +127,8 @@ oc adm upgrade channel stable-4.21
 
 Setting the channel does not start an update.
 ARO supports only the `stable`, `fast` and `eus` channels.
+--
+======
 
 .EKS and AKS (reference only)
 [%collapsible]
@@ -143,6 +158,7 @@ az aks get-upgrades \
 ----
 ====
 
+[#ex-module-04-upgrades-2]
 === Exercise 2: Read the Update History
 
 ClusterVersion keeps every update the cluster has taken, with its start and end time:
@@ -171,6 +187,7 @@ oc get clusterversion version -o json \
 `Progressing` is `True` while an update runs.
 An `Upgradeable` condition appears, set to `False`, only when something blocks the next minor update.
 
+[#ex-module-04-upgrades-3]
 === Exercise 3: Schedule an Upgrade, Then Cancel It (ROSA Only)
 
 NOTE: *Not validated:* this whole exercise, which needs the `rosa` CLI, and the `UpgradeConfig` example, which was not created.
@@ -315,6 +332,7 @@ az aks maintenanceconfiguration add \
 ----
 ====
 
+[#ex-module-04-upgrades-4]
 === Exercise 4: Find What Would Block an Upgrade
 
 ==== Operators
@@ -468,6 +486,7 @@ oc get poddisruptionbudget sample-app \
   --namespace sample-app
 ----
 
+[#ex-module-04-upgrades-5]
 === Exercise 5: Know Where Upgrade Notices Arrive
 
 NOTE: *Not validated:* these notification paths, which come from the vendors' documentation.

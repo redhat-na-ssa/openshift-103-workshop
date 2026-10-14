@@ -56,8 +56,8 @@ image::module-04-scaling-models.svg[Group autoscaling grows pre-defined groups o
 == On ROSA and ARO
 
 ROSA keeps its machine pools outside your cluster, in OpenShift Cluster Manager, while ARO keeps MachineSets inside it.
-So the steps differ between the two clusters.
-Run the ROSA steps in your ROSA terminal and the ARO steps in your ARO terminal, the ones you set up in Module 2.
+So the steps differ between the two clusters, and they appear in a *ROSA (AWS)* tab and an *ARO (Azure)* tab.
+Run each tab's steps in that cluster's terminal, the ones you set up in Module 2.
 
 The ROSA steps use the `CLUSTER` variable from Module 2.
 If you open a new ROSA terminal, set it again:
@@ -67,6 +67,15 @@ If you open a new ROSA terminal, set it again:
 export CLUSTER=<your-rosa-cluster-name>
 ----
 
+.Exercises on this page
+* <<ex-module-04-scaling-nodes-1>>
+* <<ex-module-04-scaling-nodes-2>>
+* <<ex-module-04-scaling-nodes-3>>
+* <<ex-module-04-scaling-nodes-4>>
+* <<ex-module-04-scaling-nodes-5>>
+* <<ex-module-04-scaling-nodes-6>>
+
+[#ex-module-04-scaling-nodes-1]
 === Exercise 1: Look at the Nodes You Have
 
 List the nodes with their instance type and zone, on both clusters:
@@ -82,8 +91,11 @@ ROSA shows only worker nodes.
 The control plane runs in a Red Hat account and never appears as nodes.
 ARO also shows three control plane nodes, which run in your subscription but which you must not change.
 
-==== ROSA
-
+[tabs]
+======
+ROSA (AWS)::
++
+--
 NOTE: *Not validated:* `rosa list machinepools`.
 The `oc` command after it was validated.
 
@@ -105,9 +117,10 @@ oc get machinesets \
 ----
 
 The command fails with `the server doesn't have a resource type "machinesets"`.
-
-==== ARO
-
+--
+ARO (Azure)::
++
+--
 On ARO, MachineSets are the pool API, and you edit them in the cluster:
 
 [source,bash]
@@ -124,6 +137,8 @@ Each Machine is an Azure VM:
 oc get machines \
   --namespace openshift-machine-api
 ----
+--
+======
 
 .EKS and AKS (reference only)
 [%collapsible]
@@ -147,13 +162,17 @@ az aks nodepool list \
 ----
 ====
 
+[#ex-module-04-scaling-nodes-2]
 === Exercise 2: Add an Autoscaling Group of Nodes
 
 You add a group of nodes with the label `workshop=scale-lab` and a matching taint, so that only the sample application lands there.
 The group starts small and the cluster autoscaler grows it when pods are pending.
 
-==== ROSA
-
+[tabs]
+======
+ROSA (AWS)::
++
+--
 NOTE: *Not validated:* the ROSA steps of this exercise, which need the `rosa` CLI, including a machine pool that starts at zero nodes.
 
 A machine pool on ROSA lives in one subnet, so in one availability zone.
@@ -201,9 +220,10 @@ You can see its few cluster-wide settings:
 rosa describe autoscaler \
   --cluster "$CLUSTER"
 ----
-
-==== ARO
-
+--
+ARO (Azure)::
++
+--
 Standard ARO has no pool API, so you copy an existing worker MachineSet in the cluster.
 Pick the first worker MachineSet:
 
@@ -310,6 +330,8 @@ oc get machines \
 
 Press Ctrl+C when its phase is `Running`.
 The new node is in the same availability zone as the MachineSet you copied.
+--
+======
 
 .EKS and AKS (reference only)
 [%collapsible]
@@ -347,6 +369,7 @@ az aks nodepool add \
 ----
 ====
 
+[#ex-module-04-scaling-nodes-3]
 === Exercise 3: Scale the Sample Application Past Capacity
 
 NOTE: *Not validated:* this exercise on ROSA, which needs the machine pool from Exercise 2.
@@ -470,6 +493,7 @@ kubectl get configmap cluster-autoscaler-status \
 ----
 ====
 
+[#ex-module-04-scaling-nodes-4]
 === Exercise 4: Let Karpenter Pick the Nodes (ROSA Only)
 
 NOTE: *Not validated:* this whole exercise.
@@ -653,6 +677,7 @@ az aks update \
 It then reads `karpenter.sh/v1` NodePools with an `AKSNodeClass`.
 ====
 
+[#ex-module-04-scaling-nodes-5]
 === Exercise 5: See Who Patches the Node OS
 
 List the nodes with their OS image and kernel, on both clusters:
@@ -705,6 +730,7 @@ az aks update \
 ----
 ====
 
+[#ex-module-04-scaling-nodes-6]
 === Exercise 6: Clean Up
 
 Put the sample application back on the regular workers, on both clusters:
@@ -743,8 +769,11 @@ oc scale deployment/sample-app \
   --replicas 2
 ----
 
-==== ROSA
-
+[tabs]
+======
+ROSA (AWS)::
++
+--
 NOTE: *Not validated:* the ROSA cleanup steps, which need the `rosa` CLI.
 
 If you skipped Exercise 4, delete the machine pool instead:
@@ -766,9 +795,10 @@ oc delete nodepools.karpenter.sh karpenter-lab
 ----
 
 AutoNode stays enabled, which costs nothing while no NodePool asks for nodes.
-
-==== ARO
-
+--
+ARO (Azure)::
++
+--
 Delete the MachineAutoscaler and the MachineSet.
 The Machine API deletes the VM:
 
@@ -783,6 +813,8 @@ oc delete machineautoscaler scale-lab \
 oc delete machineset scale-lab \
   --namespace openshift-machine-api
 ----
+--
+======
 
 == What Matters
 
