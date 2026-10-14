@@ -543,8 +543,27 @@ oc patch project.config.openshift.io cluster \
     {"name":"project-request"}}}'
 ----
 
-The OpenShift API server picks up the change after a few minutes.
-On ROSA, where the API server runs in the hosted control plane, it can take about five.
+The OpenShift API servers restart to pick up the change, which takes about five minutes.
+Until they all have, some project requests use the template and some don't.
+
+On ARO, wait for the restart to start, then to finish:
+
+[source,bash]
+----
+oc wait clusteroperator/openshift-apiserver \
+  --for=condition=Progressing=True \
+  --timeout=2m
+----
+
+[source,bash]
+----
+oc wait clusteroperator/openshift-apiserver \
+  --for=condition=Progressing=False \
+  --timeout=15m
+----
+
+On ROSA, the API servers run in the hosted control plane and the cluster shows no rollout, so wait about five minutes.
+
 Then, in the developer terminal, create another project:
 
 [source,bash]
@@ -562,7 +581,7 @@ oc describe quota
 oc describe limitrange
 ----
 
-If the project has no quota, the API server had not picked up the template yet.
+If the project has no quota, an API server had not picked up the template yet.
 Wait a minute and create a project with a new name, such as `dev-team-2`.
 A deleted project's name stays taken until its deletion finishes.
 
@@ -595,6 +614,9 @@ The request is refused with `You may not request a new project via this API`.
 
 The template applies only to projects created through a project request (`oc new-project` or the console).
 A Namespace created directly, by `oc create namespace` or by a GitOps tool, gets no quota from the template.
+
+To remove the template later, remove `spec.projectRequestTemplate` first and wait for the API servers to restart again, as above, before you delete the template.
+Until they all have, project requests fail with `templates.template.openshift.io "project-request" not found`.
 
 .EKS and AKS (reference only)
 [%collapsible]
@@ -646,7 +668,8 @@ oc adm policy add-role-to-group edit team-a \
   --namespace team-a
 ----
 
-In the developer terminal, the new project is visible:
+In the developer terminal, the new project is visible.
+It can take a minute to appear in the list:
 
 [source,bash]
 ----
