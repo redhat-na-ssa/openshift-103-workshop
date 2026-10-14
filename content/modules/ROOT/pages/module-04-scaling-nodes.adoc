@@ -848,9 +848,6 @@ oc delete machineset scale-lab \
   --namespace openshift-machine-api
 ----
 
-[.validation]
-NOTE: *Not validated:* deleting the ClusterAutoscaler.
-
 If you created the ClusterAutoscaler in Exercise 2, delete it:
 
 [source,bash]

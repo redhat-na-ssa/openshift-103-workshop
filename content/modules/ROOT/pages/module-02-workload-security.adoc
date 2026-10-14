@@ -302,6 +302,9 @@ oc rollout status deployment/sample-app \
   --namespace sample-app
 ----
 
+The old pod takes up to 30 seconds to stop after the rollout finishes.
+Until it has, the next two commands can show it instead, with `restricted-v2` and its old user ID, so wait until `oc get pods --namespace sample-app` lists one pod.
+
 The pod runs. Check its SCC and user ID:
 
 [source,bash]

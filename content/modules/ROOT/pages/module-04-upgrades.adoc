@@ -122,10 +122,6 @@ ARO (Azure)::
 --
 On ARO the channel is a field of the cluster's ClusterVersion, and it is not set by default.
 
-[.validation]
-NOTE: *Not validated:* setting the channel, which was not run on the validation cluster.
-That a new ARO cluster has no channel was validated.
-
 If `oc adm upgrade` reported no channel, set it to the stable channel of the cluster's minor version, for example:
 
 [source,bash]
@@ -133,6 +129,8 @@ If `oc adm upgrade` reported no channel, set it to the stable channel of the clu
 oc adm upgrade channel stable-4.21
 ----
 
+It warns that no channels are known to be compatible with the current version and sets the channel anyway: the cluster has not fetched the channel list yet.
+Run `oc adm upgrade` again a minute later, and it lists the available channels and the recommended updates.
 Setting the channel does not start an update.
 ARO supports only the `stable`, `fast` and `eus` channels.
 --
@@ -401,7 +399,7 @@ oc get configmap admin-gates \
   | jq '.data'
 ----
 
-Your acknowledgments go in another, which stays empty until you acknowledge a gate:
+Your acknowledgments go in another, which prints `null` until you acknowledge a gate:
 
 [source,bash]
 ----
@@ -413,6 +411,7 @@ oc get configmap admin-acks \
 
 A gate that is listed in `admin-gates` and not acknowledged in `admin-acks` blocks the next minor update, even when no Operator does.
 `oc adm upgrade` reports it as `Upgradeable=False` with the reason `AdminAckRequired`.
+On ARO 4.21, for example, a new cluster lists a gate about boot image management, which OpenShift 4.22 turns on for Azure clusters.
 
 ==== Removed APIs
 

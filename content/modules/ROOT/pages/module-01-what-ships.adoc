@@ -210,7 +210,7 @@ This one command covers every platform component that ships with the cluster, wh
 Operators you add from the Software Catalog, such as GitOps, Logging or OADP, are not in this list.
 
 [.validation]
-NOTE: *Not validated:* this listing, which is read-only.
+NOTE: *Not validated:* this listing on ROSA. It was validated on ARO.
 
 Their ClusterServiceVersions (CSVs) report their health instead.
 A CSV is the record that the Operator Lifecycle Manager (OLM) keeps of each installed Operator version.
@@ -370,9 +370,6 @@ oc get catalogsources \
 ARO only shows Red Hat's catalogs when the cluster has a Red Hat pull secret.
 If `redhat-operators` is missing on ARO, either the cluster has no Red Hat pull secret, or it was added after creation and the sources are still disabled.
 
-[.validation]
-NOTE: *Not validated:* the OperatorHub check, which is read-only.
-
 On ARO, check which default sources are disabled:
 
 [source,bash]
@@ -380,6 +377,8 @@ On ARO, check which default sources are disabled:
 oc get operatorhub cluster \
   --output jsonpath='{.spec.sources}{"\n"}'
 ----
+
+An empty line means that no default source is disabled.
 
 For the fix, see the xref:setup-requirements.adoc[Setup Requirements].
 
@@ -533,6 +532,8 @@ spec:
 EOF
 ----
 
+`oc` may warn that the finalizer name should be domain-qualified and include a path; that warning is harmless.
+
 Check that the application is synced and healthy:
 
 [source,bash]
@@ -566,7 +567,7 @@ Log in with *Log in via OpenShift*, using your cluster credentials.
 === Clean Up
 
 [.validation]
-NOTE: *Not validated:* the cascading delete through the finalizer.
+NOTE: *Not validated:* the cascading delete on ROSA. It was validated on ARO.
 
 Delete the application, which also removes what it deployed:
 

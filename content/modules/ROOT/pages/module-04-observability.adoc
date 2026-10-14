@@ -350,7 +350,7 @@ Without the Module 2 credentials every request to `/` fails, so the rule fires a
 If the application reads its bucket or container without errors, break the read on purpose for a few minutes and watch the alert go off.
 
 [.validation]
-NOTE: *Not validated:* this optional step, which was not run on a cluster.
+NOTE: *Not validated:* this optional step on ROSA. It was validated on ARO.
 
 [tabs]
 ======
@@ -419,7 +419,7 @@ curl -sG "https://${THANOS_HOST}/api/v1/query" \
   | jq '.data.result[].metric.alertstate'
 ----
 
-It prints `"pending"` during the rule's one-minute `for` period, then `"firing"`.
+It prints `"pending"` during the rule's one-minute `for` period, then `"firing"`, once for each of the application's pods.
 The console's *Observe* > *Alerting* page shows the same alert.
 
 Put the setting back:
@@ -762,9 +762,10 @@ ARO (Azure)::
 +
 --
 [.validation]
-NOTE: *Not validated:* this exercise end to end.
+NOTE: *Not validated:* the federated credential and delivery to Log Analytics.
 The validation ARO cluster used a service principal, not managed identity, so it has no OIDC issuer for workload identity.
-Only the log forwarder manifest was checked, against the cluster's API schema.
+The other steps were validated on it: the workspace, table, endpoint, rule, identity and role assignment were created, and the log forwarder became ready with its collectors running.
+Without the federated credential, the collectors then failed to authenticate with `AADSTS70025`.
 
 The collector writes to a Log Analytics workspace through the Azure Monitor Logs Ingestion API.
 That needs a custom table, a data collection endpoint and a data collection rule, and an identity allowed to send to the rule.
@@ -806,6 +807,14 @@ OIDC_ISSUER=$(oc get authentication.config.openshift.io \
   cluster \
   --output jsonpath='{.spec.serviceAccountIssuer}')
 ----
+
+[source,bash]
+----
+echo "$OIDC_ISSUER"
+----
+
+If it prints nothing, the cluster uses a service principal and has no workload identity, as in xref:module-02-cloud-credentials.adoc[Pod Cloud Credentials].
+The federated credential step below then fails and no logs arrive, so read the rest of this exercise without running it.
 
 [discrete]
 ==== Create the Workspace and Table
@@ -1115,6 +1124,7 @@ oc logs \
 ----
 
 `AADSTS700211` or `AADSTS700213`, no matching federated identity record, means the federated credential's issuer, subject or audience does not match the collector's token.
+`AADSTS70025`, no configured federated identity credentials, means the federated credential was never created.
 
 Older guides use the `azureMonitor` output type with a workspace shared key.
 It sends through the HTTP Data Collector API, which Microsoft stopped supporting in September 2026, and the output is deprecated in OpenShift Logging 6.6.
