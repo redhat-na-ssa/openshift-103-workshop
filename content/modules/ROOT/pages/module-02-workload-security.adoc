@@ -1,7 +1,5 @@
 = Workload Security Defaults
 
-NOTE: The exercises on this page have not been validated on live ROSA and ARO clusters yet.
-
 EKS and AKS admit almost any pod unless you add guardrails.
 ROSA and ARO admit pods through security context constraints (SCCs), which by default run every container as a non-root user ID picked for its project, with all capabilities dropped.
 This is the first difference most EKS and AKS engineers hit, and the one application teams notice most.
@@ -185,6 +183,9 @@ oc patch deployment sample-app \
     {"securityContext":{"runAsUser":1000}}}}}'
 ----
 
+The command prints a `PodSecurity "restricted:latest"` warning: that is the namespace's `warn` label at work, checking your manifest as written.
+It does not block anything.
+
 No new pod appears.
 Read the ReplicaSet's events:
 
@@ -331,15 +332,22 @@ oc rollout status deployment/sample-app \
 ----
 
 Use `anyuid` only for images you cannot change, and grant it to one dedicated service account, never to `default`.
-Before granting any SCC, you can ask which one a pod would get:
+Before granting any SCC, you can ask which one the application's pods would get:
 
 [source,bash]
 ----
 oc get deployment sample-app \
   --namespace sample-app \
   --output yaml \
-  | oc adm policy scc-subject-review -f -
+  | oc adm policy scc-subject-review \
+      --namespace sample-app \
+      --serviceaccount sample-app \
+      --groups system:authenticated \
+      -f -
 ----
+
+It answers `restricted-v2`.
+Name the service account and its group: without them, the review checks your own permissions, and as cluster-admin you may use every SCC, so it answers `anyuid`.
 
 The sample application now runs securely on both clusters.
 The next section gives it cloud credentials.

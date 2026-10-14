@@ -22,6 +22,7 @@ import base64
 import json
 import logging
 import os
+import signal
 import sys
 import time
 from datetime import datetime, timezone
@@ -224,6 +225,9 @@ def main():
 
     check_state_dir()
     log("info", "starting", port=PORT, cloud=cloud(), uid=os.getuid(), gid=os.getgid())
+    # As PID 1 the process ignores SIGTERM unless it handles it, so pods
+    # would wait out the full grace period on every rollout.
+    signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
     ThreadingHTTPServer(("", PORT), Handler).serve_forever()
 
 
