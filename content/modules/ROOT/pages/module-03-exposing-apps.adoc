@@ -1,0 +1,62 @@
+= Exposing an App
+
+NOTE: This section is an outline. Its diagrams and exercises are being written and validated on ROSA and ARO.
+
+On EKS and AKS you install or enable an ingress controller before anything can be reached from outside.
+ROSA and ARO arrive with a default ingress controller behind a cloud load balancer, a wildcard DNS name for applications and a certificate for it, so the sample application gets an HTTPS address in one step.
+This section exposes the sample application three ways: an OpenShift Route, a standard Kubernetes Ingress, and the Gateway API.
+
+// Planned visual:
+// - Request path for all four: client, cloud load balancer, ingress
+//   (ALB target, app routing NGINX or Gateway, OpenShift router),
+//   service, pod.
+
+== On EKS and AKS
+
+* EKS: install the AWS Load Balancer Controller, then each Ingress creates or joins an Application Load Balancer. The controller also supports the Gateway API.
+* AKS: enable the application routing add-on. Its managed NGINX loses Azure support after November 2026, and its Gateway API mode is the path forward.
+* You bring DNS (for example ExternalDNS) and certificates (for example cert-manager).
+
+== On ROSA and ARO
+
+Outline of the exercise:
+
+. Find the default ingress controller, its load balancer in the AWS or Azure console, and the cluster's application domain.
+. Expose the sample application with an edge-terminated Route and open it over HTTPS.
+. Create a standard Ingress for it, and look at the Route OpenShift generates from it.
+. Expose it through the Gateway API with an HTTPRoute.
+
+== What Matters
+
+* A Route is OpenShift's own resource, with edge, re-encrypt and passthrough TLS. Ingress objects still work and become Routes.
+* On ROSA, SRE owns the default ingress controller's settings. For other needs you add another ingress controller, or the AWS Load Balancer Operator for ALBs.
+* OpenShift supports the Gateway API from 4.19. The ROSA and ARO documentation do not cover it yet, so check it on your clusters before you rely on it.
+
+== Where Each Wins
+
+[cols="1,1",options="header"]
+|===
+|ROSA and ARO win |EKS and AKS win
+
+|Nothing to install: HTTPS on a wildcard domain on day one.
+|Deep cloud integration: ALB target groups, WAF and authentication on EKS, Application Gateway on AKS.
+
+|Routes cover TLS modes that Ingress cannot express.
+|Gateway API maps straight onto cloud load balancers.
+|===
+
+== References
+
+* EKS
+** https://docs.aws.amazon.com/eks/latest/userguide/aws-load-balancer-controller.html[AWS Load Balancer Controller]
+** https://aws.amazon.com/blogs/networking-and-content-delivery/aws-load-balancer-controller-adds-general-availability-support-for-kubernetes-gateway-api/[Gateway API in the AWS Load Balancer Controller]
+* AKS
+** https://learn.microsoft.com/azure/aks/app-routing[Application routing add-on]
+** https://learn.microsoft.com/azure/aks/app-routing-gateway-api[Application routing with Gateway API]
+** https://learn.microsoft.com/azure/aks/app-routing-migration[Application routing migration]
+* ROSA
+** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/ingress_and_load_balancing/routes[Routes on ROSA]
+** https://www.redhat.com/en/blog/a-guide-to-ingress-controllers-in-red-hat-openshift-service-on-aws[A guide to ingress controllers in ROSA]
+* OpenShift (ARO uses the OpenShift documentation)
+** https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/ingress_and_load_balancing/routes[Routes]
+** https://docs.redhat.com/en/documentation/openshift_container_platform/4.22/html/ingress_and_load_balancing/configuring-gateway-api[Configuring Gateway API]

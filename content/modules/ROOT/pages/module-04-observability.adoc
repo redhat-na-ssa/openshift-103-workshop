@@ -1,0 +1,65 @@
+= Observability
+
+NOTE: This section is an outline. Its diagrams and exercises are being written and validated on ROSA and ARO.
+
+On EKS and AKS you choose a monitoring and logging stack and wire it up, usually CloudWatch or Azure Monitor with managed Prometheus.
+ROSA and ARO ship Prometheus, Alertmanager and console dashboards, with platform alerts tuned by SRE.
+Getting application logs into CloudWatch or Azure Monitor is your job, and this section does it.
+
+// Planned visual:
+// - Stack diagram: what you build on EKS and AKS (agents, managed
+//   Prometheus, Grafana, log shipping) vs what ships on ROSA and ARO
+//   (platform monitoring, user workload monitoring) and what you add
+//   (Logging Operator, ClusterLogForwarder, Arc for Azure Monitor).
+
+== On EKS and AKS
+
+* EKS: CloudWatch Container Insights as an add-on, and Amazon Managed Service for Prometheus with a managed collector.
+* AKS: Azure Monitor Container Insights and Azure Monitor managed Prometheus, with Azure Managed Grafana.
+
+== On ROSA and ARO
+
+Outline of the exercise:
+
+. Browse the built-in dashboards and the platform alerts.
+. Check that user workload monitoring is on; turn it on where it is not.
+. Add a ServiceMonitor for the sample application and query its metrics in the console.
+. Install the Logging Operator and forward application logs: to CloudWatch on ROSA, using an IAM role as in xref:module-02-cloud-credentials.adoc[Pod Cloud Credentials], and to Azure Monitor Logs on ARO.
+
+== What Matters
+
+* Platform monitoring is preconfigured and SRE-owned. User workload monitoring covers your applications.
+* Application logging (Vector, optionally Loki) is an optional Operator that you install and run.
+* Azure Monitor Container Insights reaches ARO only through Azure Arc.
+* ROSA HCP control plane logs can be forwarded to CloudWatch.
+
+== Where Each Wins
+
+[cols="1,1",options="header"]
+|===
+|ROSA and ARO win |EKS and AKS win
+
+|Useful metrics, dashboards and platform alerts from the first minute.
+|One-click managed backends with long-term storage and nothing in the cluster to run.
+
+|The same monitoring stack on both clouds.
+|Native cloud console integration; on ARO, Azure Monitor needs Arc.
+|===
+
+== References
+
+* EKS
+** https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/Container-Insights-setup-EKS-addon.html[Container Insights add-on for EKS]
+** https://docs.aws.amazon.com/eks/latest/userguide/prometheus.html[Prometheus on EKS]
+* AKS
+** https://learn.microsoft.com/azure/aks/monitor-aks[Monitor AKS]
+* ROSA
+** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/monitoring/configuring-user-workload-monitoring[User workload monitoring on ROSA]
+** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/logging/rosa-forwarding-control-plane-logs[Forwarding ROSA HCP control plane logs]
+** https://cloud.redhat.com/experts/o11y/openshift-logging6-rosa-hcp/[Logging to CloudWatch on ROSA HCP (Cloud Experts)]
+* ARO
+** https://learn.microsoft.com/azure/azure-monitor/containers/kubernetes-monitoring-enable-arc[Azure Monitor for Arc-enabled clusters]
+** https://cloud.redhat.com/experts/aro/clf-to-azure/[Forwarding logs to Azure Monitor (Cloud Experts)]
+* OpenShift
+** https://docs.redhat.com/en/documentation/monitoring_stack_for_red_hat_openshift/4.21/html/about_monitoring/about-ocp-monitoring[About OpenShift monitoring]
+** https://docs.redhat.com/en/documentation/red_hat_openshift_logging/6.5/html/configuring_logging/configuring-log-forwarding[Configuring log forwarding]

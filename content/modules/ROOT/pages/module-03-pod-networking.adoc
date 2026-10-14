@@ -1,0 +1,74 @@
+= Pod Networking and Policy
+
+NOTE: This section is an outline. Its diagrams and exercises are being written and validated on ROSA and ARO.
+
+With the Amazon VPC CNI and Azure CNI, pods get addresses from your VPC or virtual network.
+ROSA and ARO run OVN-Kubernetes as an overlay: pod addresses never appear in the VPC or virtual network, and traffic leaves the cluster from the node's address unless you assign an egress IP.
+This section explains the packet path, then applies network policy at two levels: per project, and cluster-wide.
+
+// Planned visual:
+// - Packet-path diagram: VPC CNI, Azure CNI (and overlay or Cilium),
+//   OVN-Kubernetes. Mark where security groups, NetworkPolicy and
+//   AdminNetworkPolicy apply.
+// - Private-cluster panel on the same diagram: EKS private endpoint,
+//   AKS private cluster, ROSA HCP private API over PrivateLink, ARO
+//   private API and ingress.
+
+== On EKS and AKS
+
+* EKS: pods take VPC addresses, can carry their own security groups, and you plan subnets around address exhaustion. Network policy is a VPC CNI feature you turn on.
+* AKS: choose Azure CNI, Azure CNI overlay, or Azure CNI powered by Cilium, and a network policy engine.
+* Private clusters: the EKS endpoint can switch between public and private at any time, and AKS offers private clusters and API server VNet integration.
+
+== On ROSA and ARO
+
+Outline of the exercise:
+
+. Compare a pod's address with the node and VPC or virtual network addresses.
+. Apply a default-deny NetworkPolicy in the sample application's project, and allow only the router.
+. Apply an AdminNetworkPolicy that blocks every project from a sensitive namespace.
+. Show that a project administrator cannot override it.
+. Check the source address of traffic leaving the cluster.
+
+== What Matters
+
+* OVN-Kubernetes is the only network plugin. There is no CNI choice.
+* NetworkPolicy works with nothing to enable. AdminNetworkPolicy adds cluster-wide rules that project administrators cannot override.
+* Egress IPs give a project a fixed source address, with cloud-specific limits: on AWS the capacity depends on the instance type, and on ARO namespace egress IPs need user-defined routing.
+* Private clusters are an install-time choice on ROSA and ARO. ROSA HCP workers always reach the hosted control plane over AWS PrivateLink.
+
+== Where Each Wins
+
+[cols="1,1",options="header"]
+|===
+|ROSA and ARO win |EKS and AKS win
+
+|No pod address planning in your VPC or virtual network.
+|Pods are first-class network citizens: routable addresses, security groups for pods, flow logs by pod address.
+
+|NetworkPolicy, AdminNetworkPolicy and egress IPs built in.
+|Cilium on AKS adds eBPF dataplane, L7 and FQDN policy.
+
+|A supported private pattern that keeps SRE access working.
+|Endpoint visibility can change after the cluster is created.
+|===
+
+== References
+
+* EKS
+** https://docs.aws.amazon.com/eks/latest/best-practices/vpc-cni.html[VPC CNI best practices]
+** https://docs.aws.amazon.com/eks/latest/userguide/cni-network-policy.html[Network policy on EKS]
+** https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html[Cluster API server endpoint]
+* AKS
+** https://learn.microsoft.com/azure/aks/concepts-network-cni-overview[CNI networking overview]
+** https://learn.microsoft.com/azure/aks/azure-cni-powered-by-cilium[Azure CNI powered by Cilium]
+** https://learn.microsoft.com/azure/aks/private-clusters[Private AKS clusters]
+* ROSA
+** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/install_clusters/rosa-hcp-aws-private-creating-cluster[Private ROSA HCP clusters]
+** https://cloud.redhat.com/experts/rosa/egress-firewall/[Egress firewall on ROSA (Cloud Experts)]
+* ARO
+** https://learn.microsoft.com/azure/openshift/concepts-ovn-kubernetes[OVN-Kubernetes in ARO]
+** https://learn.microsoft.com/azure/openshift/howto-create-private-cluster-4x[Private ARO clusters]
+* OpenShift
+** https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/network_security/admin-network-policy[AdminNetworkPolicy]
+** https://docs.redhat.com/en/documentation/openshift_container_platform/4.21/html/ovn-kubernetes_network_plugin/configuring-egress-ips-ovn[Egress IPs]
