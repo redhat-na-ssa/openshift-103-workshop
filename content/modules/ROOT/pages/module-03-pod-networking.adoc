@@ -20,9 +20,17 @@ image::module-03-packet-path.svg[Pod packet path with the Amazon VPC CNI, Azure 
 == On ROSA and ARO
 
 Do these steps on your ROSA cluster, then repeat them on your ARO cluster.
-Where the two differ, the steps are split under ROSA and ARO headings.
+Where the two differ, the steps are split into ROSA and ARO tabs.
 They use the sample application in the `sample-app` project and the Route you created in xref:module-03-exposing-apps.adoc[Exposing an App].
 
+.Exercises on this page
+* <<ex-module-03-pod-networking-1>>
+* <<ex-module-03-pod-networking-2>>
+* <<ex-module-03-pod-networking-3>>
+* <<ex-module-03-pod-networking-4>>
+* <<ex-module-03-pod-networking-5>>
+
+[#ex-module-03-pod-networking-1]
 === Exercise 1: Compare Pod and Node Addresses
 
 List the sample application's pods with their addresses and nodes:
@@ -66,8 +74,11 @@ The VPC or virtual network knows the node's address, because it belongs to a net
 It does not know the pod's address, which belongs to none.
 When the pod talks to a database in the same VPC or virtual network, the database sees the node's address, so security groups and firewall rules can tell nodes apart but not pods.
 
-==== ROSA
-
+[tabs]
+======
+ROSA (AWS)::
++
+--
 Show the cluster's address ranges, in the `Machine CIDR`, `Service CIDR` and `Pod CIDR` lines:
 
 NOTE: *Not validated:* `rosa describe cluster`, which needs a `rosa` login to the cluster's Red Hat organization.
@@ -92,9 +103,10 @@ for ip in "$POD_IP" "$NODE_IP"; do
     --output text
 done
 ----
-
-==== ARO
-
+--
+ARO (Azure)::
++
+--
 Show the cluster's address ranges:
 
 [source,bash]
@@ -126,7 +138,10 @@ az network nic list \
   --query "[].ipConfigurations[].privateIPAddress" \
   --output tsv
 ----
+--
+======
 
+[#ex-module-03-pod-networking-2]
 === Exercise 2: Set Up a Test Client
 
 Run a client pod in its own project, to test connections from outside the sample application's project:
@@ -195,6 +210,7 @@ curl --silent \
   "https://$ROUTE_HOST/healthz"
 ----
 
+[#ex-module-03-pod-networking-3]
 === Exercise 3: Default-Deny the Sample Application's Project
 
 NetworkPolicy works on ROSA and ARO with nothing to enable.
@@ -333,6 +349,7 @@ az aks create \
 The NetworkPolicy objects themselves are the same on all four platforms.
 ====
 
+[#ex-module-03-pod-networking-4]
 === Exercise 4: Add a Cluster-Wide Guardrail
 
 NetworkPolicy belongs to whoever administers the project.
@@ -459,6 +476,7 @@ oc delete adminnetworkpolicy protect-sensitive-data
 oc delete project restricted-data
 ----
 
+[#ex-module-03-pod-networking-5]
 === Exercise 5: Check Where Traffic Leaves the Cluster
 
 Ask a public service which address the client pod's traffic comes from:
@@ -473,8 +491,11 @@ oc exec client \
 Compare it with the cloud's outbound addresses for the cluster below: it is one of them.
 Every pod on the cluster shares that address, so an external firewall that allows it allows the whole cluster.
 
-==== ROSA
-
+[tabs]
+======
+ROSA (AWS)::
++
+--
 Find the NAT gateway addresses in the cluster's VPC:
 
 NOTE: *Not validated:* the NAT gateway lookup, which needs AWS credentials for the account that owns the cluster.
@@ -495,9 +516,10 @@ aws ec2 describe-nat-gateways \
   --query "NatGateways[].NatGatewayAddresses[].PublicIp" \
   --output text
 ----
-
-==== ARO
-
+--
+ARO (Azure)::
++
+--
 List the public addresses in the cluster's managed resource group:
 
 [source,bash]
@@ -507,6 +529,8 @@ az network public-ip list \
   --query "[].{name:name,address:ipAddress}" \
   --output table
 ----
+--
+======
 
 === Fixed Egress Addresses (Reference Only)
 
