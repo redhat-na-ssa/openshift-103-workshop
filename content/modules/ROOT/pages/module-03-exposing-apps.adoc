@@ -20,10 +20,17 @@ image::module-03-request-path.svg[Request path from client to pod on EKS, AKS, R
 == On ROSA and ARO
 
 Do these steps on your ROSA cluster, then repeat them on your ARO cluster.
-Where the two differ, the steps are split under ROSA and ARO headings.
+Where the two differ, the steps are split into ROSA and ARO tabs.
 The sample application from Module 2 runs in the `sample-app` project, behind a Service named `sample-app` on port `8080`.
 Its `/healthz` path always answers `200`, so the checks below use it.
 
+.Exercises on this page
+* <<ex-module-03-exposing-apps-1>>
+* <<ex-module-03-exposing-apps-2>>
+* <<ex-module-03-exposing-apps-3>>
+* <<ex-module-03-exposing-apps-4>>
+
+[#ex-module-03-exposing-apps-1]
 === Exercise 1: Find the Default Ingress Controller
 
 Every cluster has an IngressController named `default`.
@@ -52,8 +59,11 @@ oc get service router-default \
 The `EXTERNAL-IP` column holds a host name on ROSA and an IP address on ARO.
 That is the cloud load balancer the cluster created at install time.
 
-==== ROSA
-
+[tabs]
+======
+ROSA (AWS)::
++
+--
 Find the load balancer in AWS:
 
 [source,bash]
@@ -97,9 +107,10 @@ rosa list ingresses \
 On ROSA you change the default ingress with `rosa edit ingress`, not by editing the IngressController object.
 
 NOTE: *Not validated:* changing the default ingress with `rosa edit ingress`, which comes from the ROSA documentation.
-
-==== ARO
-
+--
+ARO (Azure)::
++
+--
 Find the load balancer's public IP in Azure:
 
 [source,bash]
@@ -141,7 +152,10 @@ az aro show \
   --name <cluster-name> \
   --query ingressProfiles
 ----
+--
+======
 
+[#ex-module-03-exposing-apps-2]
 === Exercise 2: Expose the App with a Route
 
 Create an edge-terminated Route: the router terminates TLS with the cluster's wildcard certificate and forwards plain HTTP to the pods.
@@ -258,6 +272,7 @@ az aks approuting enable \
 On AKS the same Ingress uses `ingressClassName: webapprouting.kubernetes.azure.com` and no ALB annotations.
 ====
 
+[#ex-module-03-exposing-apps-3]
 === Exercise 3: Use a Standard Ingress
 
 Manifests written for EKS or AKS use Ingress, and OpenShift accepts it.
@@ -309,6 +324,7 @@ curl --silent \
   "https://sample-app-ingress.$APPS_DOMAIN/healthz"
 ----
 
+[#ex-module-03-exposing-apps-4]
 === Exercise 4: Use the Gateway API
 
 OpenShift implements the Gateway API with an Envoy-based gateway that the Ingress Operator manages.
@@ -412,12 +428,18 @@ curl --silent \
   "http://sample-app.gwapi.$APPS_DOMAIN/healthz"
 ----
 
-On ROSA it prints `200` once the new load balancer is ready, which takes a minute or two.
+[tabs]
+======
+ROSA (AWS)::
++
+--
+It prints `200` once the new load balancer is ready, which takes a minute or two.
 Until then it prints `000`, so wait and try again.
-
-[NOTE]
-====
-On ARO with the default `aroapp.io` domain, the command keeps printing `503`.
+--
+ARO (Azure)::
++
+--
+With the default `aroapp.io` domain, the command keeps printing `503`.
 Azure manages that DNS zone, so the cluster's DNS configuration names no zone and the Gateway's DNS record is never published.
 The name still resolves through the `*.apps` wildcard, to the default router, which has no Route for it.
 Send the request straight to the Gateway's address instead:
@@ -440,7 +462,8 @@ curl --silent \
 
 It prints `200`.
 To reach the Gateway by name, create the DNS record in a zone you manage.
-====
+--
+======
 
 The Gateway serves plain HTTP because nothing gave it a certificate.
 Unlike a Route, a Gateway listener needs a certificate that you provide, for example from cert-manager.
