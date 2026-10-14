@@ -70,11 +70,16 @@ The responsibility matrices in the references list each task in detail.
 == On ROSA and ARO
 
 .Exercises on this page
-* <<ex-module-01-who-manages-what-1>>
-* <<ex-module-01-who-manages-what-2>>
-* <<ex-module-01-who-manages-what-3>>
-* <<ex-module-01-who-manages-what-4>>
-* <<ex-module-01-who-manages-what-5>>
+* <<ex-module-01-who-manages-what-1>> +
+See where each cluster's control plane runs, from the cloud CLI and from inside the cluster.
+* <<ex-module-01-who-manages-what-2>> +
+See the IAM roles Red Hat works through in your AWS account, and the locked resource group ARO keeps in your subscription.
+* <<ex-module-01-who-manages-what-3>> +
+Spot the namespaces, webhooks and agents that SRE runs inside your cluster.
+* <<ex-module-01-who-manages-what-4>> +
+Watch the platform refuse a change to a resource SRE owns.
+* <<ex-module-01-who-manages-what-5>> +
+Learn where to open a support case on each platform and what it covers.
 
 [#ex-module-01-who-manages-what-1]
 === Exercise 1: Identify the Architecture
@@ -84,21 +89,7 @@ The responsibility matrices in the references list each task in detail.
 ROSA (AWS)::
 +
 --
-Describe the cluster:
-
-[source,bash]
-----
-rosa describe cluster \
-  --cluster <cluster-name>
-----
-
-Look for these lines:
-
-* `Control Plane`: `ROSA Service Hosted`, because the control plane runs in Red Hat's account.
-* `OpenShift Version`.
-* The operator IAM roles, used in Exercise 2.
-
-Get the same facts as JSON:
+Describe the cluster, keeping only its control plane type and version:
 
 [source,bash]
 ----
@@ -107,6 +98,8 @@ rosa describe cluster \
   --output json \
   | jq '{hcp: .hypershift.enabled, version: .version.raw_id}'
 ----
+
+`hcp` is `true`, because the control plane runs in Red Hat's account.
 --
 ARO (Azure)::
 +

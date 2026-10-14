@@ -46,11 +46,16 @@ export CLUSTER=<your-rosa-cluster-name>
 ----
 
 .Exercises on this page
-* <<ex-module-04-upgrades-1>>
-* <<ex-module-04-upgrades-2>>
-* <<ex-module-04-upgrades-3>>
-* <<ex-module-04-upgrades-4>>
-* <<ex-module-04-upgrades-5>>
+* <<ex-module-04-upgrades-1>> +
+Check the cluster's version, update channel and available updates.
+* <<ex-module-04-upgrades-2>> +
+Read every update the cluster has taken, and how long each one ran.
+* <<ex-module-04-upgrades-3>> +
+Schedule a ROSA upgrade with the rosa CLI and cancel it before it starts.
+* <<ex-module-04-upgrades-4>> +
+Find the Operators, removed APIs and PodDisruptionBudgets that would hold an upgrade back.
+* <<ex-module-04-upgrades-5>> +
+Know where each platform tells you about upcoming and finished upgrades.
 
 [#ex-module-04-upgrades-1]
 === Exercise 1: See Where the Cluster Stands

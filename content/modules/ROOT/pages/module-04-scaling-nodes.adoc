@@ -68,12 +68,18 @@ export CLUSTER=<your-rosa-cluster-name>
 ----
 
 .Exercises on this page
-* <<ex-module-04-scaling-nodes-1>>
-* <<ex-module-04-scaling-nodes-2>>
-* <<ex-module-04-scaling-nodes-3>>
-* <<ex-module-04-scaling-nodes-4>>
-* <<ex-module-04-scaling-nodes-5>>
-* <<ex-module-04-scaling-nodes-6>>
+* <<ex-module-04-scaling-nodes-1>> +
+List the worker nodes with their instance types and zones.
+* <<ex-module-04-scaling-nodes-2>> +
+Add a tainted group of nodes that the cluster autoscaler can grow.
+* <<ex-module-04-scaling-nodes-3>> +
+Scale the application until pods are pending, and watch new nodes arrive.
+* <<ex-module-04-scaling-nodes-4>> +
+Let the Red Hat build of Karpenter choose instance types for you on ROSA.
+* <<ex-module-04-scaling-nodes-5>> +
+See which OS the nodes run and who keeps it patched.
+* <<ex-module-04-scaling-nodes-6>> +
+Move the application back and remove the extra nodes.
 
 [#ex-module-04-scaling-nodes-1]
 === Exercise 1: Look at the Nodes You Have

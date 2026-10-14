@@ -31,10 +31,14 @@ Run the exercises on both clusters, in the administrator terminal from xref:modu
 The commands are the same on ROSA and ARO.
 
 .Exercises on this page
-* <<ex-module-02-workload-security-1>>
-* <<ex-module-02-workload-security-2>>
-* <<ex-module-02-workload-security-3>>
-* <<ex-module-02-workload-security-4>>
+* <<ex-module-02-workload-security-1>> +
+Deploy an image that runs as root, as you would on EKS, and watch what happens.
+* <<ex-module-02-workload-security-2>> +
+Find out which security context constraint admitted the pod, and why the next one failed.
+* <<ex-module-02-workload-security-3>> +
+Fix the image so it runs as any user ID, which is the fix to keep.
+* <<ex-module-02-workload-security-4>> +
+Let the service account run as root instead, and see what that gives away.
 
 [#ex-module-02-workload-security-1]
 === Exercise 1: Deploy the sample application as you would on EKS

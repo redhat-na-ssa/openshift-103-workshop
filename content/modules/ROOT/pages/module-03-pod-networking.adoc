@@ -24,11 +24,16 @@ Where the two differ, the steps are split into ROSA and ARO tabs.
 They use the sample application in the `sample-app` project and the Route you created in xref:module-03-exposing-apps.adoc[Exposing an App].
 
 .Exercises on this page
-* <<ex-module-03-pod-networking-1>>
-* <<ex-module-03-pod-networking-2>>
-* <<ex-module-03-pod-networking-3>>
-* <<ex-module-03-pod-networking-4>>
-* <<ex-module-03-pod-networking-5>>
+* <<ex-module-03-pod-networking-1>> +
+See that pods use overlay addresses, not VPC or virtual network addresses.
+* <<ex-module-03-pod-networking-2>> +
+Start a client pod in another project to test connections from.
+* <<ex-module-03-pod-networking-3>> +
+Block all traffic to the project, then allow back the router and monitoring.
+* <<ex-module-03-pod-networking-4>> +
+Add a cluster-wide rule that project administrators cannot override.
+* <<ex-module-03-pod-networking-5>> +
+Find out which address your pods' traffic comes from outside the cluster.
 
 [#ex-module-03-pod-networking-1]
 === Exercise 1: Compare Pod and Node Addresses
