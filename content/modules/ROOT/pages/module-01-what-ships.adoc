@@ -157,7 +157,7 @@ Show the update channel and the version history:
 [source,bash]
 ----
 oc get clusterversion version \
-  -o jsonpath='{.spec.channel}{"\n"}'
+  --output jsonpath='{.spec.channel}{"\n"}'
 ----
 
 On ROSA the channel is set by the service and follows your cluster's minor version, such as `stable-4.20`.
@@ -166,7 +166,7 @@ On ARO it is empty until you set one, because you start ARO upgrades yourself; M
 [source,bash]
 ----
 oc get clusterversion version \
-  -o json \
+  --output json \
   | jq -r '.status.history[] | .version + "  " + .state'
 ----
 
@@ -382,7 +382,7 @@ On ARO, check which default sources are disabled:
 [source,bash]
 ----
 oc get operatorhub cluster \
-  -o jsonpath='{.spec.sources}{"\n"}'
+  --output jsonpath='{.spec.sources}{"\n"}'
 ----
 
 For the fix, see the xref:setup-requirements.adoc[Setup Requirements].
@@ -393,7 +393,7 @@ Find the OpenShift GitOps Operator and its default channel:
 ----
 oc get packagemanifest openshift-gitops-operator \
   --namespace openshift-marketplace \
-  -o jsonpath='{.status.defaultChannel}{"\n"}'
+  --output jsonpath='{.status.defaultChannel}{"\n"}'
 ----
 
 [#ex-module-01-what-ships-6]
@@ -413,7 +413,7 @@ Create the OperatorGroup:
 
 [source,bash]
 ----
-oc apply -f - <<EOF
+oc apply --filename - <<EOF
 apiVersion: operators.coreos.com/v1
 kind: OperatorGroup
 metadata:
@@ -428,7 +428,7 @@ Create the Subscription:
 
 [source,bash]
 ----
-oc apply -f - <<EOF
+oc apply --filename - <<EOF
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
@@ -507,7 +507,7 @@ Its finalizer makes deleting the Application also delete what it deployed; witho
 
 [source,bash]
 ----
-oc apply -f - <<EOF
+oc apply --filename - <<EOF
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
@@ -552,7 +552,7 @@ Its address is the host of this route:
 ----
 oc get route openshift-gitops-server \
   --namespace openshift-gitops \
-  -o jsonpath='{.spec.host}{"\n"}'
+  --output jsonpath='{.spec.host}{"\n"}'
 ----
 
 [.validation]

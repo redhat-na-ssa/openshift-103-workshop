@@ -158,7 +158,7 @@ Where the control plane runs:
 [source,bash]
 ----
 oc get infrastructure cluster \
-  -o jsonpath='{.status.controlPlaneTopology}{"\n"}'
+  --output jsonpath='{.status.controlPlaneTopology}{"\n"}'
 ----
 
 Which Operators the Software Catalog offers:
@@ -201,7 +201,7 @@ oc get deployment <name> \
       --namespace <project> \
       --serviceaccount <service-account> \
       --groups system:authenticated \
-      -f -
+      --filename -
 ----
 
 Let one dedicated service account run images as their own user:
@@ -257,7 +257,7 @@ The cluster version's conditions, including Upgradeable:
 
 [source,bash]
 ----
-oc get clusterversion version -o json \
+oc get clusterversion version --output json \
   | jq '.status.conditions'
 ----
 
@@ -267,7 +267,7 @@ Whether a log forwarder is ready:
 ----
 oc get clusterlogforwarder <name> \
   --namespace openshift-logging \
-  -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+  --output jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
 ----
 
 === Per Cloud

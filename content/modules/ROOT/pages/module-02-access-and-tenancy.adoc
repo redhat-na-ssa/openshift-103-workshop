@@ -101,7 +101,7 @@ AKS Standard keeps a local admin credential (`az aks get-credentials --admin`) b
 ====
 
 [#ex-module-02-access-and-tenancy-2]
-=== Exercise 2: Add an identity provider
+=== Exercise 2: Add an Identity Provider
 
 [.validation]
 NOTE: *Not validated:* signing in through either identity provider, which the validation environments do not allow.
@@ -244,7 +244,7 @@ Point the OAuth server at Entra ID:
 
 [source,bash]
 ----
-oc apply -f - <<EOF
+oc apply --filename - <<EOF
 apiVersion: config.openshift.io/v1
 kind: OAuth
 metadata:
@@ -336,7 +336,7 @@ az role assignment create \
 ====
 
 [#ex-module-02-access-and-tenancy-3]
-=== Exercise 3: Log in as the developer
+=== Exercise 3: Log In as the Developer
 
 [.validation]
 NOTE: *Not validated:* this exercise, which needs a working identity provider login.
@@ -432,7 +432,7 @@ OpenShift creates a User for each person and an Identity that links it to the id
 EKS and AKS keep no such objects: the user exists only in IAM or Entra ID.
 
 [#ex-module-02-access-and-tenancy-4]
-=== Exercise 4: Let the developer create a project
+=== Exercise 4: Let the Developer Create a Project
 
 In the developer terminal, create a project:
 
@@ -491,7 +491,7 @@ oc adm create-bootstrap-project-template \
   | jq --slurpfile q quota.json \
        --slurpfile l limits.json \
        '.objects += $q + $l' \
-  | oc apply --namespace openshift-config -f -
+  | oc apply --namespace openshift-config --filename -
 ----
 
 Tell the cluster to use it:
@@ -600,7 +600,7 @@ Tools such as Capsule, the Hierarchical Namespace Controller or a Kyverno genera
 ====
 
 [#ex-module-02-access-and-tenancy-5]
-=== Exercise 5: Give a team a project
+=== Exercise 5: Give a Team a Project
 
 In the administrator terminal, create a group and add the developer to it:
 

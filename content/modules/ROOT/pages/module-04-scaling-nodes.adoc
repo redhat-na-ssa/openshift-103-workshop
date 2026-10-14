@@ -244,7 +244,7 @@ Pick the first worker MachineSet:
 ----
 SOURCE_MS=$(oc get machinesets \
   --namespace openshift-machine-api \
-  -o jsonpath='{.items[0].metadata.name}')
+  --output jsonpath='{.items[0].metadata.name}')
 ----
 
 [source,bash]
@@ -281,10 +281,10 @@ Create the new MachineSet from the copy:
 ----
 oc get machineset "$SOURCE_MS" \
   --namespace openshift-machine-api \
-  -o json \
+  --output json \
   | jq --arg name scale-lab \
       -f scale-lab-ms.jq \
-  | oc create -f -
+  | oc create --filename -
 ----
 
 The new MachineSet keeps the VM size of the one you copied, which is on ARO's list of supported worker sizes.
@@ -301,7 +301,7 @@ If there is none, create it with short scale-down timers for the workshop:
 
 [source,bash]
 ----
-cat <<'EOF' | oc apply -f -
+oc apply --filename - <<'EOF'
 apiVersion: autoscaling.openshift.io/v1
 kind: ClusterAutoscaler
 metadata:
@@ -320,7 +320,7 @@ An extra MachineSet may scale from zero on Azure, but ARO's support policy requi
 
 [source,bash]
 ----
-cat <<'EOF' | oc apply -f -
+oc apply --filename - <<'EOF'
 apiVersion: autoscaling.openshift.io/v1beta1
 kind: MachineAutoscaler
 metadata:
@@ -342,8 +342,8 @@ Watch the first Machine become a node:
 ----
 oc get machines \
   --namespace openshift-machine-api \
-  -l machine.openshift.io/cluster-api-machineset=scale-lab \
-  -w
+  --selector machine.openshift.io/cluster-api-machineset=scale-lab \
+  --watch
 ----
 
 Press Ctrl+C when its phase is `Running`.
@@ -458,7 +458,7 @@ Some pods stay `Pending`:
 ----
 oc get pods \
   --namespace sample-app \
-  -o wide
+  --output wide
 ----
 
 The cluster autoscaler records its decision as an event on the pending pods:
@@ -475,9 +475,9 @@ Watch the new nodes join:
 [source,bash]
 ----
 oc get nodes \
-  -l workshop=scale-lab \
+  --selector workshop=scale-lab \
   -L node.kubernetes.io/instance-type \
-  -w
+  --watch
 ----
 
 On ROSA you can also watch the pool's node count from outside the cluster:
@@ -520,7 +520,7 @@ AKS reports scale-ups as pod events, as OpenShift does, and also in the cluster 
 ----
 kubectl get configmap cluster-autoscaler-status \
   --namespace kube-system \
-  -o yaml
+  --output yaml
 ----
 ====
 
@@ -542,7 +542,7 @@ Collect the cluster's OIDC issuer and your AWS account ID:
 ----
 OIDC_PROVIDER=$(oc get authentication.config.openshift.io \
   cluster \
-  -o jsonpath='{.spec.serviceAccountIssuer}' \
+  --output jsonpath='{.spec.serviceAccountIssuer}' \
   | sed 's|^https://||')
 ----
 
@@ -630,7 +630,7 @@ It allows three instance types and both spot and on-demand capacity, and caps th
 
 [source,bash]
 ----
-cat <<'EOF' | oc apply -f -
+oc apply --filename - <<'EOF'
 apiVersion: karpenter.sh/v1
 kind: NodePool
 metadata:
@@ -677,7 +677,7 @@ Watch Karpenter claim nodes for the pending pods:
 
 [source,bash]
 ----
-oc get nodeclaims -w
+oc get nodeclaims --watch
 ----
 
 Press Ctrl+C when the node claims are `Ready`, then see which instance types and capacity types it chose:
@@ -685,7 +685,7 @@ Press Ctrl+C when the node claims are `Ready`, then see which instance types and
 [source,bash]
 ----
 oc get nodes \
-  -l karpenter.sh/nodepool=karpenter-lab \
+  --selector karpenter.sh/nodepool=karpenter-lab \
   -L node.kubernetes.io/instance-type \
   -L karpenter.sh/capacity-type
 ----
@@ -721,7 +721,7 @@ List the nodes with their OS image and kernel:
 
 [source,bash]
 ----
-oc get nodes -o wide
+oc get nodes --output wide
 ----
 
 Every node runs Red Hat Enterprise Linux CoreOS at the version that belongs to an OpenShift release.

@@ -86,7 +86,7 @@ Count the alert rules that come with the platform:
 ----
 oc get prometheusrules \
   --all-namespaces \
-  -o json \
+  --output json \
   | jq '[.items[].spec.groups[].rules[]
       | select(.alert)] | length'
 ----
@@ -162,7 +162,7 @@ If it does not exist, create it:
 
 [source,bash]
 ----
-cat <<'EOF' | oc apply -f -
+oc apply --filename - <<'EOF'
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -188,7 +188,7 @@ Wait for the user workload Prometheus to start:
 ----
 oc get pods \
   --namespace openshift-user-workload-monitoring \
-  -w
+  --watch
 ----
 
 Press Ctrl+C when the `prometheus-user-workload` and `thanos-ruler-user-workload` pods are `Running`.
@@ -201,7 +201,7 @@ Tell user workload monitoring to scrape it:
 
 [source,bash]
 ----
-cat <<'EOF' | oc apply -f -
+oc apply --filename - <<'EOF'
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -227,7 +227,7 @@ Send some requests through the application's route:
 ----
 APP_HOST=$(oc get route sample-app \
   --namespace sample-app \
-  -o jsonpath='{.spec.host}')
+  --output jsonpath='{.spec.host}')
 ----
 
 [source,bash]
@@ -270,7 +270,7 @@ The same queries work from the command line, through the Thanos Querier route th
 ----
 THANOS_HOST=$(oc get route thanos-querier \
   --namespace openshift-monitoring \
-  -o jsonpath='{.spec.host}')
+  --output jsonpath='{.spec.host}')
 ----
 
 [source,bash]
@@ -314,7 +314,7 @@ Alert when the application fails to read from its object store, which uses the c
 
 [source,bash]
 ----
-cat <<'EOF' | oc apply -f -
+oc apply --filename - <<'EOF'
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
@@ -357,7 +357,7 @@ Create the namespace, OperatorGroup and Subscription:
 
 [source,bash]
 ----
-cat <<'EOF' | oc apply -f -
+oc apply --filename - <<'EOF'
 apiVersion: v1
 kind: Namespace
 metadata:
@@ -397,7 +397,7 @@ Wait for the Operator to install:
 ----
 oc get csv \
   --namespace openshift-logging \
-  -w
+  --watch
 ----
 
 Press Ctrl+C when the `cluster-logging` ClusterServiceVersion shows `Succeeded`.
@@ -459,7 +459,7 @@ AWS_REGION=$(rosa describe cluster \
 ----
 OIDC_PROVIDER=$(oc get authentication.config.openshift.io \
   cluster \
-  -o jsonpath='{.spec.serviceAccountIssuer}' \
+  --output jsonpath='{.spec.serviceAccountIssuer}' \
   | sed 's|^https://||')
 ----
 
@@ -562,7 +562,7 @@ It reads only the `sample-app` namespace and writes to a log group named `worksh
 
 [source,bash]
 ----
-cat <<EOF | oc apply -f -
+oc apply --filename - <<EOF
 apiVersion: observability.openshift.io/v1
 kind: ClusterLogForwarder
 metadata:
@@ -606,7 +606,7 @@ Check that the forwarder is ready and its collector pods run:
 ----
 oc get clusterlogforwarder workshop \
   --namespace openshift-logging \
-  -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+  --output jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
 ----
 
 [source,bash]
@@ -682,7 +682,7 @@ LOCATION=$(az aro show \
 ----
 OIDC_ISSUER=$(oc get authentication.config.openshift.io \
   cluster \
-  -o jsonpath='{.spec.serviceAccountIssuer}')
+  --output jsonpath='{.spec.serviceAccountIssuer}')
 ----
 
 Create a Log Analytics workspace and a custom table for the application's logs:
@@ -889,7 +889,7 @@ Create the log forwarder:
 
 [source,bash]
 ----
-cat <<EOF | oc apply -f -
+oc apply --filename - <<EOF
 apiVersion: observability.openshift.io/v1
 kind: ClusterLogForwarder
 metadata:
@@ -933,7 +933,7 @@ Check that the forwarder is ready and its collector pods run:
 ----
 oc get clusterlogforwarder workshop \
   --namespace openshift-logging \
-  -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+  --output jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
 ----
 
 [source,bash]

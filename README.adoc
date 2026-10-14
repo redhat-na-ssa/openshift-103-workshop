@@ -389,7 +389,7 @@ Tell attendees before they ask.
 `oc whoami` shows `cluster-admin` on ROSA and `kube:admin` on ARO.
 
 |A command never returns.
-|It watches for changes (`--watch` or `-w`), or `oc rollout status` waits for a pod that cannot start.
+|It watches for changes (`--watch`), or `oc rollout status` waits for a pod that cannot start.
 |Press Ctrl+C.
 For a rollout, see <<repairing-the-sample-application,Repairing the Sample Application>>.
 

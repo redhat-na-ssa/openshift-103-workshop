@@ -234,7 +234,7 @@ The Infrastructure resource records where the control plane runs:
 [source,bash]
 ----
 oc get infrastructure cluster \
-  -o jsonpath='{.status.controlPlaneTopology}{"\n"}'
+  --output jsonpath='{.status.controlPlaneTopology}{"\n"}'
 ----
 
 ROSA shows `External`, because the control plane runs outside the cluster.
@@ -415,7 +415,7 @@ NOTE: *Not validated:* the `Limited Support` section, because the workshop's ROS
 If your ROSA cluster is in limited support, `rosa describe cluster` shows a `Limited Support` section with the reasons.
 
 [#ex-module-01-who-manages-what-5]
-=== Exercise 5: Know Your Support Path
+=== Exercise 5 (Read Only): Know Your Support Path
 
 [cols="1,2,2",options="header"]
 |===

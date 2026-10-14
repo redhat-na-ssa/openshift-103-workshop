@@ -42,7 +42,7 @@ Fix the image so it runs as any user ID, which is the fix to keep.
 Let the service account run as root instead, and see what that gives away.
 
 [#ex-module-02-workload-security-1]
-=== Exercise 1: Deploy the sample application as you would on EKS
+=== Exercise 1: Deploy the Sample Application as You Would on EKS
 
 Create the namespace:
 
@@ -55,7 +55,7 @@ Deploy the application with the root image, using a manifest that would run unch
 
 [source,bash]
 ----
-oc apply --namespace sample-app -f - <<'EOF'
+oc apply --namespace sample-app --filename - <<'EOF'
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -152,7 +152,7 @@ Pod Security Admission checks pods; it never changes them.
 ====
 
 [#ex-module-02-workload-security-2]
-=== Exercise 2: See what OpenShift decided
+=== Exercise 2: See What OpenShift Decided
 
 Find the SCC that admitted the pod:
 
@@ -236,7 +236,7 @@ The ReplicaSet controller creates the pods, so only the SCCs that the pod's serv
 image::module-02-pod-failure-tree.svg["Common reasons a pod fails on OpenShift, and their fixes",link=self,window=_blank]
 
 [#ex-module-02-workload-security-3]
-=== Exercise 3: Fix it the right way
+=== Exercise 3: Fix It the Right Way
 
 The fixed image differs from the root image in one Containerfile stage:
 
@@ -276,7 +276,7 @@ The application starts, still as a user ID from the namespace's range, not as 10
 The SCC overrides the image's `USER`.
 
 [#ex-module-02-workload-security-4]
-=== Exercise 4: Fix it the wrong way, for comparison
+=== Exercise 4: Fix It the Wrong Way, for Comparison
 
 The quick fix you will find in many forum answers is to let the service account run as any user ID, including root:
 
@@ -374,7 +374,7 @@ oc get deployment sample-app \
       --namespace sample-app \
       --serviceaccount sample-app \
       --groups system:authenticated \
-      -f -
+      --filename -
 ----
 
 It answers `restricted-v2`.
