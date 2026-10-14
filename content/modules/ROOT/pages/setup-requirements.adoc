@@ -1,5 +1,4 @@
 = Setup Requirements
-:hardbreaks-option:
 
 This page lists everything needed to run this workshop.
 
@@ -75,7 +74,7 @@ Attendees install these Operators during the exercises:
 
 |Red Hat OpenShift Service Mesh 3
 |3
-|Installed by the Ingress Operator when the Gateway API exercise creates a GatewayClass. It needs the Red Hat catalog and registry, so ARO needs its pull secret. The cluster must not already have an OpenShift Service Mesh 2 subscription.
+|The Ingress Operator starts an Istio control plane, `istiod-openshift-gateway`, when the Gateway API exercise creates a GatewayClass. On 4.20 it did so without an OLM subscription. Where a version installs the Service Mesh 3 Operator from the Red Hat catalog instead, ARO needs its pull secret, and the cluster must not already have an OpenShift Service Mesh 2 subscription.
 |===
 
 The default ingress controller, OVN-Kubernetes, the CSI drivers and platform monitoring come with every ROSA and ARO cluster.
