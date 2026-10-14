@@ -1,5 +1,9 @@
 = Pod Networking and Policy
 
+NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026.
+Steps and statements that were not checked on a live cluster carry a *Not validated* note.
+The comparison tables and summaries come from vendor documentation.
+
 With the Amazon VPC CNI and Azure CNI, pods can get addresses from your VPC or virtual network.
 ROSA and ARO run OVN-Kubernetes as an overlay: pod addresses never appear in the VPC or virtual network, and traffic leaves the cluster from the node's address unless you assign an egress IP.
 This section explains the packet path, then applies network policy at two levels: per project, and cluster-wide.
@@ -66,6 +70,8 @@ When the pod talks to a database in the same VPC or virtual network, the databas
 
 Show the cluster's address ranges, in the `Machine CIDR`, `Service CIDR` and `Pod CIDR` lines:
 
+NOTE: *Not validated:* `rosa describe cluster`, which needs a `rosa` login to the cluster's Red Hat organization.
+
 [source,bash]
 ----
 rosa describe cluster \
@@ -74,6 +80,8 @@ rosa describe cluster \
 
 Look up both addresses in the VPC.
 The pod's address finds nothing, and the node's address finds its network interface:
+
+NOTE: *Not validated:* the VPC lookup, which needs AWS credentials for the account that owns the cluster.
 
 [source,bash]
 ----
@@ -135,6 +143,9 @@ oc run client \
   --image registry.access.redhat.com/ubi9/ubi \
   --command -- sleep infinity
 ----
+
+`oc run` prints a PodSecurity warning about the pod's security settings.
+It is only a warning, and the pod starts.
 
 [source,bash]
 ----
@@ -205,7 +216,8 @@ EOF
 ----
 
 Run both checks again.
-The client now gets `000`, and the Route returns `503` or times out, because the router is just another source of traffic:
+The client now gets `000`, and the Route returns `503` or times out, because the router is just another source of traffic.
+When the client is blocked, `oc` also prints `command terminated with exit code 28`, which is curl's timeout:
 
 [source,bash]
 ----
@@ -342,13 +354,13 @@ oc label namespace restricted-data \
   workshop.k8socp.com/sensitivity=high
 ----
 
-Run a small web server in it:
+Run a second copy of the sample application in it, as a stand-in for a service with sensitive data:
 
 [source,bash]
 ----
 oc create deployment records \
   --namespace restricted-data \
-  --image registry.access.redhat.com/ubi9/nginx-124 \
+  --image ghcr.io/shpwrck/ocp-cloud-workshop/sample-app:1.0 \
   --port 8080
 ----
 
@@ -365,12 +377,11 @@ oc rollout status deployment/records \
   --namespace restricted-data
 ----
 
-The client can reach it.
-Any status other than `000` means the connection worked:
+The client can reach it, and gets `200`:
 
 [source,bash]
 ----
-probe http://records.restricted-data.svc:8080
+probe http://records.restricted-data.svc:8080/healthz
 ----
 
 Now apply a guardrail: only namespaces with the same label may connect to it.
@@ -405,7 +416,7 @@ EOF
 
 [source,bash]
 ----
-probe http://records.restricted-data.svc:8080
+probe http://records.restricted-data.svc:8080/healthz
 ----
 
 The client is blocked.
@@ -430,7 +441,7 @@ EOF
 
 [source,bash]
 ----
-probe http://records.restricted-data.svc:8080
+probe http://records.restricted-data.svc:8080/healthz
 ----
 
 The client is still blocked.
@@ -466,6 +477,9 @@ Every pod on the cluster shares that address, so an external firewall that allow
 
 Find the NAT gateway addresses in the cluster's VPC:
 
+NOTE: *Not validated:* the NAT gateway lookup, which needs AWS credentials for the account that owns the cluster.
+That the pod's address on ARO is one of the cluster's outbound addresses was validated.
+
 [source,bash]
 ----
 VPC_ID=$(aws ec2 describe-instances \
@@ -495,6 +509,8 @@ az network public-ip list \
 ----
 
 === Fixed Egress Addresses (Reference Only)
+
+NOTE: *Not validated:* this section, which no exercise runs.
 
 To give one project its own source address, OVN-Kubernetes offers egress IPs.
 This workshop does not set one up, because the cloud constraints differ: on ROSA, you label the nodes that may host egress IPs through a machine pool, and capacity depends on the instance type; on ARO, namespace egress IPs need a cluster created with user-defined routing.
