@@ -263,7 +263,7 @@ Every other figure is an estimate to check in your dry run.
 |The login flow diagram at the top of the page, and why the administrator logins are break-glass only (link:{site-url}/module-02-access-and-tenancy.html#_what_matters[What Matters]).
 
 |Access and Tenancy Exercise 2 (ARO): the authentication Operator rolls out new OAuth servers.
-|5 to 10 minutes (estimate).
+|About 2 minutes on ARO 4.21 (measured).
 The page waits up to 3 minutes for it to start and up to 10 to finish.
 |The login flow diagram, then What Matters on client secret expiry, leavers' tokens and just-in-time admin access.
 
@@ -543,8 +543,6 @@ If sign-in fails, for example because the Entra ID tenant blocks user consent or
 The page's own validation of Exercises 4 and 5 was done this way.
 Name the groups explicitly, because impersonation may not add the developer's OpenShift Group membership.
 
-NOTE: *Not validated:* the impersonation commands below, which do not appear on the Access and Tenancy page.
-
 `DEV_USER` must be set in the administrator terminal, as Exercise 2 does on both platforms.
 Exercise 3 needs a real sign-in, so the attendee reads it instead; its `oc get users` and `oc get identities` stay empty, because nobody signed in.
 
@@ -777,8 +775,6 @@ oc get networkpolicy allow-from-monitoring \
 === Repairing the Sample Application
 
 If the new pod stays in `ImagePullBackOff` after the switch to ECR or ACR in link:{site-url}/module-02-cloud-credentials.html#ex-module-02-cloud-credentials-2[Pod Cloud Credentials Exercise 2], the old pod keeps serving, and `oc rollout status` waits until the rollout's deadline.
-
-NOTE: *Not validated:* rolling back a failed registry switch, which was not run on a cluster.
 
 Press Ctrl+C and roll back to the previous image:
 
