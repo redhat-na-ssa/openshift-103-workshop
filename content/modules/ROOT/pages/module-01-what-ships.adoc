@@ -110,15 +110,44 @@ On OpenShift, its controllers need the `nonroot` security context constraint (SC
 The extension retires on October 9, 2027, in favor of the Secret Store extension, whose list of supported distributions names OpenShift Kubernetes Distribution but not ARO.
 
 [.validation]
-NOTE: *Not validated:* connecting ARO to Azure Arc, which was not run on a cluster.
+NOTE: *Not validated:* the extensions other than Flux. Connecting the cluster and installing Flux were validated.
 
-Connect the cluster to Arc before you install any extension:
+Connect the cluster to Arc before you install any extension.
+The subscription needs the `Microsoft.Kubernetes`, `Microsoft.KubernetesConfiguration` and `Microsoft.ExtendedLocation` resource providers registered, and `az` adds its `connectedk8s` extension on first use:
 
 [source,bash]
 ----
 az connectedk8s connect \
   --name <arc-cluster-name> \
-  --resource-group <resource-group>
+  --resource-group <resource-group> \
+  --location <arc-region>
+----
+
+The Arc resource defaults to the resource group's region, and Arc does not accept every region that ARO runs in, such as `australiacentral`.
+If the command fails with `InvalidLocation`, set `--location` to a nearby region from the list it prints.
+The connection takes a few minutes, installs the Arc agents in the `azure-arc` namespace, and detects the distribution as `openshift` on `azure`.
+
+Extensions then install with the same command as on AKS, with the cluster type `connectedClusters`, for example Flux:
+
+[source,bash]
+----
+az k8s-extension create \
+  --resource-group <resource-group> \
+  --cluster-name <arc-cluster-name> \
+  --cluster-type connectedClusters \
+  --extension-type microsoft.flux \
+  --name flux
+----
+
+Expect SCC denials, as in Module 2: Flux's `source-controller` and `notification-controller` pin a group ID, so their pods are refused and the extension stays `Creating` until you grant `nonroot-v2` to their service accounts:
+
+[source,bash]
+----
+for sa in source-controller notification-controller; do
+  oc adm policy add-scc-to-user nonroot-v2 \
+    --serviceaccount "$sa" \
+    --namespace flux-system
+done
 ----
 ====
 
@@ -319,7 +348,7 @@ On ARO the default class is backed by the Azure Disk CSI driver.
 Both create `ReadWriteOnce` volumes.
 For `ReadWriteMany` storage on ROSA you install the AWS EFS CSI Driver Operator and give it an IAM role.
 ARO clusters created with a service principal also ship an `azurefile-csi` class for `ReadWriteMany` volumes.
-ARO clusters created with managed identities do not offer Azure Files by default.
+ARO clusters created with managed identities do not offer Azure Files by default: `oc get csidrivers` lists `file.csi.azure.com`, but no StorageClass uses it.
 
 The CSI drivers themselves are managed by the `storage` cluster Operator through a ClusterCSIDriver resource:
 
@@ -351,9 +380,6 @@ kubectl get storageclass
 
 [#ex-module-01-what-ships-5]
 === Exercise 5: Browse the Software Catalog
-
-[.validation]
-NOTE: *Not validated:* where the Software Catalog appears in the ARO web console. On ROSA 4.22 it is under *Ecosystem*.
 
 The Software Catalog lists Operators from catalog sources.
 In the web console it is under *Ecosystem*, and it was called OperatorHub in earlier releases.
@@ -556,10 +582,6 @@ oc get route openshift-gitops-server \
   --namespace openshift-gitops \
   --output jsonpath='{.spec.host}{"\n"}'
 ----
-
-[.validation]
-NOTE: *Not validated:* the console login on ARO, where the route answered and Argo CD offered the OpenShift login, but nobody signed in through a browser.
-On ROSA the login was validated in a browser.
 
 Log in with *Log in via OpenShift*, using your cluster credentials.
 

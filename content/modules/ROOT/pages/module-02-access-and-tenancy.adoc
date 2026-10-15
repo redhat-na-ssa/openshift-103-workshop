@@ -103,11 +103,6 @@ AKS Standard keeps a local admin credential (`az aks get-credentials --admin`) b
 [#ex-module-02-access-and-tenancy-2]
 === Exercise 2: Add an Identity Provider
 
-[.validation]
-NOTE: *Not validated:* signing in through Entra ID on ARO, which the validation environment does not allow.
-On ARO, the steps up to and including the authentication Operator rollout were validated.
-On ROSA, the whole exercise and the htpasswd sign-in were validated.
-
 [tabs]
 ======
 ROSA (AWS)::
@@ -215,6 +210,20 @@ az ad app update \
   --id "$APP_ID" \
   --optional-claims @claims.json
 ----
+
+Let the application sign users in and read their profile, with the Azure AD Graph `User.Read` permission.
+The OAuth server signs in through Entra ID's v1 endpoint, which needs that permission.
+Without it, Entra ID refuses the sign-in with `AADSTS650056: Misconfigured application`, even with Microsoft Graph's `User.Read`:
+
+[source,bash]
+----
+az ad app permission add \
+  --id "$APP_ID" \
+  --api 00000002-0000-0000-c000-000000000000 \
+  --api-permissions 311a71cc-e848-46a1-bdf8-97ff7156d8e6=Scope
+----
+
+You consent to it when you first sign in, in Exercise 3.
 
 Check that you got a secret: this prints its length, which must not be 0:
 
@@ -345,11 +354,6 @@ az role assignment create \
 
 [#ex-module-02-access-and-tenancy-3]
 === Exercise 3: Log In as the Developer
-
-[.validation]
-NOTE: *Not validated:* this exercise on ARO, which needs a working Entra ID sign-in.
-On ARO, Exercises 4 and 5 were validated as the cluster administrator, impersonating the developer.
-On ROSA, this exercise and Exercises 4 and 5 were validated with the developer's own login.
 
 Open a second terminal for the developer.
 Give it its own kubeconfig file, so the administrator's login stays in the first terminal.
@@ -654,11 +658,14 @@ oc auth can-i create deployments \
   --namespace team-a
 ----
 
-[.validation]
-NOTE: *Not validated:* Entra ID group claims.
-
-On ARO you can let Entra ID manage group membership instead: add a `groups` claim to the OAuth resource and the Entra app registration, and the OAuth server creates and updates Groups, named by Entra group object ID, each time a member logs in.
+On ARO you can let Entra ID manage group membership instead: add a `groups` claim to the OAuth resource and the Entra app registration, and the OAuth server creates and updates Groups from it each time a member logs in.
 You still create the RoleBindings yourself.
+
+[.validation]
+NOTE: Validated on ARO 4.21 with this exercise's provider, `groupMembershipClaims` set to `SecurityGroup` on the app registration, and `groups: [groups]` in the OAuth resource's claims.
+The OAuth server created one Group whose name was the whole list of IDs from the claim, such as `["<id-1>","<id-2>"]`, not one Group per Entra group as the Cloud Experts guide shows.
+The list also held the ID of the Global Administrator directory role, which `SecurityGroup` includes.
+Check the Groups that a test login creates on your version before you bind roles to them.
 
 .EKS and AKS (reference only)
 [%collapsible]
@@ -720,10 +727,6 @@ az role assignment create \
 Developers get a web console with their projects, workloads, logs and metrics, and log in to it with the same account as the CLI.
 
 Since OpenShift 4.19 the console's Developer view is off by default.
-
-[.validation]
-NOTE: *Not validated:* the Developer view in a browser on ARO.
-On ROSA it was validated in a browser, and on both the console Operator wrote the patch below to the console's configuration.
 
 To turn it on, run this as an administrator:
 

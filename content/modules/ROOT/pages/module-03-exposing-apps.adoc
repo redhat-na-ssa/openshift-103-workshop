@@ -140,11 +140,7 @@ az network public-ip list \
 ----
 
 The public IP lives in the cluster's managed resource group.
-A deny assignment there lets you read it but not change it.
-
-[.validation]
-NOTE: *Not validated:* that the deny assignment stops you, which comes from the ARO documentation.
-The validation run was logged in to `az` as the cluster's own service principal, which the deny assignment exempts, so a test change to the public IP's tags went through and was reverted.
+A deny assignment there lets you read it but not change it, apart from its tags, which the deny assignment leaves open.
 
 See the ingress the way the service manages it:
 
@@ -522,12 +518,9 @@ Production apps use their own host names, so each needs a DNS record and a certi
 Install the cert-manager Operator for Red Hat OpenShift and create an ACME issuer with a DNS-01 solver: Route 53 through an IAM role on ROSA, with the IRSA annotation from xref:module-02-cloud-credentials.adoc[Pod Cloud Credentials], or Azure DNS on ARO, where Red Hat documents a service principal.
 A Route serves the issued secret through `spec.tls.externalCertificate`, and a Gateway listener names it in `certificateRefs`, so a Gateway's Certificate goes in `openshift-ingress`.
 For DNS, point a record for each host at the router's load balancer (a CNAME on ROSA, an A record on ARO), or let the External DNS Operator create records from Routes, with the cloud credentials described below.
+An ARO cluster created with managed identities has no credentials for it to reuse (there is no `azure-credentials` secret in `kube-system`), so give the Operator a service principal with `DNS Zone Contributor` on the zone; it then creates a CNAME to the router's canonical host name.
 On ROSA, use the AWS Load Balancer Operator instead of the router when you need an ALB with an ACM certificate or AWS WAF.
 The Cloud Experts guides for https://cloud.redhat.com/experts/rosa/dynamic-certificates/[ROSA] and https://cloud.redhat.com/experts/aro/cert-manager/[ARO] walk through the issuer setup.
-
-[.validation]
-NOTE: *Not validated:* cert-manager, the External DNS Operator and the AWS Load Balancer Operator on ARO.
-On ROSA 4.22 all three were run with a Route 53 zone: cert-manager issued a Let's Encrypt certificate through the IRSA annotation on its `cert-manager` service account, the Route below served it, the External DNS Operator created the Route's CNAME, and an ALB with an ACM certificate served the sample application.
 
 On ROSA, the two Operators that call AWS on your behalf need more than the annotation, as found when the workshop was validated:
 

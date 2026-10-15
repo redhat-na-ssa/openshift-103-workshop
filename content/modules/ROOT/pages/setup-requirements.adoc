@@ -138,6 +138,16 @@ a|Permission to create, in a resource group:
 
 `Reader` on the cluster's managed resource group (the `aro-...` group the cluster creates), to look up its load balancer, public IPs and network interfaces (Module 3).
 
+The subscription must have the `Microsoft.ContainerRegistry` (Module 2), `Microsoft.OperationalInsights` and `Microsoft.Insights` (Module 4) resource providers registered.
+A new subscription may not, and an attendee with access only to a resource group cannot register them, so the subscription owner registers them before the day:
+
+[source,bash]
+----
+for p in Microsoft.ContainerRegistry Microsoft.OperationalInsights Microsoft.Insights; do
+  az provider register --namespace "$p"
+done
+----
+
 In Microsoft Entra ID: permission to create an app registration for the ARO identity provider (Module 2).
 |===
 
@@ -339,6 +349,8 @@ az aro delete \
   --resource-group <resource-group> \
   --name <cluster-name>
 ----
++
+It asks you to confirm, takes about 10 minutes, and removes the cluster's managed `aro-...` resource group with it.
 . Delete the cluster's managed identities, its virtual network and subnets, and the resource group, if it holds nothing else.
 The cluster deletion leaves all of them behind, as https://learn.microsoft.com/azure/openshift/howto-create-openshift-cluster#clean-up[Microsoft's clean-up steps] note.
 For a resource group that held only the cluster:
@@ -348,7 +360,8 @@ For a resource group that held only the cluster:
 az group delete \
   --name <resource-group>
 ----
-. Remove the role assignments that the deleted identities held.
-Azure doesn't delete them with the identities, and the portal's access control (IAM) view lists them as `Identity not found`.
+. Remove any role assignments that the deleted identities held outside the resource groups you deleted, such as on a virtual network in another resource group.
+Azure doesn't delete those with the identities, and the portal's access control (IAM) view lists them as `Identity not found`.
+Assignments scoped inside a deleted resource group go with it: with the network and identities in the cluster's resource group, deleting it left none behind.
 --
 ======

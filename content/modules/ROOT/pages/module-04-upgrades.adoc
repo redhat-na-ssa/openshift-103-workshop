@@ -77,6 +77,7 @@ oc adm upgrade recommend
 
 A new cluster can report `Upgradeable=False` with the reason `AdminAckRequired`.
 That is an acknowledgment gate, covered in Exercise 4, and it blocks only the next minor version.
+An ARO cluster created with managed identities reports `MultipleReasons` instead, because the `cloud-credential` Operator also blocks the next minor version until you prepare it, as Exercise 4 shows.
 
 The update channel decides which versions are offered.
 Patch releases arrive in the current channel, and a new minor version needs a channel change, which you make, apart from the exceptions in <<upgrades-without-you,When the platform upgrades without you>>.
@@ -386,6 +387,9 @@ oc get clusteroperators --output json \
 
 No output means no Operator blocks a minor update.
 If `operator-lifecycle-manager` appears, an installed catalog Operator declares a maximum OpenShift version; update that Operator first.
+On an ARO cluster created with managed identities, `cloud-credential` appears, with the reason `MissingUpgradeableAnnotation`.
+Its credentials are managed outside the cluster, so before you update it you set the `upgradeable-to` annotation on the cluster's CloudCredential resource with `az aro update --upgradeable-to <version>`, as https://learn.microsoft.com/azure/openshift/howto-upgrade-aro-openshift-cluster[Microsoft's update guide for managed-identity clusters] describes.
+That command does not start the update.
 
 Some minor updates also need an administrator's acknowledgment, for example of an API removal.
 The platform lists these gates in one ConfigMap:
@@ -486,14 +490,16 @@ The sample application's budget is in the list.
 Budgets in `openshift-*` namespaces, such as `packageserver-pdb`, can appear too; those belong to the platform and Red Hat manages them.
 
 [.validation]
-NOTE: *Not validated:* the drain behavior below, which comes from the vendors' documentation.
-No upgrade was run.
+NOTE: *Not validated:* the ROSA, EKS and AKS drain behavior below, which comes from the vendors' documentation.
+The ARO behavior was validated with a patch update from 4.21.22 to 4.21.36 started with `oc adm upgrade --to`.
 
 What happens next depends on the platform:
 
 * ROSA waits on the budget with no time limit, unless the machine pool has a node drain grace period.
 After that period it evicts the remaining pods and replaces the node.
 * Standard ARO waits on the node until the budget allows the eviction, so the update stalls on that node.
+The node stays cordoned, and the Machine Config Operator retries the eviction every few seconds; after 10 minutes it retries every 5 minutes and records a `DrainThresholdExceeded` warning event on the node.
+The ClusterVersion can already report the update `Completed` while this happens, because it tracks the Operators, not the nodes, so watch `oc get machineconfigpools` for the nodes.
 With an `UpgradeConfig`, the managed upgrade operator forces the drain after `PDBForceDrainTimeout` minutes.
 * EKS managed node group updates fail with a pod eviction error unless you force them.
 * AKS upgrades fail on a node that cannot drain, unless you set the undrainable node behavior to cordon it and move on.

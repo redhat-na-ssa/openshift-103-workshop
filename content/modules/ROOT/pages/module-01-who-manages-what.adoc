@@ -229,7 +229,6 @@ The `resourceGroupId` field is the managed resource group that holds the cluster
 --
 ======
 
-
 You can read the same fact from inside the cluster, without cloud credentials.
 The Infrastructure resource records where the control plane runs:
 
@@ -335,14 +334,14 @@ az rest \
   --query "value[].properties.excludePrincipals[].id"
 ----
 
-The deny assignment blocks every write by everyone else, including subscription owners.
+The deny assignment blocks writes, deletes and actions by everyone else, including subscription owners.
+It leaves a few operations open, such as tags and disk snapshots.
 Only the exempt principals may change the resources.
-On a cluster created with a service principal, the exempt principal is that service principal, which the cluster's own components, such as the Machine API, use to create and delete VMs, disks and load balancers.
+On a cluster created with managed identities, the exempt principals are the eight operator identities and the Azure Red Hat OpenShift resource provider.
+The cluster's own components, such as the Machine API, use those identities to create and delete VMs, disks and load balancers.
+On a cluster created with a service principal, the exempt principal is that service principal.
 
-[.validation]
-NOTE: *Not validated:* the Owner's error message below, which comes from Red Hat's knowledge base.
-
-An Owner who tries, for example to delete a disk there, gets an error that ends with "the access is denied because of the deny assignment with name '<name>' and Id '<id>' at scope '<managed-resource-group>'".
+An Owner who tries, for example to create a public IP address there, gets an error that ends with "the access is denied because of the deny assignment with name '<name>' and Id '<id>' at scope '<managed-resource-group>'".
 With the Reader role that Setup gives you, the same attempt fails earlier with a plain `AuthorizationFailed`, so this exercise only reads the deny assignment.
 Some lab environments log `az` in as the cluster's own service principal: the deny assignment exempts that login, so a change there would go through. Don't try one.
 
@@ -494,10 +493,6 @@ On ROSA and ARO you install the OpenShift API for Data Protection (OADP) Operato
 OADP is configured with one DataProtectionApplication resource.
 These samples show its shape on each cloud; this workshop does not run them.
 
-[.validation]
-NOTE: *Not validated:* the ARO sample below.
-The ROSA sample was validated on ROSA 4.22 with OADP 1.6: with the role ARN given as the `ROLEARN` environment variable of the Operator's Subscription, the Cloud Credential Operator created the `cloud-credentials` secret, the backup location became `Available`, and a backup of the `sample-app` namespace completed.
-
 .Sample OADP configuration for ROSA
 [%collapsible]
 ====
@@ -535,6 +530,11 @@ spec:
 .Sample OADP configuration for ARO
 [%collapsible]
 ====
+On ARO the `cloud-credentials-azure` secret holds an environment file under the `cloud` key, which you create yourself.
+With a storage account key it has four lines: `AZURE_SUBSCRIPTION_ID`, `AZURE_RESOURCE_GROUP`, `AZURE_STORAGE_ACCOUNT_ACCESS_KEY` and `AZURE_CLOUD_NAME=AzurePublicCloud`.
+`storageAccountKeyEnvVar` tells Velero to use that key.
+Without it, Velero tries to list the account's keys with an Azure identity, and on a cluster without one the backup location stays `Unavailable`.
+
 [source,yaml]
 ----
 apiVersion: oadp.openshift.io/v1alpha1
@@ -559,6 +559,7 @@ spec:
           resourceGroup: <storage-resource-group>
           storageAccount: <storage-account>
           subscriptionId: <subscription-id>
+          storageAccountKeyEnvVar: AZURE_STORAGE_ACCOUNT_ACCESS_KEY
         credential:
           name: cloud-credentials-azure
           key: cloud

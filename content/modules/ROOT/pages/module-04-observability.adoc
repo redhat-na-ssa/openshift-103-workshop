@@ -94,10 +94,6 @@ oc get prometheusrules \
 Well over a hundred rules cover the nodes, the control plane and every platform Operator.
 You did not write or install any of them, and they are updated with each OpenShift release.
 
-[.validation]
-NOTE: *Not validated:* the console steps in this exercise on ARO.
-They were validated on ROSA, and the commands above on both.
-
 In the web console, open *Observe* > *Dashboards* and pick *Kubernetes / Compute Resources / Namespace (Pods)*, then the `sample-app` namespace.
 Then open *Observe* > *Alerting*.
 The `Watchdog` alert always fires: it proves that alerting works end to end.
@@ -239,10 +235,6 @@ done
 
 If you skipped xref:module-02-cloud-credentials.adoc[Pod Cloud Credentials], every request to `/` returns `500`, because the application has no bucket or container to read.
 
-[.validation]
-NOTE: *Not validated:* the console on ARO.
-On ROSA the queries below were validated in the console, and on both through the Thanos Querier, with the command at the end of this exercise.
-
 In the console, open *Observe* > *Metrics* and run this query for the request rate by status code:
 
 [source,promql]
@@ -336,12 +328,8 @@ spec:
 EOF
 ----
 
-[.validation]
-NOTE: *Not validated:* the console view on ARO.
-On ROSA the console listed the rule under *Source: User*, and on both the rule loads and fires, as the `ALERTS` metric shows.
-
 In the console, open *Observe* > *Alerting* > *Alerting rules* and filter on *Source: User*.
-The rule is listed and `Inactive` while the application reads its bucket or container without errors.
+The rule is listed, with `-` in its alert state, while the application reads its bucket or container without errors.
 Without the Module 2 credentials every request to `/` fails, so the rule fires a minute after you send requests, as in Exercise 3, and shows it working.
 
 [discrete]
@@ -492,8 +480,8 @@ EOF
 ----
 
 On ROSA the `openshift-logging` namespace already exists, and the command only adds the label.
-On ARO the command creates it.
-`oc apply` warns that the namespace is missing the `last-applied-configuration` annotation; that warning is harmless.
+There `oc apply` warns that the namespace is missing the `last-applied-configuration` annotation; that warning is harmless.
+On ARO the command creates the namespace, with no warning.
 
 Wait for the Operator to install:
 
@@ -754,12 +742,6 @@ oc logs \
 ARO (Azure)::
 +
 --
-[.validation]
-NOTE: *Not validated:* the federated credential and delivery to Log Analytics.
-The validation ARO cluster used a service principal, not managed identity, so it has no OIDC issuer for workload identity.
-The other steps were validated on it: the workspace, table, endpoint, rule, identity and role assignment were created, and the log forwarder became ready with its collectors running.
-Without the federated credential, the collectors then failed to authenticate with `AADSTS70025`.
-
 The collector writes to a Log Analytics workspace through the Azure Monitor Logs Ingestion API.
 That needs a custom table, a data collection endpoint and a data collection rule, and an identity allowed to send to the rule.
 The identity is a user-assigned managed identity that trusts the collector's service account, the same trust idea as in xref:module-02-cloud-credentials.adoc[Pod Cloud Credentials].
@@ -1127,10 +1109,7 @@ It sends through the HTTP Data Collector API, which Microsoft stopped supporting
 ====
 The same forwarder can send the API server audit logs to Log Analytics, for Microsoft Sentinel or your security team.
 Give them their own table: they are sensitive, they need the `collect-audit-logs` cluster role, and their volume adds noticeable Log Analytics charges.
-A `kubeAPIAudit` filter on the pipeline can drop the events you do not need.
-
-[.validation]
-NOTE: *Not validated:* forwarding audit logs from ARO, which was not run on a cluster.
+A `kubeAPIAudit` filter on the pipeline can drop the events you do not need: an idle validation cluster sent about 1,000 audit events a minute.
 
 Grant the collector's service account the audit role:
 
@@ -1143,6 +1122,10 @@ oc adm policy add-cluster-role-to-user \
 ----
 
 Create a second custom table, for example `AroAuditLogs_CL`, and add a matching stream and data flow to the data collection rule, as you did for `SampleAppLogs_CL`.
+Audit events have no `message` or `level` field, so declare the audit fields you keep instead, for example `verb`, `requestURI`, and `user` and `objectRef` as `dynamic`, and map them in the transformation, for example `User = tostring(user.username)` and `Resource = tostring(objectRef.resource)`.
+A changed rule can take about 20 minutes to reach the ingestion endpoint.
+Until it does, the collector log shows `InvalidStream` for the new stream and drops those events.
+
 Then add these entries to the `inputs`, `outputs` and `pipelines` lists of the `workshop` forwarder:
 
 [source,yaml]

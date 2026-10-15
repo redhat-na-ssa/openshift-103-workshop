@@ -131,7 +131,7 @@ oc get machinesets \
   --namespace openshift-machine-api
 ----
 
-There is one worker MachineSet per availability zone.
+There is one worker MachineSet per availability zone, or a single one in a region without availability zones, such as `australiacentral`.
 Each Machine is an Azure VM:
 
 [source,bash]

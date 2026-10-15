@@ -570,10 +570,6 @@ spec:
 
 === Restricting Egress (Reference Only)
 
-[.validation]
-NOTE: *Not validated:* this section on ARO, where no exercise runs it.
-On ROSA, the sample below was applied to a test project with `api.example.com` replaced by `checkip.amazonaws.com`: that host answered, another host timed out, and cluster DNS lookups still worked.
-
 NetworkPolicy in this module controls incoming traffic.
 To limit which destinations outside the cluster a project's pods can reach, by CIDR or by DNS name, OVN-Kubernetes offers the EgressFirewall.
 A project has at most one, named `default`, and the first rule that matches a connection wins, so allow rules go before the final deny.
