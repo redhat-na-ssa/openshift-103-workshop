@@ -803,7 +803,7 @@ The link:{site-url}/module-04-upgrades.html[Upgrades] page inspects and schedule
 If you want the room to see one, run an optional facilitator demo on a cluster of your own that is one patch release behind: start its upgrade at the beginning of the day, and during Module 4 show `oc adm upgrade` while the update progresses, the cluster Operators reporting `PROGRESSING`, and the nodes rolling, through the machine config pools on ARO or the machine pool upgrade that follows the control plane on ROSA.
 If you cannot spare a cluster, show a recording of a real upgrade instead.
 During your dry run, also check whether the ROSA `scale-lab` machine pool from Scaling Nodes can be created one patch release behind and upgraded in place, which would give a short, real node pool upgrade.
-No upgrade was run when the workshop was validated, so rehearse whichever you choose.
+The only update run during validation was an ARO patch update from 4.21.22 to 4.21.36: the control plane took about 55 minutes, and each worker about 10 more, apart from a drain held by a PodDisruptionBudget. Rehearse whichever you choose.
 
 == After the Workshop
 

@@ -491,14 +491,16 @@ The sample application's budget is in the list.
 Budgets in `openshift-*` namespaces, such as `packageserver-pdb`, can appear too; those belong to the platform and Red Hat manages them.
 
 [.validation]
-NOTE: *Not validated:* the drain behavior below, which comes from the vendors' documentation.
-No upgrade was run.
+NOTE: *Not validated:* the ROSA, EKS and AKS drain behavior below, which comes from the vendors' documentation.
+The ARO behavior was validated with a patch update from 4.21.22 to 4.21.36 started with `oc adm upgrade --to`.
 
 What happens next depends on the platform:
 
 * ROSA waits on the budget with no time limit, unless the machine pool has a node drain grace period.
 After that period it evicts the remaining pods and replaces the node.
 * Standard ARO waits on the node until the budget allows the eviction, so the update stalls on that node.
+The node stays cordoned, and the Machine Config Operator retries the eviction every few seconds; after 10 minutes it retries every 5 minutes and records a `DrainThresholdExceeded` warning event on the node.
+The ClusterVersion can already report the update `Completed` while this happens, because it tracks the Operators, not the nodes, so watch `oc get machineconfigpools` for the nodes.
 With an `UpgradeConfig`, the managed upgrade operator forces the drain after `PDBForceDrainTimeout` minutes.
 * EKS managed node group updates fail with a pod eviction error unless you force them.
 * AKS upgrades fail on a node that cannot drain, unless you set the undrainable node behavior to cordon it and move on.
