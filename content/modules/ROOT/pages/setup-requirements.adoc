@@ -287,7 +287,7 @@ rosa delete oidc-provider \
   --mode auto
 ----
 . Delete the cluster's OIDC configuration.
-The command refuses if another cluster still uses it:
+This command and the `oidc-provider` one before it both refuse while another cluster still uses the configuration, so run them after the last such cluster is gone:
 +
 [source,bash]
 ----
