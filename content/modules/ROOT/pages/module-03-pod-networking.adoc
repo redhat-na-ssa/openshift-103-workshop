@@ -1,7 +1,7 @@
 = Pod Networking and Policy
 
 [.validation]
-NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026.
+NOTE: Validated on ROSA HCP 4.20 and 4.22 and ARO 4.21 in October 2026.
 Steps and statements that were not checked on a live cluster carry a *Not validated* note.
 The comparison tables and summaries come from vendor documentation.
 
@@ -88,9 +88,6 @@ ROSA (AWS)::
 --
 Show the cluster's address ranges, in the `Machine CIDR`, `Service CIDR` and `Pod CIDR` lines:
 
-[.validation]
-NOTE: *Not validated:* `rosa describe cluster`, which needs a `rosa` login to the cluster's Red Hat organization.
-
 [source,bash]
 ----
 rosa describe cluster \
@@ -98,10 +95,7 @@ rosa describe cluster \
 ----
 
 Look up both addresses in the VPC.
-The pod's address finds nothing, and the node's address finds its network interface:
-
-[.validation]
-NOTE: *Not validated:* the VPC lookup, which needs AWS credentials for the account that owns the cluster.
+The pod's address finds nothing, so its line is empty, and the node's address finds its network interface:
 
 [source,bash]
 ----
@@ -513,9 +507,6 @@ ROSA (AWS)::
 --
 Find the NAT gateway addresses in the cluster's VPC:
 
-[.validation]
-NOTE: *Not validated:* the NAT gateway lookup, which needs AWS credentials for the account that owns the cluster.
-
 [source,bash]
 ----
 VPC_ID=$(aws ec2 describe-instances \
@@ -579,7 +570,8 @@ spec:
 === Restricting Egress (Reference Only)
 
 [.validation]
-NOTE: *Not validated:* this section, which no exercise runs.
+NOTE: *Not validated:* this section on ARO, where no exercise runs it.
+On ROSA, the sample below was applied to a test project with `api.example.com` replaced by `checkip.amazonaws.com`: that host answered, another host timed out, and cluster DNS lookups still worked.
 
 NetworkPolicy in this module controls incoming traffic.
 To limit which destinations outside the cluster a project's pods can reach, by CIDR or by DNS name, OVN-Kubernetes offers the EgressFirewall.

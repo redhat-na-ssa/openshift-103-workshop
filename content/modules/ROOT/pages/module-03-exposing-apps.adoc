@@ -1,7 +1,7 @@
 = Exposing an App
 
 [.validation]
-NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026.
+NOTE: Validated on ROSA HCP 4.20 and 4.22 and ARO 4.21 in October 2026.
 Steps and statements that were not checked on a live cluster carry a *Not validated* note.
 The comparison tables and summaries come from vendor documentation.
 
@@ -89,10 +89,7 @@ oc get service router-default \
 ----
 
 It prints `nlb`.
-AWS shows the same:
-
-[.validation]
-NOTE: *Not validated:* `aws elbv2 describe-load-balancers`, which needs AWS credentials for the account that owns the cluster.
+AWS shows the same, `network` and `internet-facing`:
 
 [source,bash]
 ----
@@ -102,9 +99,6 @@ aws elbv2 describe-load-balancers \
 ----
 
 See the ingress the way the service manages it:
-
-[.validation]
-NOTE: *Not validated:* `rosa list ingresses`, which needs a `rosa` login to the cluster's Red Hat organization.
 
 [source,bash]
 ----
@@ -450,7 +444,7 @@ ROSA (AWS)::
 +
 --
 It prints `200` once the new load balancer is ready, which takes a minute or two.
-Until then it prints `000`, so wait and try again.
+Until then it prints `503`, from the default router, or `000`, so wait and try again.
 --
 ARO (Azure)::
 +
@@ -501,10 +495,7 @@ oc delete gateway workshop \
 The `openshift-default` GatewayClass and `istiod-openshift-gateway` stay.
 Delete the GatewayClass if you do not want an Istio control plane running.
 
-[.validation]
-NOTE: *Not validated:* deleting the Ingress on ROSA. On ARO, deleting it also removed its generated Route.
-
-Remove the Ingress from Exercise 3 as well:
+Remove the Ingress from Exercise 3 as well, which also removes its generated Route:
 
 [source,bash]
 ----
@@ -516,11 +507,6 @@ The Route from Exercise 2 stays.
 The next section applies network policy to it.
 
 == What Matters
-
-[.validation]
-NOTE: *Not validated:* that the Gateway's load balancer on ROSA is a Classic Load Balancer, and that `dedicated-admin` cannot use the Gateway API.
-The ROSA load balancer type was read from its host name and annotations, not checked in AWS, and `dedicated-admin` was not tried.
-On ARO it was validated that a Gateway adds a public IP and a frontend to the cluster's existing Azure load balancer, and that deleting the Gateway removes the public IP.
 
 * A Route is OpenShift's own resource, with edge, re-encrypt and passthrough TLS. Ingress objects still work and become Routes.
 * On Module 1's xref:module-01-who-manages-what.adoc#_the_responsibility_line[responsibility line], the default router is a platform component that SRE runs, and the Routes, Ingresses and Gateways you create on it are yours, like your workloads.

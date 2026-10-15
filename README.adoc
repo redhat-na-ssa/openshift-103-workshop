@@ -256,16 +256,16 @@ The wait allows up to 10.
 
 |Exposing an App Exercise 4 (ROSA): the Gateway's new load balancer answers.
 |A minute or two, as the page says.
-`curl` prints `000` until then.
+`curl` prints `503` or `000` until then.
 |link:{site-url}/module-03-exposing-apps.html#_what_matters[What Matters]: each Gateway gets its own load balancer and needs its own certificate.
 Then the custom domains reference block.
 
-|link:{site-url}/module-04-scaling-nodes.html#ex-module-04-scaling-nodes-2[Scaling Nodes Exercise 2] (ARO): the first `scale-lab` Machine becomes a node.
-|5 to 10 minutes (estimate).
+|link:{site-url}/module-04-scaling-nodes.html#ex-module-04-scaling-nodes-2[Scaling Nodes Exercise 2]: the first `scale-lab` node becomes `Ready`.
+|About 3 minutes on ROSA 4.22 (measured), 5 to 10 minutes on ARO (estimate).
 |The diagram and table in link:{site-url}/module-04-scaling-nodes.html#_two_ways_to_add_nodes[Two Ways to Add Nodes], and link:{site-url}/module-04-scaling-nodes.html#nodes-as-code[node pools as code].
 
 |link:{site-url}/module-04-scaling-nodes.html#ex-module-04-scaling-nodes-3[Scaling Nodes Exercise 3]: new nodes boot and join.
-|Several minutes, as the page says; 5 to 10 minutes (estimate).
+|Several minutes, as the page says; about 4 minutes on ROSA 4.22 (measured), 5 to 10 minutes on ARO (estimate).
 |The "What is happening" list in the exercise, which the page tells attendees to read while they wait, and App Teams Will Notice.
 
 |link:{site-url}/module-04-scaling-nodes.html#ex-module-04-scaling-nodes-4[Scaling Nodes Exercise 4] (ROSA): AutoNode's node class appears, then Karpenter's nodes join.
@@ -672,8 +672,6 @@ No later page needs these two values.
 === Ready Checks
 
 From Pod Cloud Credentials onward, every page changes the same sample application, so check it before each of them.
-
-NOTE: *Not validated:* these checks, which are read-only.
 
 Before link:{site-url}/module-02-cloud-credentials.html[Pod Cloud Credentials], the sample application runs the fixed image:
 

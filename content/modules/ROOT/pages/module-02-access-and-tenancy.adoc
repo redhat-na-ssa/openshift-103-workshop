@@ -1,7 +1,7 @@
 = Access and Tenancy
 
 [.validation]
-NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026.
+NOTE: Validated on ROSA HCP 4.20 and 4.22 and ARO 4.21 in October 2026.
 Steps and statements that were not checked on a live cluster carry a *Not validated* note.
 The comparison tables and summaries come from vendor documentation.
 
@@ -104,17 +104,15 @@ AKS Standard keeps a local admin credential (`az aks get-credentials --admin`) b
 === Exercise 2: Add an Identity Provider
 
 [.validation]
-NOTE: *Not validated:* signing in through either identity provider, which the validation environments do not allow.
+NOTE: *Not validated:* signing in through Entra ID on ARO, which the validation environment does not allow.
 On ARO, the steps up to and including the authentication Operator rollout were validated.
+On ROSA, the whole exercise and the htpasswd sign-in were validated.
 
 [tabs]
 ======
 ROSA (AWS)::
 +
 --
-[.validation]
-NOTE: *Not validated:* `rosa create idp`, which needs the `rosa` CLI logged in to the cluster's organization.
-
 On ROSA, you add identity providers with the `rosa` CLI, and Red Hat applies them to the cluster.
 This workshop uses an htpasswd provider with one developer account, so you don't need to register an application anywhere.
 Production clusters use `--type openid`, `github`, `gitlab`, `google` or `ldap` instead.
@@ -141,6 +139,7 @@ rosa create idp \
 ----
 
 The provider is usually ready within two minutes.
+Until then, the developer's login in Exercise 3 fails with `401 Unauthorized`; wait and try again.
 --
 ARO (Azure)::
 +
@@ -348,8 +347,9 @@ az role assignment create \
 === Exercise 3: Log In as the Developer
 
 [.validation]
-NOTE: *Not validated:* this exercise, which needs a working identity provider login.
-Exercises 4 and 5 were validated as the cluster administrator, impersonating the developer.
+NOTE: *Not validated:* this exercise on ARO, which needs a working Entra ID sign-in.
+On ARO, Exercises 4 and 5 were validated as the cluster administrator, impersonating the developer.
+On ROSA, this exercise and Exercises 4 and 5 were validated with the developer's own login.
 
 Open a second terminal for the developer.
 Give it its own kubeconfig file, so the administrator's login stays in the first terminal.
@@ -640,7 +640,8 @@ oc adm policy add-role-to-group edit team-a \
 ----
 
 In the developer terminal, the new project is visible.
-It can take a minute to appear in the list:
+It can take a minute or two to appear in the list, and until it does, the `oc auth can-i` check below answers `no`.
+Run both again until the project is listed:
 
 [source,bash]
 ----
@@ -722,7 +723,7 @@ Since OpenShift 4.19 the console's Developer view is off by default.
 
 [.validation]
 NOTE: *Not validated:* the Developer view in a browser.
-On ARO, the patch below was validated: the console Operator wrote it to the console's configuration.
+On ROSA and ARO, the patch below was validated: the console Operator wrote it to the console's configuration.
 
 To turn it on, run this as an administrator:
 
