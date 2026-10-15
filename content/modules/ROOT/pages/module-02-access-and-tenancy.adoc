@@ -721,8 +721,7 @@ Developers get a web console with their projects, workloads, logs and metrics, a
 Since OpenShift 4.19 the console's Developer view is off by default.
 
 [.validation]
-NOTE: *Not validated:* the Developer view in a browser.
-On ARO, the patch below was validated: the console Operator wrote it to the console's configuration.
+NOTE: *Not validated:* the Developer view on ROSA. It was validated on ARO.
 
 To turn it on, run this as an administrator:
 

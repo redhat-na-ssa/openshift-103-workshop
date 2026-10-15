@@ -385,7 +385,7 @@ kubectl get storageclass
 === Exercise 5: Browse the Software Catalog
 
 [.validation]
-NOTE: *Not validated:* where the Software Catalog appears in the web console, because the console was not opened during validation.
+NOTE: *Not validated:* where the Software Catalog appears in the ROSA web console. It was validated on ARO.
 
 The Software Catalog lists Operators from catalog sources.
 In the web console it is under *Ecosystem*, and it was called OperatorHub in earlier releases.
@@ -590,8 +590,7 @@ oc get route openshift-gitops-server \
 ----
 
 [.validation]
-NOTE: *Not validated:* the console login itself.
-The route answered and Argo CD offered the OpenShift login, but nobody signed in through a browser.
+NOTE: *Not validated:* the Argo CD console login on ROSA. It was validated on ARO.
 
 Log in with *Log in via OpenShift*, using your cluster credentials.
 

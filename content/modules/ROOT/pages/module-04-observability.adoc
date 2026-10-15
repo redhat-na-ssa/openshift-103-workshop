@@ -95,8 +95,7 @@ Well over a hundred rules cover the nodes, the control plane and every platform 
 You did not write or install any of them, and they are updated with each OpenShift release.
 
 [.validation]
-NOTE: *Not validated:* the console steps in this exercise.
-The commands above were validated.
+NOTE: *Not validated:* the console steps in this exercise on ROSA. They were validated on ARO.
 
 In the web console, open *Observe* > *Dashboards* and pick *Kubernetes / Compute Resources / Namespace (Pods)*, then the `sample-app` namespace.
 Then open *Observe* > *Alerting*.
@@ -240,8 +239,7 @@ done
 If you skipped xref:module-02-cloud-credentials.adoc[Pod Cloud Credentials], every request to `/` returns `500`, because the application has no bucket or container to read.
 
 [.validation]
-NOTE: *Not validated:* the console.
-The queries below were validated through the Thanos Querier, with the command at the end of this exercise.
+NOTE: *Not validated:* the console on ROSA. It was validated on ARO, and the queries below also through the Thanos Querier, with the command at the end of this exercise.
 
 In the console, open *Observe* > *Metrics* and run this query for the request rate by status code:
 
@@ -337,11 +335,10 @@ EOF
 ----
 
 [.validation]
-NOTE: *Not validated:* the console view.
-The rule itself was validated: it loads and fires, as the `ALERTS` metric shows.
+NOTE: *Not validated:* the console view on ROSA. It was validated on ARO, and the rule fires, as the `ALERTS` metric shows.
 
 In the console, open *Observe* > *Alerting* > *Alerting rules* and filter on *Source: User*.
-The rule is listed and `Inactive` while the application reads its bucket or container without errors.
+The rule is listed, with `-` in its alert state, while the application reads its bucket or container without errors.
 Without the Module 2 credentials every request to `/` fails, so the rule fires a minute after you send requests, as in Exercise 3, and shows it working.
 
 [discrete]
