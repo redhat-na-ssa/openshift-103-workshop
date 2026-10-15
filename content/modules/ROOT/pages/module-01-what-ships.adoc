@@ -110,7 +110,7 @@ On OpenShift, its controllers need the `nonroot` security context constraint (SC
 The extension retires on October 9, 2027, in favor of the Secret Store extension, whose list of supported distributions names OpenShift Kubernetes Distribution but not ARO.
 
 [.validation]
-NOTE: *Not validated:* installing an Arc extension. Connecting the cluster was validated.
+NOTE: *Not validated:* the extensions other than Flux. Connecting the cluster and installing Flux were validated.
 
 Connect the cluster to Arc before you install any extension.
 The subscription needs the `Microsoft.Kubernetes`, `Microsoft.KubernetesConfiguration` and `Microsoft.ExtendedLocation` resource providers registered, and `az` adds its `connectedk8s` extension on first use:
@@ -126,6 +126,29 @@ az connectedk8s connect \
 The Arc resource defaults to the resource group's region, and Arc does not accept every region that ARO runs in, such as `australiacentral`.
 If the command fails with `InvalidLocation`, set `--location` to a nearby region from the list it prints.
 The connection takes a few minutes, installs the Arc agents in the `azure-arc` namespace, and detects the distribution as `openshift` on `azure`.
+
+Extensions then install with the same command as on AKS, with the cluster type `connectedClusters`, for example Flux:
+
+[source,bash]
+----
+az k8s-extension create \
+  --resource-group <resource-group> \
+  --cluster-name <arc-cluster-name> \
+  --cluster-type connectedClusters \
+  --extension-type microsoft.flux \
+  --name flux
+----
+
+Expect SCC denials, as in Module 2: Flux's `source-controller` and `notification-controller` pin a group ID, so their pods are refused and the extension stays `Creating` until you grant `nonroot-v2` to their service accounts:
+
+[source,bash]
+----
+for sa in source-controller notification-controller; do
+  oc adm policy add-scc-to-user nonroot-v2 \
+    --serviceaccount "$sa" \
+    --namespace flux-system
+done
+----
 ====
 
 == On ROSA and ARO
