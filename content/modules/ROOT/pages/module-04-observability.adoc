@@ -495,8 +495,8 @@ EOF
 ----
 
 On ROSA the `openshift-logging` namespace already exists, and the command only adds the label.
-On ARO the command creates it.
-`oc apply` warns that the namespace is missing the `last-applied-configuration` annotation; that warning is harmless.
+There `oc apply` warns that the namespace is missing the `last-applied-configuration` annotation; that warning is harmless.
+On ARO the command creates the namespace, with no warning.
 
 Wait for the Operator to install:
 
