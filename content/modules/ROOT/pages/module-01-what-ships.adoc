@@ -322,7 +322,7 @@ On ARO the default class is backed by the Azure Disk CSI driver.
 Both create `ReadWriteOnce` volumes.
 For `ReadWriteMany` storage on ROSA you install the AWS EFS CSI Driver Operator and give it an IAM role.
 ARO clusters created with a service principal also ship an `azurefile-csi` class for `ReadWriteMany` volumes.
-ARO clusters created with managed identities do not offer Azure Files by default.
+ARO clusters created with managed identities do not offer Azure Files by default: `oc get csidrivers` lists `file.csi.azure.com`, but no StorageClass uses it.
 
 The CSI drivers themselves are managed by the `storage` cluster Operator through a ClusterCSIDriver resource:
 
