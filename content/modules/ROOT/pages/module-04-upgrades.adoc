@@ -1,7 +1,7 @@
 = Upgrades
 
 [.validation]
-NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026.
+NOTE: Validated on ROSA HCP 4.20 and 4.22 and ARO 4.21 in October 2026.
 Steps and statements that were not checked on a live cluster carry a *Not validated* note.
 The comparison tables and summaries come from vendor documentation.
 
@@ -87,7 +87,7 @@ ROSA (AWS)::
 +
 --
 [.validation]
-NOTE: *Not validated:* the `rosa` commands in this part, and the claim that machine pools can trail the control plane by two minor versions.
+NOTE: *Not validated:* the claim that machine pools can trail the control plane by two minor versions.
 
 On ROSA the channel and the list of updates come from OpenShift Cluster Manager.
 Show the cluster's channel and version:
@@ -206,7 +206,9 @@ An `Upgradeable` condition appears, set to `False`, only when something blocks t
 === Exercise 3: Schedule an Upgrade, Then Cancel It (ROSA Only)
 
 [.validation]
-NOTE: *Not validated:* this whole exercise, which needs the `rosa` CLI, and the `UpgradeConfig` example, which was not created.
+NOTE: *Not validated:* scheduling and cancelling a control plane upgrade, because the ROSA 4.22 validation cluster ran the newest version and had none to offer, and the `UpgradeConfig` example, which was not created.
+The same commands with `--machinepool` were validated on a machine pool created one patch release behind: `rosa upgrade machinepool` with `--schedule-date` and `--schedule-time`, `rosa describe upgrade` and `rosa delete upgrade`.
+So was `rosa upgrade machinepool` without a schedule, which replaced the pool's node with one on the new version.
 
 On ROSA you schedule upgrades with the `rosa` CLI or OpenShift Cluster Manager, and Red Hat runs them.
 You schedule one here and cancel it before it starts.
@@ -428,11 +430,11 @@ oc get apirequestcounts --output json \
 ----
 
 The list is often empty, and that is a real answer.
-OpenShift flags only the APIs it has scheduled for removal in a coming release, and on 4.20 and 4.21 every API scheduled so far has already been removed.
+OpenShift flags only the APIs it has scheduled for removal in a coming release, and on 4.20, 4.21 and 4.22 every API scheduled so far has already been removed.
 An empty list means nothing on the cluster calls an API that is about to disappear; it fills in when a future release schedules more removals.
 
 [.validation]
-NOTE: *Not validated:* a non-empty result. The command returned nothing on both validation clusters, as expected on 4.20 and 4.21.
+NOTE: *Not validated:* a non-empty result. The command returned nothing on every validation cluster, as expected on 4.20, 4.21 and 4.22.
 
 To see who calls one of them, look at its users, for example:
 
@@ -499,9 +501,6 @@ With an `UpgradeConfig`, the managed upgrade operator forces the drain after `PD
 * EKS managed node group updates fail with a pod eviction error unless you force them.
 * AKS upgrades fail on a node that cannot drain, unless you set the undrainable node behavior to cordon it and move on.
 
-[.validation]
-NOTE: *Not validated:* `rosa describe machinepool` and `rosa edit machinepool`, which need the `rosa` CLI.
-
 On ROSA, check the pool's node drain grace period and its `Management upgrade` settings.
 By default the grace period is empty, which means no time limit, and nodes are replaced one extra node at a time (max surge 1, max unavailable 0):
 
@@ -512,7 +511,8 @@ rosa describe machinepool \
   --machinepool <machinepool-name>
 ----
 
-To have ROSA evict pods that a budget still protects after an hour, you would set a grace period on the pool:
+To have ROSA evict pods that a budget still protects after an hour, you would set a grace period on the pool.
+The command then asks whether to turn on autoscaling and how many replicas to keep; answer with the pool's current settings, or pass them with `--enable-autoscaling` and `--replicas` or `--min-replicas` and `--max-replicas`:
 
 [source,bash]
 ----

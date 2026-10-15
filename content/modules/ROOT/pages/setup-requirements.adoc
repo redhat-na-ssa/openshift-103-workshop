@@ -29,6 +29,8 @@ Check the quotas before creating the cluster:
 rosa verify quota
 ----
 
+It checks the region your AWS CLI is configured for, and prints nothing when the quotas are sufficient.
+
 |ARO
 a|* Created with managed identities, which Module 2 needs for workload identity. A cluster created with a service principal cannot be converted.
 * Created with a Red Hat pull secret, which Module 1 needs to install Operators. If the cluster was created without one, https://learn.microsoft.com/azure/openshift/howto-add-update-pull-secret[add it afterwards].
@@ -76,7 +78,7 @@ Attendees install these Operators during the exercises:
 
 |Red Hat OpenShift Service Mesh 3
 |3
-|The Ingress Operator starts an Istio control plane, `istiod-openshift-gateway`, when the Gateway API exercise creates a GatewayClass. On 4.20 and 4.21 it did so without an OLM subscription. Where a version installs the Service Mesh 3 Operator from the Red Hat catalog instead, ARO needs its pull secret, and the cluster must not already have an OpenShift Service Mesh 2 subscription.
+|The Ingress Operator starts an Istio control plane, `istiod-openshift-gateway`, when the Gateway API exercise creates a GatewayClass. On 4.20, 4.21 and ROSA 4.22 it did so without an OLM subscription. Where a version installs the Service Mesh 3 Operator from the Red Hat catalog instead, ARO needs its pull secret, and the cluster must not already have an OpenShift Service Mesh 2 subscription.
 |===
 
 The default ingress controller, OVN-Kubernetes, the CSI drivers and platform monitoring come with every ROSA and ARO cluster.

@@ -518,10 +518,6 @@ kubectl get configmap cluster-autoscaler-status \
 [#ex-module-04-scaling-nodes-4]
 === Exercise 4: Let Karpenter Pick the Nodes (ROSA Only)
 
-[.validation]
-NOTE: *Not validated:* this whole exercise.
-The validation cluster ran ROSA 4.20, and AutoNode needs 4.22 and the `rosa` and `aws` CLIs.
-
 From OpenShift 4.22, ROSA can run the Red Hat build of Karpenter, called AutoNode in OpenShift Cluster Manager.
 Its controller runs in the hosted control plane and launches EC2 instances in your account, so it needs an IAM role.
 Standard ARO has no equivalent, so this exercise is for your ROSA cluster only.
@@ -682,6 +678,7 @@ oc get nodes \
 ----
 
 Karpenter batches the pending pods, picks the cheapest instance types that fit them, and prefers spot capacity when the NodePool allows it.
+On the validation cluster it put all ten pods on one `c7i.2xlarge` spot node, which was `Ready` about four minutes after the machine pool was deleted.
 Spot nodes can be reclaimed by AWS at short notice, so allow spot only for workloads that tolerate interruption.
 Karpenter nodes also expire after 30 days, which replaces them with fresh ones.
 
@@ -726,7 +723,7 @@ On ARO, the Machine Config Operator rolls OS changes onto nodes, one pool at a t
 oc get machineconfigpools
 ----
 
-On ROSA the same command finds no pools.
+On ROSA the same command fails with `the server doesn't have a resource type "machineconfigpools"`.
 Node configuration and OS updates are driven from the hosted control plane, per machine pool.
 
 Either way, the node OS changes only when the cluster or machine pool takes an OpenShift update.
@@ -799,9 +796,6 @@ oc scale deployment/sample-app \
 ROSA (AWS)::
 +
 --
-[.validation]
-NOTE: *Not validated:* the ROSA cleanup steps, which need the `rosa` CLI.
-
 If you skipped Exercise 4, delete the machine pool instead:
 
 [source,bash]

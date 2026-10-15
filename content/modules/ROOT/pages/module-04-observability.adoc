@@ -1,7 +1,7 @@
 = Observability
 
 [.validation]
-NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026.
+NOTE: Validated on ROSA HCP 4.20 and 4.22 and ARO 4.21 in October 2026.
 Steps and statements that were not checked on a live cluster carry a *Not validated* note.
 The comparison tables and summaries come from vendor documentation.
 
@@ -349,9 +349,6 @@ Without the Module 2 credentials every request to `/` fails, so the rule fires a
 
 If the application reads its bucket or container without errors, break the read on purpose for a few minutes and watch the alert go off.
 
-[.validation]
-NOTE: *Not validated:* this optional step on ROSA. It was validated on ARO.
-
 [tabs]
 ======
 ROSA (AWS)::
@@ -536,10 +533,6 @@ The collector sends the sample application's logs to your cloud's log service: C
 ROSA (AWS)::
 +
 --
-[.validation]
-NOTE: *Not validated:* the `rosa` and `aws` steps, and delivery to CloudWatch.
-The log forwarder and its collector were validated with a placeholder IAM role, up to the collector calling AWS STS.
-
 The collector writes to CloudWatch with an IAM role, which it assumes with its service account token.
 This is the same STS pattern as in xref:module-02-cloud-credentials.adoc[Pod Cloud Credentials].
 

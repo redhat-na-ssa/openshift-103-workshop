@@ -277,9 +277,6 @@ oc get clusterlogforwarder <name> \
 ROSA (AWS)::
 +
 --
-[.validation]
-NOTE: *Not validated:* the `rosa` commands below, which need a `rosa` login to the cluster's Red Hat organization.
-
 Describe the cluster: its control plane, version and IAM roles:
 
 [source,bash]
