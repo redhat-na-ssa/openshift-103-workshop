@@ -447,6 +447,10 @@ If your ROSA cluster is in limited support, `rosa describe cluster` shows a `Lim
 |What you need
 |An AWS support plan that includes technical support cases, to open ROSA cases with AWS. Red Hat support is included
 |An Azure support plan to open cases with Microsoft, and the Red Hat pull secret on the cluster to open them with Red Hat
+
+|SRE access to the cluster
+|Opt in to Approved Access through a support case. SRE requests for cluster-admin-level access then go to the cluster owners by email, to approve or deny, and a slow answer puts the SLA at risk
+|Customer Lockbox covers Microsoft support engineers working a case: an approval opens the whole subscription, for 8 hours by default. No customer approval step is documented for Red Hat SRE access
 |===
 
 When an EKS or AKS add-on from another vendor fails, you open a second case with that vendor.
@@ -602,6 +606,29 @@ The pricing pages in the references have current numbers.
 * The AKS column is a paid tier. The free tier has no uptime SLA, so it is not a fair comparison for production.
 * Instance prices are the same, but on ROSA and ARO the platform's own pods (router, monitoring, registry, networking) use part of every cluster's worker capacity, and ARO needs at least three workers. The OpenShift fee scales with worker vCPUs, so commitments on it are a major lever on larger clusters, alongside compute commitments.
 * ROSA and ARO both carry a financially backed SLA and joint support: one case reaches both the cloud provider and Red Hat.
+
+Where the charges appear, and what a cluster costs while nobody uses it, also differ:
+
+[cols="1,2,2",options="header"]
+|===
+| |ROSA |ARO
+
+|Where the OpenShift charge appears
+|On the AWS bill, as AWS Marketplace charges kept apart from the infrastructure
+|On the Azure bill, as an OpenShift meter beside the VMs
+
+|Cost per team or namespace
+|EKS split cost allocation data covers only ECS and EKS, so it doesn't split a ROSA cluster's cost
+|The AKS cost analysis add-on works only on AKS
+
+|Smallest running cluster
+|Two workers, or three across availability zones, plus the control plane fee. Red Hat documents no way to stop or hibernate it, and shutting down its instances is unsupported
+|Three control plane and three worker VMs. Microsoft's support policy rules out scaling workers to zero, shutting the cluster down and deallocating its VMs
+|===
+
+Red Hat Lightspeed cost management (formerly Cost Management) is Red Hat's replacement for per-team cost: it spreads cloud cost across OpenShift projects, and on ROSA it needs a cost model with your rates.
+By contrast, an AKS cluster can be stopped and keeps its state for up to 12 months, and EKS node groups can scale to zero.
+On ROSA and ARO, the levers left are fewer non-production clusters, shared between teams, or short-lived ones on ROSA, where a create takes about 10 minutes.
 
 === Where Your Infrastructure as Code Lives
 

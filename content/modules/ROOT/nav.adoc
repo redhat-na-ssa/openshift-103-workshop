@@ -6,6 +6,7 @@ endif::[]
 * Module 1: The Service Model
   ** xref:module-01-who-manages-what.adoc[Who Manages What]
   ** xref:module-01-what-ships.adoc[What Ships and How You Extend It]
+  ** xref:module-01-living-with-the-service.adoc[Living With the Service]
 * Module 2: Access and Workload Security
   ** xref:module-02-access-and-tenancy.adoc[Access and Tenancy]
   ** xref:module-02-workload-security.adoc[Workload Security Defaults]

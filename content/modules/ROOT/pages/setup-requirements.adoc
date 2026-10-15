@@ -20,6 +20,8 @@ a|* ROSA with hosted control planes (HCP), in STS mode (the default).
 * Its own OIDC config, not one shared with another attendee's cluster, so that Module 2's trust policies stay scoped to one cluster.
 * OpenShift 4.22 or later, for the Red Hat build of Karpenter in Module 4.
 * A public API and default ingress.
+* At least 32 vCPUs of On-Demand Standard instance quota in the region, the minimum ROSA needs to install.
+The AWS default is 5, so an account that has not run ROSA before needs an increase, which can take several hours to approve.
 * At least 2 worker nodes, with Service Quotas that allow the cluster to scale out by at least 3 more nodes in Module 4.
 
 Check the quotas before creating the cluster:
@@ -34,6 +36,9 @@ a|* Created with managed identities, which Module 2 needs for workload identity.
 * Created with a Red Hat pull secret, which Module 1 needs to install Operators. If the cluster was created without one, https://learn.microsoft.com/azure/openshift/howto-add-update-pull-secret[add it afterwards].
 * The newest OpenShift version ARO offers.
 * A public API and default ingress.
+* Quota to install: 44 vCPUs, in the regional total and in the VM family of the nodes, Standard DSv5 for the default sizes.
+Of those, 8 are for a bootstrap VM that the install removes, 24 for the control plane and 12 for three workers.
+A new subscription has less, and Azure can refuse an increase in a region that is short of capacity, so request it early and keep a fallback region in mind.
 * Quota for at least 3 more worker nodes in the region, for Module 4.
 
 These resource providers must be registered:
@@ -50,12 +55,24 @@ for namespace in \
     --namespace "$namespace"
 done
 ----
+
+List the OpenShift versions the region can install, and pick the newest:
+
+[source,bash]
+----
+az aro get-versions \
+  --location <region>
+----
 |===
+
+ROSA with HCP runs in fewer regions than EKS, and ARO in fewer than AKS, so check that the region you plan to use offers the service.
 
 To create the clusters, follow:
 
 * https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/install_clusters/index[Creating ROSA with HCP clusters]
-* https://learn.microsoft.com/azure/openshift/howto-understand-managed-identities[Creating ARO clusters with managed identities]
+* https://learn.microsoft.com/azure/openshift/howto-create-openshift-cluster[Creating ARO clusters with managed identities]
+
+For a production cluster, also read xref:module-01-living-with-the-service.adoc#decide-before-you-create[Decide Before You Create]: some settings can't be changed once the cluster exists.
 
 == Operators and Cluster Components
 
@@ -137,7 +154,8 @@ The ROSA identity provider in Module 2 is an htpasswd provider created with the 
 |`rosa`
 |ROSA
 |Version 1.2.61 or later, for Karpenter in Module 4.
-Logged in with a token from console.redhat.com.
+Logged in to the Red Hat organization that owns the cluster, with `rosa login --use-auth-code`, which opens a browser, or `rosa login --use-device-code` on a machine without one.
+The login lasts about 10 hours, so log in on the day.
 
 |`aws` (v2)
 |ROSA
@@ -162,6 +180,7 @@ Workstations need outbound HTTPS to:
 
 * the AWS and Azure APIs
 * console.redhat.com
+* sso.redhat.com, where `rosa login` signs you in
 * api.openshift.com
 * the ROSA and ARO cluster API and application domains. The ROSA with HCP API listens on port 443 and the ARO API on port 6443, so a firewall that allows only 443 blocks the ARO API.
 * ghcr.io, where Module 2 copies the sample application's image from
@@ -234,7 +253,58 @@ ROSA (AWS)::
 . Detach the ECR read policy from the ROSA worker IAM role. Other ROSA clusters in the account share that role, so do not delete it.
 . Delete the IAM roles and policies attendees created, including the Karpenter and log forwarding roles from Module 4.
 . Delete the S3 buckets, ECR repositories and CloudWatch log groups attendees created.
-. Delete the cluster, following https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/install_clusters/index[Deleting ROSA with HCP clusters].
+. Note the cluster's operator role prefix and OIDC configuration ID, which the last steps need once the cluster is gone.
+The roles under `Operator IAM Roles` start with the prefix, and the `OIDC Endpoint URL` of a managed configuration ends with its ID:
++
+[source,bash]
+----
+rosa describe cluster \
+  --cluster <cluster-name>
+----
+. Delete the cluster, and wait for the deletion to finish:
++
+[source,bash]
+----
+rosa delete cluster \
+  --cluster <cluster-name> \
+  --watch
+----
+. Delete the cluster's operator roles and OIDC provider, which the cluster deletion leaves behind:
++
+[source,bash]
+----
+rosa delete operator-roles \
+  --prefix <operator-role-prefix> \
+  --mode auto
+----
++
+[source,bash]
+----
+rosa delete oidc-provider \
+  --oidc-config-id <oidc-config-id> \
+  --mode auto
+----
+. Delete the cluster's OIDC configuration.
+The command refuses if another cluster still uses it:
++
+[source,bash]
+----
+rosa delete oidc-config \
+  --oidc-config-id <oidc-config-id> \
+  --mode auto
+----
+. If `rosa create network` built the VPC, delete its CloudFormation stack, whose NAT gateways and VPC endpoints are billed by the hour.
+Unless you named it, the stack is called `rosa-network-stack-` followed by the AWS account ID:
++
+[source,bash]
+----
+aws cloudformation delete-stack \
+  --stack-name <stack-name> \
+  --region <region>
+----
+
+The account roles, the `ocm-role` and the `user-role` stay, because other ROSA clusters in the account use them.
+For an account that will run no more ROSA clusters, Red Hat's https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html-single/install_clusters/index#rosa-hcp-deleting-cluster[deletion steps] remove them too.
 --
 ARO (Azure)::
 +
@@ -242,6 +312,24 @@ ARO (Azure)::
 . Delete the Entra ID app registration for the ARO identity provider.
 . Delete the managed identities, storage accounts and container registries attendees created.
 . Delete the Log Analytics workspaces, and the data collection rules and endpoints.
-. Delete the cluster, following https://learn.microsoft.com/azure/openshift/howto-understand-managed-identities[Deleting ARO clusters with managed identities].
+. Delete the cluster:
++
+[source,bash]
+----
+az aro delete \
+  --resource-group <resource-group> \
+  --name <cluster-name>
+----
+. Delete the cluster's managed identities, its virtual network and subnets, and the resource group, if it holds nothing else.
+The cluster deletion leaves all of them behind, as https://learn.microsoft.com/azure/openshift/howto-create-openshift-cluster#clean-up[Microsoft's clean-up steps] note.
+For a resource group that held only the cluster:
++
+[source,bash]
+----
+az group delete \
+  --name <resource-group>
+----
+. Remove the role assignments that the deleted identities held.
+Azure doesn't delete them with the identities, and the portal's access control (IAM) view lists them as `Identity not found`.
 --
 ======

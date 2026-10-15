@@ -14,6 +14,25 @@ Each attendee runs the hands-on steps on one cluster, ROSA or ARO, whichever the
 An attendee whose team runs both can have one of each and run every step on both, as link:{site-url}/index.html#_how_the_workshop_works[How the Workshop Works] and link:{site-url}/setup-requirements.html[Setup Requirements] describe.
 Several exercises change cluster-wide settings, so each attendee or pair needs a cluster of their own.
 
+[#plan-the-clusters]
+=== Plan the Clusters
+
+Most of the lead time comes before the first create command.
+
+* Request quota as soon as you know how many clusters you need.
+Each ARO cluster needs 44 vCPUs to install, in the regional total and in the VM family, and a new subscription has less.
+An AWS account that has not run ROSA before needs 32 vCPUs of On-Demand Standard instances, where the default is 5.
+Azure can refuse a request in a region that is short of capacity, so pick a fallback region before you need one.
+* Find out who has to act, and ask them early.
+ROSA needs a Red Hat organization administrator for the `ocm-role`, an AWS administrator to enable ROSA and create the account roles, and a `user-role` for each person who creates clusters.
+ARO needs someone with `Contributor` and `User Access Administrator`, or `Owner`, because the install creates role assignments.
+* Allow for the create itself: about 10 minutes for a ROSA cluster, plus about 5 if `rosa create network` builds its VPC, and about 45 minutes for an ARO cluster, which took about an hour when the workshop was validated.
+* Create the clusters close to the day.
+Neither ROSA nor ARO can be stopped, so a cluster is billed from the moment you create it until you delete it.
+* Sign in to `rosa` on the day, not the day before: a `rosa login` session lasts about 10 hours.
+
+link:{site-url}/module-01-living-with-the-service.html[Living With the Service] has the details behind each of these.
+
 [#setup-checklist]
 === Setup Checklist
 
@@ -152,6 +171,12 @@ See where the control plane runs, how the service reaches their cloud account, w
 |Read the cluster version and the cluster Operators, find the default storage, install OpenShift GitOps, and sync one application from Git.
 |40 to 45 min
 
+|Module 1: The Service Model
+|link:{site-url}/module-01-living-with-the-service.html[Living With the Service]
+|Read what it takes to get, sign in to, secure and pay for a cluster, and which settings are fixed at creation.
+Answer the module's questions.
+|10 to 15 min
+
 |Module 2: Access and Workload Security
 |link:{site-url}/module-02-access-and-tenancy.html[Access and Tenancy]
 |Add an identity provider, log in as a developer in a second terminal, add a project template with a quota, turn off self-provisioning, and give a team a project.
@@ -208,6 +233,8 @@ If you run short of time, have attendees read these exercises instead of running
 Exercise 6 covers the clean-up for either path.
 * link:{site-url}/module-03-exposing-apps.html#ex-module-03-exposing-apps-4[Exposing an App Exercise 4] (the Gateway API).
 Still run its last step, which deletes the Ingress from Exercise 3.
+
+Living With the Service has no exercises, so attendees can also read it after the day.
 
 [#slow-steps]
 == Slow Steps
