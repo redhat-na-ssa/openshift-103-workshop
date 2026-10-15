@@ -73,7 +73,7 @@ The module pages were validated on ROSA HCP 4.20 and ARO 4.21, while Setup asks 
 * [ ] Run every page in order, from link:{site-url}/module-01-who-manages-what.html#before-you-start[Before You Start] to the Observability clean-up, in one terminal per cluster.
 * [ ] Time each page and replace the estimates in the <<agenda,Agenda>> and <<slow-steps,Slow Steps>> with what you measured.
 * [ ] On ROSA, run the steps the pages mark *Not validated* that attendees will run: `rosa create admin`, `rosa create idp` and the htpasswd sign-in, the AWS steps of Pod Cloud Credentials and the ECR pull, the AWS lookups in Module 3, the `scale-lab` machine pool from zero nodes and its scale-up, Karpenter, scheduling and cancelling an upgrade, and log delivery to CloudWatch.
-* [ ] On ARO, run the Entra ID sign-in, workload identity from the federated credential onward, setting the update channel, and log forwarding to Azure Monitor Logs end to end.
+* [ ] On ARO, run the Entra ID sign-in and the developer terminal's login.
 * [ ] On both, sign in to the Argo CD console, check the cascading delete in What Ships Exercise 7, and open the console views that Observability uses.
 * [ ] Run the Gateway API exercise on your version: whether the Ingress Operator installs the Service Mesh Operator first depends on the version.
 * [ ] Try the <<if-identity-provider-sign-in-fails,identity provider fallback>> once, so that you can hand it out quickly.
