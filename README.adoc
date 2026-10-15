@@ -73,7 +73,7 @@ The module pages were validated on ROSA HCP 4.20 and ARO 4.21, while Setup asks 
 * [ ] Run every page in order, from link:{site-url}/module-01-who-manages-what.html#before-you-start[Before You Start] to the Observability clean-up, in one terminal per cluster.
 * [ ] Time each page and replace the estimates in the <<agenda,Agenda>> and <<slow-steps,Slow Steps>> with what you measured.
 * [ ] On ROSA, run the steps the pages mark *Not validated* that attendees will run: `rosa create admin`, `rosa create idp` and the htpasswd sign-in, the AWS steps of Pod Cloud Credentials and the ECR pull, the AWS lookups in Module 3, the `scale-lab` machine pool from zero nodes and its scale-up, Karpenter, scheduling and cancelling an upgrade, and log delivery to CloudWatch.
-* [ ] On ARO, run the Entra ID sign-in, workload identity from the federated credential onward, setting the update channel, and log forwarding to Azure Monitor Logs end to end.
+* [ ] On ARO, run the Entra ID sign-in and the developer terminal's login.
 * [ ] On both, sign in to the Argo CD console, check the cascading delete in What Ships Exercise 7, and open the console views that Observability uses.
 * [ ] Run the Gateway API exercise on your version: whether the Ingress Operator installs the Service Mesh Operator first depends on the version.
 * [ ] Try the <<if-identity-provider-sign-in-fails,identity provider fallback>> once, so that you can hand it out quickly.
@@ -263,7 +263,7 @@ Every other figure is an estimate to check in your dry run.
 |The login flow diagram at the top of the page, and why the administrator logins are break-glass only (link:{site-url}/module-02-access-and-tenancy.html#_what_matters[What Matters]).
 
 |Access and Tenancy Exercise 2 (ARO): the authentication Operator rolls out new OAuth servers.
-|5 to 10 minutes (estimate).
+|About 2 minutes on ARO 4.21 (measured).
 The page waits up to 3 minutes for it to start and up to 10 to finish.
 |The login flow diagram, then What Matters on client secret expiry, leavers' tokens and just-in-time admin access.
 
@@ -288,7 +288,7 @@ The wait allows up to 10.
 Then the custom domains reference block.
 
 |link:{site-url}/module-04-scaling-nodes.html#ex-module-04-scaling-nodes-2[Scaling Nodes Exercise 2] (ARO): the first `scale-lab` Machine becomes a node.
-|5 to 10 minutes (estimate).
+|About 4 minutes on ARO 4.21 (measured).
 |The diagram and table in link:{site-url}/module-04-scaling-nodes.html#_two_ways_to_add_nodes[Two Ways to Add Nodes], and link:{site-url}/module-04-scaling-nodes.html#nodes-as-code[node pools as code].
 
 |link:{site-url}/module-04-scaling-nodes.html#ex-module-04-scaling-nodes-3[Scaling Nodes Exercise 3]: new nodes boot and join.
@@ -543,8 +543,6 @@ If sign-in fails, for example because the Entra ID tenant blocks user consent or
 The page's own validation of Exercises 4 and 5 was done this way.
 Name the groups explicitly, because impersonation may not add the developer's OpenShift Group membership.
 
-NOTE: *Not validated:* the impersonation commands below, which do not appear on the Access and Tenancy page.
-
 `DEV_USER` must be set in the administrator terminal, as Exercise 2 does on both platforms.
 Exercise 3 needs a real sign-in, so the attendee reads it instead; its `oc get users` and `oc get identities` stay empty, because nobody signed in.
 
@@ -700,7 +698,7 @@ No later page needs these two values.
 
 From Pod Cloud Credentials onward, every page changes the same sample application, so check it before each of them.
 
-NOTE: *Not validated:* these checks, which are read-only.
+NOTE: *Not validated:* these checks on ROSA. They were validated on ARO, before each page.
 
 Before link:{site-url}/module-02-cloud-credentials.html[Pod Cloud Credentials], the sample application runs the fixed image:
 
@@ -778,8 +776,6 @@ oc get networkpolicy allow-from-monitoring \
 
 If the new pod stays in `ImagePullBackOff` after the switch to ECR or ACR in link:{site-url}/module-02-cloud-credentials.html#ex-module-02-cloud-credentials-2[Pod Cloud Credentials Exercise 2], the old pod keeps serving, and `oc rollout status` waits until the rollout's deadline.
 
-NOTE: *Not validated:* rolling back a failed registry switch, which was not run on a cluster.
-
 Press Ctrl+C and roll back to the previous image:
 
 [source,bash]
@@ -807,7 +803,7 @@ The link:{site-url}/module-04-upgrades.html[Upgrades] page inspects and schedule
 If you want the room to see one, run an optional facilitator demo on a cluster of your own that is one patch release behind: start its upgrade at the beginning of the day, and during Module 4 show `oc adm upgrade` while the update progresses, the cluster Operators reporting `PROGRESSING`, and the nodes rolling, through the machine config pools on ARO or the machine pool upgrade that follows the control plane on ROSA.
 If you cannot spare a cluster, show a recording of a real upgrade instead.
 During your dry run, also check whether the ROSA `scale-lab` machine pool from Scaling Nodes can be created one patch release behind and upgraded in place, which would give a short, real node pool upgrade.
-No upgrade was run when the workshop was validated, so rehearse whichever you choose.
+The only update run during validation was an ARO patch update from 4.21.22 to 4.21.36: the control plane took about 55 minutes, and each worker about 10 more, apart from a drain held by a PodDisruptionBudget. Rehearse whichever you choose.
 
 == After the Workshop
 
