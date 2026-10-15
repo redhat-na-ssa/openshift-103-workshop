@@ -698,7 +698,7 @@ No later page needs these two values.
 
 From Pod Cloud Credentials onward, every page changes the same sample application, so check it before each of them.
 
-NOTE: *Not validated:* these checks, which are read-only.
+NOTE: *Not validated:* these checks on ROSA. They were validated on ARO, before each page.
 
 Before link:{site-url}/module-02-cloud-credentials.html[Pod Cloud Credentials], the sample application runs the fixed image:
 
