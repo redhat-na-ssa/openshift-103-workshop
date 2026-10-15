@@ -545,7 +545,8 @@ The outbound one is named in the `effectiveOutboundIps` list of the `networkProf
 === Fixed Egress Addresses (Reference Only)
 
 [.validation]
-NOTE: *Not validated:* this section, which no exercise runs.
+NOTE: *Not validated:* this section on ARO, where no exercise runs it.
+On ROSA 4.22, the sample below was applied after a machine pool added the `k8s.ovn.org/egress-assignable` label to a node: OVN-Kubernetes added `10.0.1.200` to that node's network interface, an `m5.xlarge` reported room for 14 addresses, and a host in the VPC saw the sample application's connections come from `10.0.1.200`.
 
 To give one project its own source address, OVN-Kubernetes offers egress IPs.
 This workshop does not set one up, because the cloud constraints differ: on ROSA, you label the nodes that may host egress IPs through a machine pool, and capacity depends on the instance type; on ARO, namespace egress IPs need a cluster created with a private API, private ingress and user-defined routing, where you provide the egress path through a firewall or NAT.

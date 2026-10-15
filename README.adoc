@@ -53,7 +53,6 @@ The module pages were validated on ROSA HCP 4.20 and 4.22 and on ARO 4.21, so th
 * [ ] Work with an attendee-level account: the same Red Hat organization permissions, AWS permissions and Azure roles your attendees get, so that permission gaps show up now.
 * [ ] Run every page in order, from link:{site-url}/module-01-who-manages-what.html#before-you-start[Before You Start] to the Observability clean-up, in one terminal per cluster.
 * [ ] Time each page and replace the estimates in the <<agenda,Agenda>> and <<slow-steps,Slow Steps>> with what you measured.
-* [ ] On ROSA, schedule and cancel a control plane upgrade, which needs a cluster with a newer version available: the 4.22 validation cluster was on the newest version, so only the machine pool form of these commands was validated.
 * [ ] On ARO, run the Entra ID sign-in, workload identity from the federated credential onward, setting the update channel, and log forwarding to Azure Monitor Logs end to end.
 * [ ] On both, sign in to the Argo CD console and open the console views that Observability uses.
 * [ ] Run the Gateway API exercise on your version: whether the Ingress Operator installs the Service Mesh Operator first depends on the version.

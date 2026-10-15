@@ -203,9 +203,8 @@ An `Upgradeable` condition appears, set to `False`, only when something blocks t
 === Exercise 3: Schedule an Upgrade, Then Cancel It (ROSA Only)
 
 [.validation]
-NOTE: *Not validated:* scheduling and cancelling a control plane upgrade, because the ROSA 4.22 validation cluster ran the newest version and had none to offer, and the `UpgradeConfig` example, which was not created.
-The same commands with `--machinepool` were validated on a machine pool created one patch release behind: `rosa upgrade machinepool` with `--schedule-date` and `--schedule-time`, `rosa describe upgrade` and `rosa delete upgrade`.
-So was `rosa upgrade machinepool` without a schedule, which replaced the pool's node with one on the new version.
+NOTE: *Not validated:* the `UpgradeConfig` example, which was not created.
+The ROSA steps were validated on a ROSA 4.22 cluster one patch release behind, including a recurring `--schedule`, and on a machine pool one patch release behind, where `rosa upgrade machinepool` without a schedule replaced the pool's node with one on the new version.
 
 On ROSA you schedule upgrades with the `rosa` CLI or OpenShift Cluster Manager, and Red Hat runs them.
 You schedule one here and cancel it before it starts.
@@ -254,6 +253,7 @@ rosa upgrade cluster \
 ----
 
 If the CLI offers to upgrade account or operator roles, decline: that is needed only for a minor version, and you are cancelling anyway.
+It also suggests running the command with `--dry-run` to check and acknowledge gates; a patch release has none to acknowledge.
 
 Show the scheduled upgrade:
 

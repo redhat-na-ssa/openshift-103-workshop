@@ -491,7 +491,8 @@ OADP is configured with one DataProtectionApplication resource.
 These samples show its shape on each cloud; this workshop does not run them.
 
 [.validation]
-NOTE: *Not validated:* the two OADP samples below, which were not applied to a cluster.
+NOTE: *Not validated:* the ARO sample below.
+The ROSA sample was validated on ROSA 4.22 with OADP 1.6: with the role ARN given as the `ROLEARN` environment variable of the Operator's Subscription, the Cloud Credential Operator created the `cloud-credentials` secret, the backup location became `Available`, and a backup of the `sample-app` namespace completed.
 
 .Sample OADP configuration for ROSA
 [%collapsible]
