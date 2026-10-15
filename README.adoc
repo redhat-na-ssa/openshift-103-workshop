@@ -288,7 +288,7 @@ The wait allows up to 10.
 Then the custom domains reference block.
 
 |link:{site-url}/module-04-scaling-nodes.html#ex-module-04-scaling-nodes-2[Scaling Nodes Exercise 2] (ARO): the first `scale-lab` Machine becomes a node.
-|5 to 10 minutes (estimate).
+|About 4 minutes on ARO 4.21 (measured).
 |The diagram and table in link:{site-url}/module-04-scaling-nodes.html#_two_ways_to_add_nodes[Two Ways to Add Nodes], and link:{site-url}/module-04-scaling-nodes.html#nodes-as-code[node pools as code].
 
 |link:{site-url}/module-04-scaling-nodes.html#ex-module-04-scaling-nodes-3[Scaling Nodes Exercise 3]: new nodes boot and join.
