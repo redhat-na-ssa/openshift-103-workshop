@@ -799,12 +799,13 @@ Without the credentials, the application answers `500` on `/`, which Observabili
 [#upgrades-without-a-live-upgrade]
 == Upgrades Without a Live Upgrade
 
-The link:{site-url}/module-04-upgrades.html[Upgrades] page inspects and schedules upgrades but does not run one, because a real upgrade takes an hour or more, so attendees never see the drain and PodDisruptionBudget behavior it describes.
+The link:{site-url}/module-04-upgrades.html[Upgrades] page inspects and schedules upgrades but does not run one, because a real upgrade with its node rollout takes an hour or more, so attendees never see the drain and PodDisruptionBudget behavior it describes.
 If you want the room to see one, run an optional facilitator demo on a cluster of your own that is one patch release behind: start its upgrade at the beginning of the day, and during Module 4 show `oc adm upgrade` while the update progresses, the cluster Operators reporting `PROGRESSING`, and the nodes rolling, through the machine config pools on ARO or the machine pool upgrade that follows the control plane on ROSA.
 If you cannot spare a cluster, show a recording of a real upgrade instead.
 On ROSA there is a shorter, real node pool upgrade: create a one-node machine pool one patch release behind the control plane, with `rosa create machinepool` and `--version`, then run `rosa upgrade machinepool` with the control plane's version.
 On ROSA 4.22 this was validated: the upgrade started about 14 minutes after the command and replaced the node within 3 more, adding the new node before draining the old one.
-No cluster upgrade was run when the workshop was validated, so rehearse whichever you choose.
+A ROSA control plane patch upgrade was also run when the workshop was validated, from 4.22.17 to 4.22.18: `rosa upgrade cluster` without a schedule started it about 10 minutes later, it finished about 23 minutes after that, and the machine pool stayed on 4.22.17 until its own upgrade.
+No ARO upgrade was run, so rehearse whichever you choose.
 
 == After the Workshop
 
