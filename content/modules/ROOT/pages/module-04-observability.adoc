@@ -1353,8 +1353,10 @@ The cloud resources (the IAM role and log group on AWS, the workspace, rule, end
 User workload monitoring covers your applications, and you may need to turn it on.
 * Alertmanager sends no notifications by default, and Red Hat SRE watches the platform with its own tooling.
 On day one, configure a receiver, such as PagerDuty, Slack or a webhook, for the platform and user alerts your team owns; on ARO, also set Azure Resource Health alerts on the cluster resource.
+Resource Health reports maintenance up to two weeks ahead, maintenance in progress, actions you need to take and an unreachable API server, but it alerts nobody until you create alert rules, and SRE posts its advisories in Service Health.
 * For fleet or long-term metrics on ROSA, the platform Prometheus can remote write to Amazon Managed Service for Prometheus with SigV4 and add a cluster ID label to each series.
 Do not run a second Prometheus instance of your own: ROSA does not support it.
+* CloudWatch Container Insights also runs on ROSA, installed with AWS's Helm chart in its ROSA mode rather than with the EKS add-on.
 * Application logging (Vector, optionally Loki for in-cluster storage) is an optional Operator that you install, upgrade and run.
 * Log forwarding uses the same short-lived credentials as your applications: an IAM role through STS on ROSA, a managed identity through workload identity on ARO.
 * Azure Monitor Container Insights and managed Prometheus, whose metrics Azure Managed Grafana reads, reach ARO through Azure Arc, which Microsoft lists as supported for ARO.
