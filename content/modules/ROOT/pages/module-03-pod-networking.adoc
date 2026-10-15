@@ -579,7 +579,7 @@ spec:
 === Restricting Egress (Reference Only)
 
 [.validation]
-NOTE: *Not validated:* this section, which no exercise runs.
+NOTE: *Not validated:* this section on ROSA. It was validated on ARO, with `checkip.amazonaws.com` as the allowed host.
 
 NetworkPolicy in this module controls incoming traffic.
 To limit which destinations outside the cluster a project's pods can reach, by CIDR or by DNS name, OVN-Kubernetes offers the EgressFirewall.
