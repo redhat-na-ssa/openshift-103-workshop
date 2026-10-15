@@ -1,7 +1,7 @@
 = Exposing an App
 
 [.validation]
-NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026.
+NOTE: Validated on ROSA HCP 4.20 and 4.22 and ARO 4.21 in October 2026.
 Steps and statements that were not checked on a live cluster carry a *Not validated* note.
 The comparison tables and summaries come from vendor documentation.
 
@@ -89,10 +89,7 @@ oc get service router-default \
 ----
 
 It prints `nlb`.
-AWS shows the same:
-
-[.validation]
-NOTE: *Not validated:* `aws elbv2 describe-load-balancers`, which needs AWS credentials for the account that owns the cluster.
+AWS shows the same, `network` and `internet-facing`:
 
 [source,bash]
 ----
@@ -103,9 +100,6 @@ aws elbv2 describe-load-balancers \
 
 See the ingress the way the service manages it:
 
-[.validation]
-NOTE: *Not validated:* `rosa list ingresses`, which needs a `rosa` login to the cluster's Red Hat organization.
-
 [source,bash]
 ----
 rosa list ingresses \
@@ -114,9 +108,7 @@ rosa list ingresses \
 
 On ROSA, SRE manages the default ingress controller, and `rosa edit ingress` changes only its visibility and component routes.
 For anything else, such as sharding, a wildcard or namespace ownership policy, or another load balancer type, you add your own IngressController, or use the AWS Load Balancer Operator for ALBs.
-
-[.validation]
-NOTE: *Not validated:* changing the default ingress with `rosa edit ingress`, which comes from the ROSA documentation.
+On ROSA with HCP, `rosa edit ingress` refuses those settings.
 --
 ARO (Azure)::
 +
@@ -446,7 +438,7 @@ ROSA (AWS)::
 +
 --
 It prints `200` once the new load balancer is ready, which takes a minute or two.
-Until then it prints `000`, so wait and try again.
+Until then it prints `503`, from the default router, or `000`, so wait and try again.
 --
 ARO (Azure)::
 +
@@ -497,10 +489,7 @@ oc delete gateway workshop \
 The `openshift-default` GatewayClass and `istiod-openshift-gateway` stay.
 Delete the GatewayClass if you do not want an Istio control plane running.
 
-[.validation]
-NOTE: *Not validated:* deleting the Ingress on ROSA. On ARO, deleting it also removed its generated Route.
-
-Remove the Ingress from Exercise 3 as well:
+Remove the Ingress from Exercise 3 as well, which also removes its generated Route:
 
 [source,bash]
 ----
@@ -512,11 +501,6 @@ The Route from Exercise 2 stays.
 The next section applies network policy to it.
 
 == What Matters
-
-[.validation]
-NOTE: *Not validated:* that the Gateway's load balancer on ROSA is a Classic Load Balancer, and that `dedicated-admin` cannot use the Gateway API.
-The ROSA load balancer type was read from its host name and annotations, not checked in AWS, and `dedicated-admin` was not tried.
-On ARO it was validated that a Gateway adds a public IP and a frontend to the cluster's existing Azure load balancer, and that deleting the Gateway removes the public IP.
 
 * A Route is OpenShift's own resource, with edge, re-encrypt and passthrough TLS. Ingress objects still work and become Routes.
 * On Module 1's xref:module-01-who-manages-what.adoc#_the_responsibility_line[responsibility line], the default router is a platform component that SRE runs, and the Routes, Ingresses and Gateways you create on it are yours, like your workloads.
@@ -533,14 +517,19 @@ On ARO it was validated that a Gateway adds a public IP and a frontend to the cl
 Production apps use their own host names, so each needs a DNS record and a certificate that renews itself.
 Install the cert-manager Operator for Red Hat OpenShift and create an ACME issuer with a DNS-01 solver: Route 53 through an IAM role on ROSA, with the IRSA annotation from xref:module-02-cloud-credentials.adoc[Pod Cloud Credentials], or Azure DNS on ARO, where Red Hat documents a service principal.
 A Route serves the issued secret through `spec.tls.externalCertificate`, and a Gateway listener names it in `certificateRefs`, so a Gateway's Certificate goes in `openshift-ingress`.
-For DNS, point a record for each host at the router's load balancer (a CNAME on ROSA, an A record on ARO), or let the External DNS Operator create records from Routes after you check that it works with your cluster's cloud credentials.
+For DNS, point a record for each host at the router's load balancer (a CNAME on ROSA, an A record on ARO), or let the External DNS Operator create records from Routes, with the cloud credentials described below.
 An ARO cluster created with managed identities has no credentials for it to reuse (there is no `azure-credentials` secret in `kube-system`), so give the Operator a service principal with `DNS Zone Contributor` on the zone; it then creates a CNAME to the router's canonical host name.
 On ROSA, use the AWS Load Balancer Operator instead of the router when you need an ALB with an ACM certificate or AWS WAF.
 The Cloud Experts guides for https://cloud.redhat.com/experts/rosa/dynamic-certificates/[ROSA] and https://cloud.redhat.com/experts/aro/cert-manager/[ARO] walk through the issuer setup.
 
-[.validation]
-NOTE: *Not validated:* the AWS Load Balancer Operator, and cert-manager and the External DNS Operator on ROSA.
-On ARO, the Certificate, role, binding and Route below were validated with a Let's Encrypt DNS-01 issuer on an Azure DNS zone, and the External DNS Operator created a record from a Route.
+On ROSA, the two Operators that call AWS on your behalf need more than the annotation, as found when the workshop was validated:
+
+* The External DNS Operator reads AWS credentials from a secret that its `ExternalDNS` resource names in `spec.provider.aws.credentials`.
+For STS, the secret holds a `credentials` file with the role's `role_arn` and `web_identity_token_file = /var/run/secrets/openshift/serviceaccount/token`, and the role trusts the `external-dns-<name>` service account.
+* The AWS Load Balancer Operator takes its own role as the `ROLEARN` environment variable of its Subscription, and the controller takes a second one through a secret of the same form, named in the `AWSLoadBalancerController` resource's `spec.credentials`.
+The Operator does not start until the cluster's VPC carries the tag `kubernetes.io/cluster/<infra-id>`, where `<infra-id>` is the cluster's `infrastructureName`, and an internet-facing ALB needs public subnets in two availability zones, which a single-zone ROSA network does not have.
+* Pod addresses are not VPC addresses on ROSA, so use `alb.ingress.kubernetes.io/target-type: instance` and a `NodePort` Service, not the `ip` target type from the EKS example.
+With the default-deny policy from xref:module-03-pod-networking.adoc[Pod Networking and Policy], the ALB's health checks time out until a NetworkPolicy also allows the namespace label `policy-group.network.openshift.io/host-network: ""`.
 
 This Certificate asks for a custom host's certificate from a ClusterIssuer named `letsencrypt-dns01`, which you set up as the guides show:
 

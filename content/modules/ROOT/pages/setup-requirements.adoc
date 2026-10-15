@@ -31,6 +31,8 @@ Check the quotas before creating the cluster:
 rosa verify quota
 ----
 
+It checks the region your AWS CLI is configured for, and prints nothing when the quotas are sufficient.
+
 |ARO
 a|* Created with managed identities, which Module 2 needs for workload identity. A cluster created with a service principal cannot be converted.
 * Created with a Red Hat pull secret, which Module 1 needs to install Operators. If the cluster was created without one, https://learn.microsoft.com/azure/openshift/howto-add-update-pull-secret[add it afterwards].
@@ -93,7 +95,7 @@ Attendees install these Operators during the exercises:
 
 |Red Hat OpenShift Service Mesh 3
 |3
-|The Ingress Operator starts an Istio control plane, `istiod-openshift-gateway`, when the Gateway API exercise creates a GatewayClass. On 4.20 and 4.21 it did so without an OLM subscription. Where a version installs the Service Mesh 3 Operator from the Red Hat catalog instead, ARO needs its pull secret, and the cluster must not already have an OpenShift Service Mesh 2 subscription.
+|The Ingress Operator starts an Istio control plane, `istiod-openshift-gateway`, when the Gateway API exercise creates a GatewayClass. On 4.20, 4.21 and ROSA 4.22 it did so without an OLM subscription. Where a version installs the Service Mesh 3 Operator from the Red Hat catalog instead, ARO needs its pull secret, and the cluster must not already have an OpenShift Service Mesh 2 subscription.
 |===
 
 The default ingress controller, OVN-Kubernetes, the CSI drivers and platform monitoring come with every ROSA and ARO cluster.
@@ -295,7 +297,7 @@ rosa delete oidc-provider \
   --mode auto
 ----
 . Delete the cluster's OIDC configuration.
-The command refuses if another cluster still uses it:
+This command and the `oidc-provider` one before it both refuse while another cluster still uses the configuration, so run them after the last such cluster is gone:
 +
 [source,bash]
 ----
@@ -311,6 +313,23 @@ Unless you named it, the stack is called `rosa-network-stack-` followed by the A
 aws cloudformation delete-stack \
   --stack-name <stack-name> \
   --region <region>
+----
++
+On ROSA 4.22 the cluster deletion left a security group named `<infra-id>-vpce-private-router` in the VPC, so the stack's deletion failed with `DELETE_FAILED` on the VPC.
+Delete that security group, then delete the stack again:
++
+[source,bash]
+----
+aws ec2 describe-security-groups \
+  --filters Name=vpc-id,Values=<vpc-id> \
+  --query "SecurityGroups[?GroupName!='default'].[GroupId,GroupName]" \
+  --output text
+----
++
+[source,bash]
+----
+aws ec2 delete-security-group \
+  --group-id <security-group-id>
 ----
 
 The account roles, the `ocm-role` and the `user-role` stay, because other ROSA clusters in the account use them.

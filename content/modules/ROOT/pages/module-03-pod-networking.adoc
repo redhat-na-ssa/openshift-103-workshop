@@ -1,7 +1,7 @@
 = Pod Networking and Policy
 
 [.validation]
-NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026.
+NOTE: Validated on ROSA HCP 4.20 and 4.22 and ARO 4.21 in October 2026.
 Steps and statements that were not checked on a live cluster carry a *Not validated* note.
 The comparison tables and summaries come from vendor documentation.
 
@@ -88,9 +88,6 @@ ROSA (AWS)::
 --
 Show the cluster's address ranges, in the `Machine CIDR`, `Service CIDR` and `Pod CIDR` lines:
 
-[.validation]
-NOTE: *Not validated:* `rosa describe cluster`, which needs a `rosa` login to the cluster's Red Hat organization.
-
 [source,bash]
 ----
 rosa describe cluster \
@@ -98,10 +95,7 @@ rosa describe cluster \
 ----
 
 Look up both addresses in the VPC.
-The pod's address finds nothing, and the node's address finds its network interface:
-
-[.validation]
-NOTE: *Not validated:* the VPC lookup, which needs AWS credentials for the account that owns the cluster.
+The pod's address finds nothing, so its line is empty, and the node's address finds its network interface:
 
 [source,bash]
 ----
@@ -513,9 +507,6 @@ ROSA (AWS)::
 --
 Find the NAT gateway addresses in the cluster's VPC:
 
-[.validation]
-NOTE: *Not validated:* the NAT gateway lookup, which needs AWS credentials for the account that owns the cluster.
-
 [source,bash]
 ----
 VPC_ID=$(aws ec2 describe-instances \
@@ -554,7 +545,8 @@ The outbound one is named in the `effectiveOutboundIps` list of the `networkProf
 === Fixed Egress Addresses (Reference Only)
 
 [.validation]
-NOTE: *Not validated:* this section, which no exercise runs.
+NOTE: *Not validated:* this section on ARO, where no exercise runs it.
+On ROSA 4.22, the sample below was applied after a machine pool added the `k8s.ovn.org/egress-assignable` label to a node: OVN-Kubernetes added `10.0.1.200` to that node's network interface, an `m5.xlarge` reported room for 14 addresses, and a host in the VPC saw the sample application's connections come from `10.0.1.200`.
 
 To give one project its own source address, OVN-Kubernetes offers egress IPs.
 This workshop does not set one up, because the cloud constraints differ: on ROSA, you label the nodes that may host egress IPs through a machine pool, and capacity depends on the instance type; on ARO, namespace egress IPs need a cluster created with a private API, private ingress and user-defined routing, where you provide the egress path through a firewall or NAT.
@@ -577,9 +569,6 @@ spec:
 ----
 
 === Restricting Egress (Reference Only)
-
-[.validation]
-NOTE: *Not validated:* this section on ROSA. It was validated on ARO, with `checkip.amazonaws.com` as the allowed host.
 
 NetworkPolicy in this module controls incoming traffic.
 To limit which destinations outside the cluster a project's pods can reach, by CIDR or by DNS name, OVN-Kubernetes offers the EgressFirewall.
@@ -619,20 +608,16 @@ oc delete project net-client
 
 == Private Clusters
 
-[.validation]
-NOTE: *Not validated:* switching the ROSA API between public and private after the cluster is created, which comes from the ROSA documentation.
-
 On ARO, a private API and private ingress are install-time choices.
 On ROSA, you can switch the API and the default ingress between public and private after creation, with `rosa edit cluster` and `rosa edit ingress`.
 The ROSA OAuth server follows the API, so a private API also stops web console logins from outside the private network, even behind a public ingress.
+On ROSA 4.22 the API stopped answering from outside within a minute of `rosa edit cluster --private`; the console page still loaded, but its sign-in redirect to the OAuth server timed out.
+Switching back with `--private=false` brought the API back under the same name, but a resolver that had cached the missing name kept failing for longer.
 There is no exercise for this, because a private API would cut your workstation off from the cluster.
 What changes is where the control plane runs and how you, and the provider's SRE team, reach it:
 
 .Where the control plane runs and how private API access works
 image::module-03-private-clusters.svg["Where the control plane runs and how private API access works",width=100%,link=self,window=_blank]
-
-[.validation]
-NOTE: *Not validated:* making the ROSA default ingress private after the cluster is created.
 
 [cols="1,1,1,1,1",options="header"]
 |===
@@ -668,6 +653,7 @@ NOTE: *Not validated:* making the ROSA default ingress private after the cluster
 |===
 
 ROSA workers always reach the hosted control plane over AWS PrivateLink, public cluster or not.
+Switching the ROSA default ingress between public and private with `rosa edit ingress --private` replaces the router's load balancer and its DNS record, so every Route is unreachable for some minutes, and longer from a resolver that has cached the missing name.
 ROSA also offers clusters with no internet egress at all (egress zero).
 
 On ARO, egress lockdown (on by default for new clusters) carries the endpoints the service needs through the service itself, so your firewall only has to allow the optional ones, such as `registry.redhat.io`, `quay.io` and `api.openshift.com` for update checks.

@@ -1,7 +1,7 @@
 = Scaling Nodes
 
 [.validation]
-NOTE: Validated on ROSA HCP 4.20 and ARO 4.21 in October 2026.
+NOTE: Validated on ROSA HCP 4.20 and 4.22 and ARO 4.21 in October 2026.
 Steps and statements that were not checked on a live cluster carry a *Not validated* note.
 The comparison tables and summaries come from vendor documentation.
 
@@ -101,10 +101,6 @@ ROSA shows only worker nodes, and ARO also shows its three control plane nodes, 
 ROSA (AWS)::
 +
 --
-[.validation]
-NOTE: *Not validated:* `rosa list machinepools`.
-The `oc` command after it was validated.
-
 Machine pools live in OpenShift Cluster Manager.
 List them with the `rosa` CLI:
 
@@ -172,16 +168,13 @@ az aks nodepool list \
 === Exercise 2: Add an Autoscaling Group of Nodes
 
 You add a group of nodes with the label `workshop=scale-lab` and a matching taint, so that only the sample application lands there.
-The group starts small and the cluster autoscaler grows it when pods are pending.
+The group starts with one node and the cluster autoscaler grows it when pods are pending.
 
 [tabs]
 ======
 ROSA (AWS)::
 +
 --
-[.validation]
-NOTE: *Not validated:* the ROSA steps of this exercise, which need the `rosa` CLI, including a machine pool that starts at zero nodes.
-
 A machine pool on ROSA lives in one subnet, so in one availability zone.
 Use the subnet of your existing pool:
 
@@ -198,7 +191,7 @@ SUBNET=$(rosa list machinepools \
 echo "$SUBNET"
 ----
 
-Create an autoscaling machine pool that starts at zero nodes:
+Create an autoscaling machine pool that keeps one node:
 
 [source,bash]
 ----
@@ -208,11 +201,14 @@ rosa create machinepool \
   --subnet "$SUBNET" \
   --instance-type m7i.xlarge \
   --enable-autoscaling \
-  --min-replicas 0 \
+  --min-replicas 1 \
   --max-replicas 3 \
   --labels workshop=scale-lab \
   --taints workshop=scale-lab:NoSchedule
 ----
+
+ROSA machine pools can scale to zero, but on the 4.22 validation cluster a pool that started at zero nodes never grew for pods that select its label: the autoscaler reported `didn't match Pod's node affinity/selector` and left them `Pending`.
+Starting with one node avoids that, and the first node takes about three minutes to become `Ready`.
 
 Check the pool:
 
@@ -400,10 +396,6 @@ Keep them in Git and apply them with OpenShift GitOps, which you installed in xr
 [#ex-module-04-scaling-nodes-3]
 === Exercise 3: Scale the Sample Application Past Capacity
 
-[.validation]
-NOTE: *Not validated:* this exercise on ROSA, which needs the machine pool from Exercise 2.
-It was validated on ARO, and the ROSA behavior described below comes from Red Hat's documentation.
-
 Run these steps on your cluster.
 
 Give each sample application pod a CPU request large enough that a few replicas fill a node:
@@ -525,10 +517,6 @@ kubectl get configmap cluster-autoscaler-status \
 
 [#ex-module-04-scaling-nodes-4]
 === Exercise 4: Let Karpenter Pick the Nodes (ROSA Only)
-
-[.validation]
-NOTE: *Not validated:* this whole exercise.
-The validation cluster ran ROSA 4.20, and AutoNode needs 4.22 and the `rosa` and `aws` CLIs.
 
 From OpenShift 4.22, ROSA can run the Red Hat build of Karpenter, called AutoNode in OpenShift Cluster Manager.
 Its controller runs in the hosted control plane and launches EC2 instances in your account, so it needs an IAM role.
@@ -690,6 +678,7 @@ oc get nodes \
 ----
 
 Karpenter batches the pending pods, picks the cheapest instance types that fit them, and prefers spot capacity when the NodePool allows it.
+On the validation cluster it put all ten pods on one `c7i.2xlarge` spot node, which was `Ready` about four minutes after the machine pool was deleted.
 Spot nodes can be reclaimed by AWS at short notice, so allow spot only for workloads that tolerate interruption.
 Karpenter nodes also expire after 30 days, which replaces them with fresh ones.
 
@@ -734,7 +723,7 @@ On ARO, the Machine Config Operator rolls OS changes onto nodes, one pool at a t
 oc get machineconfigpools
 ----
 
-On ROSA the same command finds no pools.
+On ROSA the same command fails with `the server doesn't have a resource type "machineconfigpools"`.
 Node configuration and OS updates are driven from the hosted control plane, per machine pool.
 
 Either way, the node OS changes only when the cluster or machine pool takes an OpenShift update.
@@ -807,9 +796,6 @@ oc scale deployment/sample-app \
 ROSA (AWS)::
 +
 --
-[.validation]
-NOTE: *Not validated:* the ROSA cleanup steps, which need the `rosa` CLI.
-
 If you skipped Exercise 4, delete the machine pool instead:
 
 [source,bash]
@@ -865,7 +851,7 @@ ROSA machine pools are managed through the `rosa` CLI or OpenShift Cluster Manag
 Standard ARO has no pool API, and you edit MachineSets in the cluster with `oc`.
 * Each machine pool or MachineSet uses one instance type.
 On ARO, and on ROSA without the Red Hat build of Karpenter (4.22+), you create two groups to offer two instance types, or spot and on-demand.
-* ROSA machine pools can scale to zero.
+* ROSA machine pools can scale to zero, but test scale-up from zero before you rely on it: on 4.22 a pool at zero did not grow for pods that select its label, as Exercise 2 notes.
 On ARO an extra MachineSet can too, but the cluster must keep at least three workers, and the original worker MachineSets must not scale to zero.
 * The Red Hat build of Karpenter requires ROSA 4.22.
 ARO with hosted control planes has its own autoscaling, in preview.

@@ -51,7 +51,7 @@ The commands use bash syntax, and Upgrades gives its `date` command only for Lin
 Clusters also need `github.com`, because Argo CD in the cluster clones this workshop's repository in What Ships Exercise 7, and `registry.access.redhat.com` is needed in Module 1 as well as Module 3.
 * [ ] The link:{site-url}/setup-requirements.html#_verification_checklist[Verification Checklist] passes for every attendee.
 * [ ] On ROSA, the attendee's AWS credentials belong to the account that owns the cluster.
-The validation runs could not do the AWS steps for exactly this reason.
+Otherwise every AWS step in Modules 2 to 4 fails.
 * [ ] On ARO, the attendee can create and delete an Entra ID app registration, which Access and Tenancy Exercise 2 creates.
 
 To check the AWS account, have the attendee print the account their `aws` CLI uses, and compare it with the account that owns the cluster:
@@ -66,18 +66,15 @@ aws sts get-caller-identity \
 === Dry Run
 
 Run one attendee path per platform, end to end, before the day.
-The module pages were validated on ROSA HCP 4.20 and ARO 4.21, while Setup asks for ROSA 4.22 or later, so the dry run is also the first check on the version you deliver on.
+The module pages were validated on ROSA HCP 4.20 and 4.22 and on ARO 4.21, so the dry run is also the check on the version you deliver on.
 
 * [ ] Use one ROSA and one ARO cluster built exactly like the attendees' clusters, not an attendee's own cluster: the exercises leave cluster-wide changes behind, such as the identity provider, the project template and AutoNode.
 * [ ] Work with an attendee-level account: the same Red Hat organization permissions, AWS permissions and Azure roles your attendees get, so that permission gaps show up now.
 * [ ] Run every page in order, from link:{site-url}/module-01-who-manages-what.html#before-you-start[Before You Start] to the Observability clean-up, in one terminal per cluster.
 * [ ] Time each page and replace the estimates in the <<agenda,Agenda>> and <<slow-steps,Slow Steps>> with what you measured.
-* [ ] On ROSA, run the steps the pages mark *Not validated* that attendees will run: `rosa create admin`, `rosa create idp` and the htpasswd sign-in, the AWS steps of Pod Cloud Credentials and the ECR pull, the AWS lookups in Module 3, the `scale-lab` machine pool from zero nodes and its scale-up, Karpenter, scheduling and cancelling an upgrade, and log delivery to CloudWatch.
 * [ ] On ARO, run the Entra ID sign-in and the developer terminal's login.
-* [ ] On both, sign in to the Argo CD console, check the cascading delete in What Ships Exercise 7, and open the console views that Observability uses.
 * [ ] Run the Gateway API exercise on your version: whether the Ingress Operator installs the Service Mesh Operator first depends on the version.
 * [ ] Try the <<if-identity-provider-sign-in-fails,identity provider fallback>> once, so that you can hand it out quickly.
-* [ ] Check whether the ROSA `scale-lab` machine pool can be created one patch release behind and upgraded in place (see <<upgrades-without-a-live-upgrade,Upgrades Without a Live Upgrade>>).
 * [ ] Clean up in the order link:{site-url}/setup-requirements.html#_cost_and_cleanup[Cost and Cleanup] gives, to test that too.
 
 === The ROSA Temporary Administrator
@@ -94,7 +91,7 @@ rosa create admin \
 ----
 
 When the attendee then runs `rosa create admin` in Before You Start, it says the cluster already has a `cluster-admin` user, and the page tells them to run your `oc login` command instead.
-If attendees create it themselves, their `rosa` CLI must be logged in to the Red Hat organization that owns the cluster, which the validation runs could not test, so include it in your dry run.
+If attendees create it themselves, their `rosa` CLI must be logged in to the Red Hat organization that owns the cluster.
 Attendees need that `rosa` login for later steps anyway: the identity provider, machine pools, AutoNode and upgrades.
 
 ARO needs no step from you: an attendee with `Contributor` on the cluster's resource group reads the kubeadmin password with `az` in Before You Start.
@@ -283,20 +280,20 @@ The wait allows up to 10.
 
 |Exposing an App Exercise 4 (ROSA): the Gateway's new load balancer answers.
 |A minute or two, as the page says.
-`curl` prints `000` until then.
+`curl` prints `503` or `000` until then.
 |link:{site-url}/module-03-exposing-apps.html#_what_matters[What Matters]: each Gateway gets its own load balancer and needs its own certificate.
 Then the custom domains reference block.
 
-|link:{site-url}/module-04-scaling-nodes.html#ex-module-04-scaling-nodes-2[Scaling Nodes Exercise 2] (ARO): the first `scale-lab` Machine becomes a node.
-|About 4 minutes on ARO 4.21 (measured).
+|link:{site-url}/module-04-scaling-nodes.html#ex-module-04-scaling-nodes-2[Scaling Nodes Exercise 2]: the first `scale-lab` node becomes `Ready`.
+|About 3 minutes on ROSA 4.22 and about 4 minutes on ARO 4.21 (measured).
 |The diagram and table in link:{site-url}/module-04-scaling-nodes.html#_two_ways_to_add_nodes[Two Ways to Add Nodes], and link:{site-url}/module-04-scaling-nodes.html#nodes-as-code[node pools as code].
 
 |link:{site-url}/module-04-scaling-nodes.html#ex-module-04-scaling-nodes-3[Scaling Nodes Exercise 3]: new nodes boot and join.
-|Several minutes, as the page says; 5 to 10 minutes (estimate).
+|Several minutes, as the page says; about 4 minutes on ROSA 4.22 (measured), 5 to 10 minutes on ARO (estimate).
 |The "What is happening" list in the exercise, which the page tells attendees to read while they wait, and App Teams Will Notice.
 
 |link:{site-url}/module-04-scaling-nodes.html#ex-module-04-scaling-nodes-4[Scaling Nodes Exercise 4] (ROSA): AutoNode's node class appears, then Karpenter's nodes join.
-|A few minutes for the node class, as the page says, then a node boot of 5 to 10 minutes (estimate).
+|A few minutes for the node class, as the page says (under a minute on ROSA 4.22), then about 4 minutes until Karpenter's node is `Ready` (measured).
 |Where Each Wins, and the exercise's notes on spot capacity and node expiry.
 
 |link:{site-url}/module-04-observability.html#ex-module-04-observability-2[Observability Exercises 2 and 3]: user workload monitoring starts and scrapes the sample application.
@@ -698,8 +695,6 @@ No later page needs these two values.
 
 From Pod Cloud Credentials onward, every page changes the same sample application, so check it before each of them.
 
-NOTE: *Not validated:* these checks on ROSA. They were validated on ARO, before each page.
-
 Before link:{site-url}/module-02-cloud-credentials.html[Pod Cloud Credentials], the sample application runs the fixed image:
 
 [source,bash]
@@ -799,11 +794,15 @@ Without the credentials, the application answers `500` on `/`, which Observabili
 [#upgrades-without-a-live-upgrade]
 == Upgrades Without a Live Upgrade
 
-The link:{site-url}/module-04-upgrades.html[Upgrades] page inspects and schedules upgrades but does not run one, because a real upgrade takes an hour or more, so attendees never see the drain and PodDisruptionBudget behavior it describes.
+The link:{site-url}/module-04-upgrades.html[Upgrades] page inspects and schedules upgrades but does not run one, because a real upgrade with its node rollout takes an hour or more, so attendees never see the drain and PodDisruptionBudget behavior it describes.
 If you want the room to see one, run an optional facilitator demo on a cluster of your own that is one patch release behind: start its upgrade at the beginning of the day, and during Module 4 show `oc adm upgrade` while the update progresses, the cluster Operators reporting `PROGRESSING`, and the nodes rolling, through the machine config pools on ARO or the machine pool upgrade that follows the control plane on ROSA.
 If you cannot spare a cluster, show a recording of a real upgrade instead.
-During your dry run, also check whether the ROSA `scale-lab` machine pool from Scaling Nodes can be created one patch release behind and upgraded in place, which would give a short, real node pool upgrade.
-The only update run during validation was an ARO patch update from 4.21.22 to 4.21.36: the control plane took about 55 minutes, and each worker about 10 more, apart from a drain held by a PodDisruptionBudget. Rehearse whichever you choose.
+On ROSA there is a shorter, real node pool upgrade: create a one-node machine pool one patch release behind the control plane, with `rosa create machinepool` and `--version`, then run `rosa upgrade machinepool` with the control plane's version.
+On ROSA 4.22 this was validated: the upgrade started about 14 minutes after the command and replaced the node within 3 more, adding the new node before draining the old one.
+Two cluster updates were also run during validation.
+A ROSA control plane patch upgrade from 4.22.17 to 4.22.18 started about 10 minutes after `rosa upgrade cluster`, finished about 23 minutes later, and left the machine pool on 4.22.17 until its own upgrade.
+An ARO patch update from 4.21.22 to 4.21.36 took about 55 minutes for the control plane, and each worker about 10 more, apart from a drain held by a PodDisruptionBudget.
+Rehearse whichever you choose.
 
 == After the Workshop
 
