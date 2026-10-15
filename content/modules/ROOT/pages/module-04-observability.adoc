@@ -761,12 +761,6 @@ oc logs \
 ARO (Azure)::
 +
 --
-[.validation]
-NOTE: *Not validated:* the federated credential and delivery to Log Analytics.
-The validation ARO cluster used a service principal, not managed identity, so it has no OIDC issuer for workload identity.
-The other steps were validated on it: the workspace, table, endpoint, rule, identity and role assignment were created, and the log forwarder became ready with its collectors running.
-Without the federated credential, the collectors then failed to authenticate with `AADSTS70025`.
-
 The collector writes to a Log Analytics workspace through the Azure Monitor Logs Ingestion API.
 That needs a custom table, a data collection endpoint and a data collection rule, and an identity allowed to send to the rule.
 The identity is a user-assigned managed identity that trusts the collector's service account, the same trust idea as in xref:module-02-cloud-credentials.adoc[Pod Cloud Credentials].
