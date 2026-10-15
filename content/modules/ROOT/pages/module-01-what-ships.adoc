@@ -110,16 +110,22 @@ On OpenShift, its controllers need the `nonroot` security context constraint (SC
 The extension retires on October 9, 2027, in favor of the Secret Store extension, whose list of supported distributions names OpenShift Kubernetes Distribution but not ARO.
 
 [.validation]
-NOTE: *Not validated:* connecting ARO to Azure Arc, which was not run on a cluster.
+NOTE: *Not validated:* installing an Arc extension. Connecting the cluster was validated.
 
-Connect the cluster to Arc before you install any extension:
+Connect the cluster to Arc before you install any extension.
+The subscription needs the `Microsoft.Kubernetes`, `Microsoft.KubernetesConfiguration` and `Microsoft.ExtendedLocation` resource providers registered, and `az` adds its `connectedk8s` extension on first use:
 
 [source,bash]
 ----
 az connectedk8s connect \
   --name <arc-cluster-name> \
-  --resource-group <resource-group>
+  --resource-group <resource-group> \
+  --location <arc-region>
 ----
+
+The Arc resource defaults to the resource group's region, and Arc does not accept every region that ARO runs in, such as `australiacentral`.
+If the command fails with `InvalidLocation`, set `--location` to a nearby region from the list it prints.
+The connection takes a few minutes, installs the Arc agents in the `azure-arc` namespace, and detects the distribution as `openshift` on `azure`.
 ====
 
 == On ROSA and ARO
