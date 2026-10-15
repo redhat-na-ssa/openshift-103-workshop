@@ -77,6 +77,7 @@ oc adm upgrade recommend
 
 A new cluster can report `Upgradeable=False` with the reason `AdminAckRequired`.
 That is an acknowledgment gate, covered in Exercise 4, and it blocks only the next minor version.
+An ARO cluster created with managed identities reports `MultipleReasons` instead, because the `cloud-credential` Operator also blocks the next minor version until you prepare it, as Exercise 4 shows.
 
 The update channel decides which versions are offered.
 Patch releases arrive in the current channel, and a new minor version needs a channel change, which you make, apart from the exceptions in <<upgrades-without-you,When the platform upgrades without you>>.
@@ -387,6 +388,9 @@ oc get clusteroperators --output json \
 
 No output means no Operator blocks a minor update.
 If `operator-lifecycle-manager` appears, an installed catalog Operator declares a maximum OpenShift version; update that Operator first.
+On an ARO cluster created with managed identities, `cloud-credential` appears, with the reason `MissingUpgradeableAnnotation`.
+Its credentials are managed outside the cluster, so before you update it you set the `upgradeable-to` annotation on the cluster's CloudCredential resource with `az aro update --upgradeable-to <version>`, as https://learn.microsoft.com/azure/openshift/howto-upgrade-aro-openshift-cluster[Microsoft's update guide for managed-identity clusters] describes.
+That command does not start the update.
 
 Some minor updates also need an administrator's acknowledgment, for example of an API removal.
 The platform lists these gates in one ConfigMap:
