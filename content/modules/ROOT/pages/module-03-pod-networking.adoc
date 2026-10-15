@@ -612,12 +612,11 @@ oc delete project net-client
 
 == Private Clusters
 
-[.validation]
-NOTE: *Not validated:* switching the ROSA API between public and private after the cluster is created, which comes from the ROSA documentation.
-
 On ARO, a private API and private ingress are install-time choices.
 On ROSA, you can switch the API and the default ingress between public and private after creation, with `rosa edit cluster` and `rosa edit ingress`.
 The ROSA OAuth server follows the API, so a private API also stops web console logins from outside the private network, even behind a public ingress.
+On ROSA 4.22 the API stopped answering from outside within a minute of `rosa edit cluster --private`; the console page still loaded, but its sign-in redirect to the OAuth server timed out.
+Switching back with `--private=false` brought the API back under the same name, but a resolver that had cached the missing name kept failing for longer.
 There is no exercise for this, because a private API would cut your workstation off from the cluster.
 What changes is where the control plane runs and how you, and the provider's SRE team, reach it:
 
