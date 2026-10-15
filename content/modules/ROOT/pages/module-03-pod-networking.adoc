@@ -617,9 +617,6 @@ What changes is where the control plane runs and how you, and the provider's SRE
 .Where the control plane runs and how private API access works
 image::module-03-private-clusters.svg["Where the control plane runs and how private API access works",width=100%,link=self,window=_blank]
 
-[.validation]
-NOTE: *Not validated:* making the ROSA default ingress private after the cluster is created.
-
 [cols="1,1,1,1,1",options="header"]
 |===
 |
@@ -654,6 +651,7 @@ NOTE: *Not validated:* making the ROSA default ingress private after the cluster
 |===
 
 ROSA workers always reach the hosted control plane over AWS PrivateLink, public cluster or not.
+Switching the ROSA default ingress between public and private with `rosa edit ingress --private` replaces the router's load balancer and its DNS record, so every Route is unreachable for some minutes, and longer from a resolver that has cached the missing name.
 ROSA also offers clusters with no internet egress at all (egress zero).
 
 On ARO, egress lockdown (on by default for new clusters) carries the endpoints the service needs through the service itself, so your firewall only has to allow the optional ones, such as `registry.redhat.io`, `quay.io` and `api.openshift.com` for update checks.

@@ -108,9 +108,7 @@ rosa list ingresses \
 
 On ROSA, SRE manages the default ingress controller, and `rosa edit ingress` changes only its visibility and component routes.
 For anything else, such as sharding, a wildcard or namespace ownership policy, or another load balancer type, you add your own IngressController, or use the AWS Load Balancer Operator for ALBs.
-
-[.validation]
-NOTE: *Not validated:* changing the default ingress with `rosa edit ingress`, which comes from the ROSA documentation.
+On ROSA with HCP, `rosa edit ingress` refuses those settings.
 --
 ARO (Azure)::
 +

@@ -515,7 +515,7 @@ If sign-in fails, for example because the Entra ID tenant blocks user consent or
 The page's own validation of Exercises 4 and 5 was done this way.
 Name the groups explicitly, because impersonation may not add the developer's OpenShift Group membership.
 
-NOTE: *Not validated:* the impersonation commands below, which do not appear on the Access and Tenancy page.
+NOTE: *Not validated:* the impersonation commands below on ARO. They were validated on ROSA.
 
 `DEV_USER` must be set in the administrator terminal, as Exercise 2 does on both platforms.
 Exercise 3 needs a real sign-in, so the attendee reads it instead; its `oc get users` and `oc get identities` stay empty, because nobody signed in.
@@ -748,7 +748,7 @@ oc get networkpolicy allow-from-monitoring \
 
 If the new pod stays in `ImagePullBackOff` after the switch to ECR or ACR in link:{site-url}/module-02-cloud-credentials.html#ex-module-02-cloud-credentials-2[Pod Cloud Credentials Exercise 2], the old pod keeps serving, and `oc rollout status` waits until the rollout's deadline.
 
-NOTE: *Not validated:* rolling back a failed registry switch, which was not run on a cluster.
+NOTE: *Not validated:* rolling back a failed switch to ACR on ARO. A failed switch to ECR was rolled back this way on ROSA.
 
 Press Ctrl+C and roll back to the previous image:
 

@@ -86,9 +86,6 @@ Patch releases arrive in the current channel, and a new minor version needs a ch
 ROSA (AWS)::
 +
 --
-[.validation]
-NOTE: *Not validated:* the claim that machine pools can trail the control plane by two minor versions.
-
 On ROSA the channel and the list of updates come from OpenShift Cluster Manager.
 Show the cluster's channel and version:
 
@@ -107,7 +104,7 @@ rosa list upgrades \
 ----
 
 Machine pools carry their own version.
-The `VERSION` column shows each pool's version, which can trail the control plane by up to two minor versions:
+The `VERSION` column shows each pool's version, which can trail the control plane by up to two minor versions: a 4.22 control plane accepts a new 4.20 pool and refuses a 4.19 one.
 
 [source,bash]
 ----
