@@ -550,6 +550,8 @@ Set these up before you need them.
 
 * ROSA: notices about scheduled, started, and completed upgrades, and about critical patches Red Hat applies, appear in the cluster's *Cluster history* in the Red Hat Hybrid Cloud Console.
 Only the cluster owner receives them by email by default, so add your team as notification contacts.
+Each contact must be a Red Hat account in the cluster owner's organization, so to reach a team mailbox, give it a Red Hat account of its own.
+Act on the notices that ask for action, such as upgrading off an unsupported version: Red Hat may delete a cluster within 15 days if they are not addressed, even with delete protection on.
 * ARO: Microsoft announces new versions in the ARO release notes.
 In extreme cases you get 72 hours to apply a critical security patch, after which ARO SRE may apply it and notify you.
 * Both: Red Hat SRE watches the cluster during an update, and the console shows its progress under *Administration* > *Cluster Settings*.
@@ -568,11 +570,16 @@ Set a regular patch rhythm, for example an `UpgradeConfig` for each update that 
 Even minor versions from 4.16 extend to 24 months with the Extended Update Support add-on, which the subscription includes, once you move the cluster to the `eus` channel group with `rosa edit cluster` and its `--channel-group` flag.
 * ARO ends each minor version about 18 months after OpenShift's general availability, on the date in the ARO release calendar, and a cluster past that date drops to Limited Support, with no SLA.
 Even minor versions from 4.16 extend to 24 months with Extended Update Support Term 1, which the subscription includes, on an `eus-4.y` channel.
-* [[upgrades-without-you]]*When the platform upgrades without you:* on both services, Red Hat may apply a critical security fix, on ARO after a 72-hour notice.
+* [[upgrades-without-you]]*When the platform upgrades without you:* on both services, Red Hat may apply a critical security fix, on ROSA to the control plane after two business days' notice, and on ARO after a 72-hour notice.
+ROSA also upgrades clusters off a patch release that Red Hat deprecates, within 48 hours.
 On ROSA, a control plane past its end of life is moved to the next supported minor version; EKS does the same at the end of extended support.
+From June 1, 2027, AKS will upgrade clusters on an expired version too, after a 60-day grace period, ignoring maintenance windows and able to override PodDisruptionBudgets.
 Otherwise a minor version never moves on its own.
 * Existing ARO clusters can update to a new minor version once an update path reaches the fast channel.
-New clusters can be installed on that version only months after OpenShift's general availability.
+New clusters can be installed on that version about six months after OpenShift's general availability, while ROSA offers it within a day of the release.
+So if your ARO cluster already runs a minor version that new clusters can't install yet, a cluster you rebuild starts on an older minor version and needs an update before it matches.
+* Standard ARO has no control-plane-only update, so an EUS-to-EUS update such as 4.20 to 4.22 takes every node through 4.21 as well.
+On ROSA, machine pools can stay up to two minor versions behind while the control plane moves.
 * OpenShift does not support rolling back an upgrade.
 Test updates on a non-production cluster first.
 

@@ -105,7 +105,9 @@ On ARO you get them only by connecting the cluster to Azure Arc and installing e
 * Defender for Containers: lists ARO, but its support for Arc-enabled clusters is in preview.
 * Container insights and managed Prometheus: supported on ARO through Arc (Module 4).
 * Flux (GitOps): supported on any CNCF-certified cluster.
+On OpenShift, its controllers need the `nonroot` security context constraint (SCC), which you grant to their service accounts before you install the extension, following https://learn.microsoft.com/azure/azure-arc/kubernetes/tutorial-use-gitops-flux2#red-hat-openshift-onboarding-guidance[Microsoft's OpenShift steps].
 * Key Vault Secrets Provider: Microsoft recommends the Arc extension on ARO over installing the open source driver yourself.
+The extension retires on October 9, 2027, in favor of the Secret Store extension, whose list of supported distributions names OpenShift Kubernetes Distribution but not ARO.
 
 [.validation]
 NOTE: *Not validated:* connecting ARO to Azure Arc, which was not run on a cluster.
@@ -584,6 +586,8 @@ Keep the OpenShift GitOps Operator installed; later modules do not depend on it,
 * One health view for the platform: `oc get clusteroperators` covers every component that ships with the cluster, and catalog Operators report through their ClusterServiceVersions. SRE is alerted when a platform Operator degrades, but if your own configuration caused it, such as an identity provider, a webhook or a PodDisruptionBudget, the fix is yours.
 * Storage: ROSA ships the EBS CSI driver with a default gp3 StorageClass. Shared (RWX) storage needs the EFS CSI Driver Operator and an IAM role. ARO ships Azure Disk as the default; Azure Files ships on clusters created with a service principal and is disabled by default on clusters created with managed identities.
 * ARO needs a Red Hat pull secret before it can install Operators from the Software Catalog.
+The install removes the pull secret's `cloud.openshift.com` entry, so an ARO cluster sends no telemetry and is not registered in OpenShift Cluster Manager until you add that entry back, which the Red Hat Lightspeed advisor (formerly Insights Advisor) needs.
+ROSA clusters are always registered, with telemetry on.
 * On ROSA, the `dedicated-admin` role can install Operators into `openshift-operators` and into projects you create, so you do not need `cluster-admin` to extend the platform. It cannot create other `openshift-` namespaces, such as the one Exercise 6 uses.
 * Catalog Operators such as OpenShift GitOps run on your worker nodes and are yours to operate: their capacity, their configuration and approving their updates.
 * Helm still works on ROSA and ARO. Use it for vendor software that has no Operator.
@@ -612,48 +616,6 @@ Flux is a native extension on AKS; ARO gets it only through Azure Arc, after you
 
 * Application teams get a working Route, a default StorageClass and metrics on day one, with nothing to request from you.
 * Teams used to installing their own controllers with Helm will find that cluster-wide components come from the Software Catalog, and installing one needs an administrator.
-
-== Check Your Understanding
-
-These questions cover the whole module.
-Try each one before you open its answer.
-
-. A teammate adds a label to the ClusterVersion on both clusters, for an inventory script.
-ARO accepts it and ROSA refuses it.
-Why the difference, and should they keep the label on ARO?
-+
-.Answer
-[%collapsible]
-====
-ROSA protects the resources SRE owns with managed admission webhooks, so the cluster refuses the change, as in xref:module-01-who-manages-what.adoc#ex-module-01-who-manages-what-4[Who Manages What Exercise 4].
-ARO protects its platform through the deny assignment on the Azure side and its support policy, so the API accepts the label.
-Accepted is not the same as supported: treat platform resources as read-only on both, and keep inventory data outside them, for example in cloud tags.
-====
-
-. An app team asks you to install metrics-server and the AWS Load Balancer Controller on ROSA, as they had on EKS.
-What do you tell them?
-+
-.Answer
-[%collapsible]
-====
-Look up each add-on's cluster Operator first, as in xref:module-01-what-ships.adoc#ex-module-01-what-ships-3[Exercise 3].
-Metrics ship with the `monitoring` cluster Operator, so `oc adm top` and the Horizontal Pod Autoscaler work without metrics-server.
-The router serves Routes and plain Ingresses, so most apps need no controller.
-Only if they need ALBs do you add the AWS Load Balancer Operator from the Software Catalog, and then it is yours to operate and update, like any catalog Operator.
-====
-
-. Your finance team compares the ROSA or ARO cluster fee with the EKS or AKS control plane fee and asks why it is higher.
-What do you show them?
-+
-.Answer
-[%collapsible]
-====
-The xref:module-01-who-manages-what.adoc#_the_responsibility_line[responsibility line].
-The EKS or AKS fee covers the control plane.
-The ROSA or ARO fee also covers the worker OS, the platform components and their upgrades, SRE monitoring and one support path, which on EKS or AKS cost add-ons and your team's time.
-Compare whole platforms, including the people who run them.
-For a cluster that needs little of that, such as a short-lived test cluster, the native service can be the better buy.
-====
 
 == References
 

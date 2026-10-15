@@ -1,0 +1,372 @@
+= Living With the Service
+
+[.validation]
+NOTE: This page has no exercises.
+It comes from vendor documentation as of October 2026, apart from the measured create times, which come from the clusters the workshop was validated on.
+
+Who Manages What and What Ships compare the platforms once a cluster runs.
+This page covers what surrounds the cluster: how long a new one takes, who has to act before the first one, how quota is counted, how you sign in and automate, what your cloud's own tools still see, and which choices you can't change later.
+None of it shows in the cluster, so it is easy to miss until the first production cluster is due.
+
+== On EKS and AKS
+
+* One cloud identity takes a cluster from creation to deletion, and an AWS or Azure administrator can do every step.
+* A new cluster is ready in minutes, and its control plane uses none of your compute quota.
+* Your cloud's security, monitoring and cost tools know the cluster type: GuardDuty, Inspector and split cost allocation data on EKS, Defender for Containers and cost analysis on AKS.
+* An AKS cluster can be stopped while nobody uses it, and EKS node groups can scale to zero.
+
+== On ROSA and ARO
+
+This page is for reading: nothing on it changes your cluster.
+
+=== Time to a Cluster
+
+[cols="1,2,1",options="header"]
+|===
+|Platform |Documented create time |Measured when the workshop was validated
+
+|ROSA
+|About 10 minutes, plus about 5 minutes if `rosa create network` builds the VPC first.
+The web console opens once the workers have joined.
+|About 10 minutes
+
+|ARO
+|About 45 minutes, or about 35 for a private cluster
+|Within about an hour
+
+|EKS and AKS
+|"Several minutes" and "a few minutes", with no exact figure
+|Not measured
+|===
+
+ARO with hosted control planes, in preview, documents 15 to 20 minutes.
+
+The create time sets the floor for every rebuild.
+Where recovery means a new cluster, then a GitOps sync and an OADP restore, the ARO create takes most of an hour before anything is restored, and the ROSA create about 10 minutes.
+Short-lived clusters, such as upgrade rehearsals and Operator tests, follow the same arithmetic.
+The first cluster in a new account or subscription takes longer than either figure, because one-time setup and quota come first.
+
+=== One-Time Setup
+
+A first ROSA cluster depends on a Red Hat organization as well as on the AWS account.
+A first ARO cluster depends only on Azure, but each cluster needs more setup around it.
+
+[cols="1,2,2",options="header"]
+|===
+| |ROSA |ARO
+
+|Once per account or subscription
+|Enable ROSA in the AWS console, which checks Marketplace permissions, quotas and the Elastic Load Balancing service-linked role, and links the account to Red Hat.
+Create the account roles, and the `ocm-role`, which needs a Red Hat organization administrator.
+|Register the resource providers that xref:setup-requirements.adoc#_cluster[Setup] lists, and get quota (see <<quota-and-capacity>>).
+
+|Once per person
+|A Red Hat account in the organization.
+Each person who creates clusters also links it to the AWS account with a `user-role`.
+|Nothing beyond Azure role assignments.
+
+|For each cluster
+|Operator roles, an OIDC configuration, and an existing VPC, which `rosa create network` can build with CloudFormation.
+|A virtual network with two subnets, nine user-assigned managed identities with their role assignments, and a Red Hat pull secret for the Software Catalog.
+
+|Checks before you create
+|`rosa verify quota` checks quota limits, not what is already in use.
+The network is verified when you create the cluster.
+|`az aro validate` checks the permissions a create needs.
+`az aro identity create-required` creates the identities and their role assignments ahead of time.
+
+|Who has to act
+|A Red Hat organization administrator, an AWS administrator, and each person who creates clusters, for their own `user-role`.
+|Someone with `Contributor` and `User Access Administrator`, or `Owner`, because the install creates role assignments.
+|===
+
+On EKS and AKS, one cloud identity covers the whole chain, with no account outside the cloud.
+
+[#quota-and-capacity]
+=== Quota and Capacity
+
+ARO runs its control plane on three VMs in your subscription, so the control plane counts against your quota.
+On ROSA, EKS and AKS, only the workers do.
+
+[cols="1,2,2",options="header"]
+|===
+| |ROSA |ARO
+
+|Control plane in your quota
+|No: it runs in a Red Hat-owned AWS account.
+|Yes: three VMs, 24 vCPUs at the default size.
+
+|Minimum to install
+|32 vCPUs of On-Demand Standard instances.
+The AWS default is 5, so an account that has not run ROSA before must request more.
+|44 vCPUs: 8 for a bootstrap VM that the install removes, 24 for the control plane and 12 for three workers.
+A new subscription's default quota is lower.
+
+|Headroom to keep
+|The 32 vCPUs cover creation, availability and upgrades.
+A machine pool upgrade adds a node before it removes one.
+|Microsoft's support policy asks you to keep at least double the control plane's vCPU count available, so that its nodes can be scaled up.
+
+|How quota is counted
+|One vCPU limit per region, shared by the standard instance families.
+|A regional vCPU total and a limit per VM family, Standard DSv5 for the default sizes.
+A VM needs room in both.
+
+|Requesting more
+|Through Service Quotas, and approval can take several hours.
+|Azure weighs the region's capacity, and quota does not reserve capacity.
+A request can be refused with `QuotaNotAvailableForResource`.
+|===
+
+Every ARO cluster takes 24 vCPUs of quota for its control plane before it runs an application, plus the headroom, so ten clusters need 240 control plane vCPUs where ten ROSA, EKS or AKS clusters need none.
+
+On Azure, quota is not capacity.
+Request it early, for the VM family as well as the regional total, and have a second family or region in mind.
+Check that a fallback region has availability zones: some, such as Australia Central, have none.
+Since July 2026, new subscriptions can't deploy some previous-generation VM series, such as Dsv3, Esv3, Fsv2 and Lsv2, so runbooks that name those sizes fail there.
+
+=== Sign-in and Automation
+
+[cols="1,2,2",options="header"]
+|===
+| |ROSA |ARO
+
+|People
+|A Red Hat login: `rosa login --use-auth-code` opens a browser, and `rosa login --use-device-code` lets you approve the login on another device.
+The session lasts about 10 hours.
+|`az login`.
+Creating and deleting the cluster needs no Red Hat login.
+
+|Automation
+|A Red Hat service account, with a client ID and a secret.
+Its access tokens last 15 minutes, and it has no permissions until an administrator adds it to a group.
+|A service principal or a managed identity, as for any Azure resource.
+
+|Where you change the cluster
+|OpenShift Cluster Manager, in the Red Hat Hybrid Cloud Console, or `rosa`.
+The ROSA page in the AWS console only enables the service.
+|The Azure portal and `az` create and delete the cluster.
+Everything else goes through the OpenShift web console or `oc`: Microsoft documents no workload view for ARO in the portal, like the one AKS has.
+
+|First administrator
+|`rosa create admin` creates a `cluster-admin` user, as in xref:module-01-who-manages-what.adoc#before-you-start[Before You Start].
+|The kubeadmin user, whose password `az aro list-credentials` returns, so an Azure role on the cluster resource grants cluster administrator.
+|===
+
+A `rosa` login from the day before has expired by the next morning, and so has a pipeline that stored one.
+Red Hat recommends service accounts for automation.
+Offline tokens from console.redhat.com still work, but Red Hat discourages them because they can't be revoked.
+
+=== Your Cloud's Tools
+
+Your cloud's security and monitoring tools see less of a ROSA or ARO cluster than of an EKS or AKS one.
+
+For ARO, xref:module-01-what-ships.adoc#_from_the_software_catalog[What Ships] lists the Azure services that reach the cluster through Azure Arc.
+Defender for Containers is one of them, in preview on Arc, without features such as binary drift detection, response actions and malware detection, and it doesn't scan ARO's built-in image registry.
+
+This is the AWS side, as of October 2026:
+
+[cols="1,3",options="header"]
+|===
+|AWS service |On ROSA
+
+|GuardDuty
+|Findings from CloudTrail, VPC flow logs and DNS logs still cover the account.
+EKS Protection reads only EKS audit logs, and Runtime Monitoring doesn't list RHCOS, the nodes' operating system, among the systems it supports.
+
+|Inspector
+|Not supported on ROSA directly, according to Red Hat.
+Scan images in ECR instead; Inspector maps images to running containers only on ECS and EKS.
+
+|CloudWatch Container Insights
+|Supported, installed with AWS's Helm chart in its ROSA mode, not with the EKS add-on.
+
+|Amazon Managed Service for Prometheus
+|Its managed collectors work only with EKS, so ROSA sends metrics to it with remote write (xref:module-04-observability.adoc#_what_matters[Observability]).
+
+|AWS Marketplace container products
+|Marketplace add-ons install only on EKS, and the Helm products target self-managed clusters.
+ROSA isn't named, so ask the vendor whether they support it.
+|===
+
+=== Guardrails to Clear Before the First Cluster
+
+Organization-wide rules written for EKS and AKS can make a ROSA or ARO create fail.
+Agree the exceptions with the teams that own them before the first create:
+
+* *AWS Organizations:* service control policies must not be more restrictive than the roles and policies the cluster needs, and must never block EC2, IAM or tagging actions.
+Red Hat's prerequisites also rule out restrictive tag policies.
+* *IAM standards:* ROSA's account roles take only AWS managed policies, never customer-managed ones; a permissions boundary is optional.
+An organization that requires customer-managed policies needs an exception.
+* *Procurement:* if your organization uses AWS Private Marketplace, an administrator must add the ROSA listings before anyone can enable ROSA.
+* *Azure identities:* an ARO cluster's managed identities must keep ARO's built-in roles, their role assignments and federated credentials must not be changed, and no identity may be shared between clusters.
+Check that Azure Policy doesn't restrict the federated credentials or role assignments the install creates.
+* *Infrastructure as code:* CloudFormation has no resource type for ROSA, so CloudFormation and CDK teams describe the cluster with the `rhcs` Terraform provider, `rosa` or the OpenShift Cluster Manager API (see xref:module-01-who-manages-what.adoc#_where_your_infrastructure_as_code_lives[Where Your Infrastructure as Code Lives]).
+For ARO, Terraform's azurerm provider supports clusters with managed identities from version 5.2.0.
+
+[#decide-before-you-create]
+=== Decide Before You Create
+
+Some settings can be chosen only when a cluster is created.
+Changing one later means a new cluster and a migration, so settle these before the first production cluster.
+
+[tabs]
+======
+ROSA (AWS)::
++
+--
+Fixed when you create the cluster:
+
+* The domain prefix, which names the cluster's subdomain of `openshiftapps.com`.
+You can later move the console and downloads routes to your own domain, but not the API or the OAuth route.
+* The machine, pod and service CIDRs.
+* External authentication, which replaces the built-in OAuth server for good.
+* KMS keys for etcd and for volumes, FIPS mode, and the OIDC configuration.
+* A cluster without a CNI, for one you bring yourself (xref:module-03-pod-networking.adoc#_what_matters[Pod Networking and Policy]).
+
+You can change these later:
+
+* The API's visibility, public or private, with `rosa edit cluster`.
+The OAuth server follows the API, so a private API also stops web console logins from outside the private network, even behind a public ingress.
+* The default ingress's visibility, with `rosa edit ingress`.
+* Machine pools, including ones in other subnets, if those subnets carry the cluster's `shared` tag.
+--
+ARO (Azure)::
++
+--
+Fixed when you create the cluster:
+
+* Managed identities or a service principal.
+Workload identity in xref:module-02-cloud-credentials.adoc[Pod Cloud Credentials] needs managed identities, and a cluster can't be converted.
+* FIPS mode.
+* The disk encryption set for the control plane nodes.
+Worker disks can get a customer-managed key later.
+* API and ingress visibility, and the outbound type: user-defined routing needs both to be private.
+* The virtual network and subnets, and the pod and service CIDRs.
+Each node takes a /23 from the pod CIDR, and that size can't be changed.
+* The domain.
+Without a custom domain, the cluster uses a subdomain of `aroapp.io` with certificates the service provides.
+With one, you create the `api` and `*.apps` DNS records and replace the default certificates.
+
+`az aro update` changes only the cluster's identities and credentials, its outbound IP count and its upgrade settings, so treat everything else as fixed.
+--
+======
+
+== What Matters
+
+* Plan a first cluster's lead time around people and quota, not the create: quota requests, a Red Hat organization administrator for ROSA, and someone who can create role assignments for ARO all come before the first create.
+* ARO's control plane runs on your quota.
+Request quota for the VM family as well as the region, keep the headroom the support policy asks for, and have a fallback region.
+* A rebuild is only as fast as the create: on ARO, most of an hour passes before GitOps and OADP can restore anything.
+* A `rosa` login lasts about 10 hours.
+Automation that manages ROSA clusters needs a Red Hat service account, not a person's login.
+* GuardDuty's EKS protections, Inspector's container view and the full Defender for Containers feature set on AKS don't carry over.
+Agree with your security team what replaces them before go-live.
+* Service control policies, tag policies, IAM standards, Private Marketplace and Azure Policy can each make the first create fail, so clear them first.
+* Settle the choices in <<decide-before-you-create>> before the first production cluster.
+
+== Where Each Wins
+
+[cols="1,1",options="header"]
+|===
+|ROSA and ARO win |EKS and AKS win
+
+|The OpenShift charge comes on your AWS or Azure bill, with no separate Red Hat contract to sign.
+|One cloud identity runs the whole lifecycle, where ROSA also needs a Red Hat organization and its administrator.
+
+|Red Hat Lightspeed cost management splits cloud cost across OpenShift projects, with one tool for both clouds.
+|Native security and cost tools cover the whole cluster, AKS clusters can be stopped, and EKS node groups can scale to zero.
+ROSA and ARO clusters run until you delete them.
+|===
+
+== App Teams Will Notice
+
+* Per-namespace cost reports from EKS split cost allocation data or AKS cost analysis stop, as xref:module-01-who-manages-what.adoc#_cost_and_support[Cost and Support] explains.
+Agree which tool replaces them before teams ask for their bill.
+* A request for a short-lived cluster, such as a test environment, takes minutes on ROSA and most of an hour on ARO.
+
+== Check Your Understanding
+
+These questions cover the whole module.
+Try each one before you open its answer.
+
+. A teammate adds a label to the ClusterVersion on both clusters, for an inventory script.
+ARO accepts it and ROSA refuses it.
+Why the difference, and should they keep the label on ARO?
++
+.Answer
+[%collapsible]
+====
+ROSA protects the resources SRE owns with managed admission webhooks, so the cluster refuses the change, as in xref:module-01-who-manages-what.adoc#ex-module-01-who-manages-what-4[Who Manages What Exercise 4].
+ARO protects its platform through the deny assignment on the Azure side and its support policy, so the API accepts the label.
+Accepted is not the same as supported: treat platform resources as read-only on both, and keep inventory data outside them, for example in cloud tags.
+====
+
+. An app team asks you to install metrics-server and the AWS Load Balancer Controller on ROSA, as they had on EKS.
+What do you tell them?
++
+.Answer
+[%collapsible]
+====
+Look up each add-on's cluster Operator first, as in xref:module-01-what-ships.adoc#ex-module-01-what-ships-3[What Ships Exercise 3].
+Metrics ship with the `monitoring` cluster Operator, so `oc adm top` and the Horizontal Pod Autoscaler work without metrics-server.
+The router serves Routes and plain Ingresses, so most apps need no controller.
+Only if they need ALBs do you add the AWS Load Balancer Operator from the Software Catalog, and then it is yours to operate and update, like any catalog Operator.
+====
+
+. Your finance team compares the ROSA or ARO cluster fee with the EKS or AKS control plane fee and asks why it is higher.
+What do you show them?
++
+.Answer
+[%collapsible]
+====
+The xref:module-01-who-manages-what.adoc#_the_responsibility_line[responsibility line].
+The EKS or AKS fee covers the control plane.
+The ROSA or ARO fee also covers the worker OS, the platform components and their upgrades, SRE monitoring and one support path, which on EKS or AKS cost add-ons and your team's time.
+Compare whole platforms, including the people who run them.
+For a cluster that needs little of that, such as a short-lived test cluster, the native service can be the better buy.
+====
+
+. Your team's first ARO cluster is due next week, in a new subscription.
+What can hold it up, and what do you start today?
++
+.Answer
+[%collapsible]
+====
+Quota comes first.
+ARO needs 44 vCPUs to install, 24 of them for a control plane that runs in your subscription, and a new subscription's default quota is lower.
+Request the regional total and the VM family together today, because Azure can refuse a VM family in a region that is short of capacity, and have a second family or region ready, as <<quota-and-capacity>> describes.
+The install also creates role assignments, so line up someone with `Contributor` and `User Access Administrator`, or `Owner`.
+Then allow most of an hour for the create itself.
+====
+
+. A pipeline that manages your ROSA machine pools worked yesterday afternoon and can't log in this morning.
+What changed, and what is the lasting fix?
++
+.Answer
+[%collapsible]
+====
+The pipeline used a person's `rosa` login, and that session lasts about 10 hours.
+Give the pipeline a Red Hat service account instead: an administrator creates it and adds it to a group with the cluster permissions it needs, and the pipeline logs in with the account's client ID and secret.
+====
+
+== References
+
+* EKS and AKS
+** https://docs.aws.amazon.com/guardduty/latest/ug/prereq-runtime-monitoring-cpu-os-kernel-support.html[GuardDuty Runtime Monitoring supported operating systems]
+** https://learn.microsoft.com/azure/aks/start-stop-cluster[Stop and start an AKS cluster]
+* ROSA
+** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html-single/prepare_your_environment/index[Prepare your environment: quotas, prerequisites and IAM]
+** https://docs.redhat.com/en/documentation/red_hat_openshift_service_on_aws/4/html/cli_tools/rosa-cli[The rosa CLI: logging in and service accounts]
+** https://docs.aws.amazon.com/rosa/latest/userguide/set-up.html[Set up ROSA (AWS)]
+** https://docs.aws.amazon.com/rosa/latest/userguide/integration-marketplace.html[ROSA and AWS Marketplace]
+** https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/deploy-container-insights-RedHatOpenShift.html[Container Insights on ROSA]
+* ARO
+** https://learn.microsoft.com/azure/openshift/howto-create-openshift-cluster[Create an ARO cluster with managed identities]
+** https://learn.microsoft.com/azure/openshift/support-policies-v4[ARO support policy]
+** https://learn.microsoft.com/azure/openshift/concepts-networking[ARO networking concepts]
+** https://learn.microsoft.com/cli/azure/aro[az aro reference]
+** https://learn.microsoft.com/azure/defender-for-cloud/support-matrix-defender-for-containers[Defender for Containers support matrix]
+* Azure
+** https://learn.microsoft.com/azure/quotas/quotas-overview[Azure quotas]
+** https://learn.microsoft.com/azure/virtual-machines/migration/sizes/previous-gen-series-capacity-limitations[Previous-generation VM series limits]

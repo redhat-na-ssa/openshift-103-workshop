@@ -44,6 +44,10 @@ The EKS and AKS column describes their standard modes; EKS Auto Mode and AKS Aut
 |The cluster, node pools and add-ons are resources in one cloud API, described with Terraform, CloudFormation or Bicep.
 |ROSA: OCM-side settings (machine pools, IdPs, upgrades, AutoNode) go in Terraform with the `rhcs` provider, beside the AWS provider. ARO: azurerm or Bicep owns only the cluster resource. Cluster objects, including ARO's OAuth and MachineSets, go in Git.
 
+|First cluster
+|An AWS or Azure administrator creates it in minutes.
+|ROSA: a Red Hat organization administrator acts once, the account needs 32 vCPUs of quota, and a create takes about 10 minutes. ARO: the subscription needs 44 vCPUs of quota, 24 of them for the control plane, and a create takes about 45 minutes. Neither can be stopped. Some settings are fixed at creation.
+
 3+h|Module 2: Access and Workload Security
 
 |Cluster login
@@ -102,7 +106,7 @@ The EKS and AKS column describes their standard modes; EKS Auto Mode and AKS Aut
 
 |Private cluster
 |You can make the API endpoint private later.
-|A private API is chosen when the cluster is created, and so is private ingress on ARO. On ROSA the default ingress can be made private later. ROSA workers always reach the hosted control plane over PrivateLink.
+|ARO fixes API and ingress visibility when the cluster is created. ROSA can switch both later, but a private API also stops web console logins from outside the private network. ROSA workers always reach the hosted control plane over PrivateLink.
 
 3+h|Module 4: Day-2 Operations
 
@@ -121,6 +125,10 @@ The EKS and AKS column describes their standard modes; EKS Auto Mode and AKS Aut
 |Upgrades
 |Control plane, then each add-on against a compatibility matrix, then nodes.
 |One release moves Kubernetes, networking, ingress, storage and monitoring together. ROSA: you schedule it, control plane first, then each machine pool, which may trail by up to two minor versions. ARO: you start each update, and workers roll with it. No rollback on either.
+
+|Kubernetes version
+|The cluster's version is its Kubernetes version.
+|The OpenShift version decides it: so far, OpenShift 4.y has shipped Kubernetes 1.(y+13), so 4.22 runs Kubernetes 1.35. A new minor version reaches ROSA within a day of OpenShift's release and new ARO clusters about six months later, so both trail EKS and AKS by a few Kubernetes minor versions.
 
 |Upgrade blockers
 |EKS upgrade insights flag deprecated API use; AKS blocks an upgrade on recent deprecated API use.

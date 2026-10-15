@@ -612,7 +612,13 @@ oc delete project net-client
 
 == Private Clusters
 
-A private API is an install-time choice on ROSA and ARO, as is private ingress on ARO, so there is no exercise for it.
+[.validation]
+NOTE: *Not validated:* switching the ROSA API between public and private after the cluster is created, which comes from the ROSA documentation.
+
+On ARO, a private API and private ingress are install-time choices.
+On ROSA, you can switch the API and the default ingress between public and private after creation, with `rosa edit cluster` and `rosa edit ingress`.
+The ROSA OAuth server follows the API, so a private API also stops web console logins from outside the private network, even behind a public ingress.
+There is no exercise for this, because a private API would cut your workstation off from the cluster.
 What changes is where the control plane runs and how you, and the provider's SRE team, reach it:
 
 .Where the control plane runs and how private API access works
@@ -629,7 +635,7 @@ image::module-03-private-clusters.svg["Where the control plane runs and how priv
 |Private API
 |Endpoint access settings
 |Private cluster, or API Server VNet Integration
-|`--private` at create
+|`--private` at create, or `rosa edit cluster --private` later
 |`--apiserver-visibility Private` at create
 
 |Private ingress
@@ -641,7 +647,7 @@ image::module-03-private-clusters.svg["Where the control plane runs and how priv
 |Change after create
 |Yes, at any time
 |Depends on the option
-|Ingress: yes; API: plan it at create
+|Yes, for both
 |Plan it at create
 
 |Outbound path
@@ -666,7 +672,7 @@ The ARO support policy does not allow an HTTPS proxy in the path of the service'
 * AdminNetworkPolicy adds cluster-wide rules that project administrators cannot override. Keep its subjects away from `openshift-*` namespaces, which the platform and SRE need.
 * Egress IPs give a project a fixed source address, with cloud-specific limits: on AWS the capacity depends on the instance type, and on ARO namespace egress IPs need a private cluster created with user-defined routing. Public ARO clusters cannot use them.
 * An EgressFirewall, one per project, limits which destinations outside the cluster its pods can reach, by CIDR or by DNS name. DNS-name rules follow a host's addresses only as often as its TTL, so they suit hosts whose addresses rarely change.
-* A private API is an install-time choice on ROSA and ARO, and so is private ingress on ARO. ROSA workers always reach the hosted control plane over AWS PrivateLink.
+* On ARO, a private API and private ingress are install-time choices. On ROSA, both can be switched later, and a private API also stops web console logins from outside the private network. ROSA workers always reach the hosted control plane over AWS PrivateLink.
 
 == Where Each Wins
 
@@ -681,7 +687,7 @@ The ARO support policy does not allow an HTTPS proxy in the path of the service'
 |Cilium on AKS adds an eBPF dataplane and, with Advanced Container Networking Services, L7 policy and FQDN policy through a DNS proxy that tracks address changes. EKS Auto Mode adds DNS-based policies.
 
 |A supported private pattern that keeps SRE access working.
-|Endpoint visibility can change after the cluster is created.
+|Endpoint visibility can change after the cluster is created, where ARO fixes it at install.
 |===
 
 == App Teams Will Notice

@@ -34,7 +34,7 @@ The last page of each module ends with a few questions to check your understandi
 
 == Modules
 
-. *xref:module-01-who-manages-what.adoc[The Service Model]*: who manages what on each platform, what it costs, and what a cluster ships with.
+. *xref:module-01-who-manages-what.adoc[The Service Model]*: who manages what on each platform, what it costs, what a cluster ships with, and what it takes to get, secure and pay for one.
 . *xref:module-02-access-and-tenancy.adoc[Access and Workload Security]*: logging in, onboarding teams, pod security defaults and cloud credentials for pods.
 . *xref:module-03-exposing-apps.adoc[Networking]*: exposing applications, pod networking and network policy.
 . *xref:module-04-scaling-nodes.adoc[Day-2 Operations]*: scaling nodes, upgrades and observability.
