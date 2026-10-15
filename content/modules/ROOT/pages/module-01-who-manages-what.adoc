@@ -499,7 +499,8 @@ OADP is configured with one DataProtectionApplication resource.
 These samples show its shape on each cloud; this workshop does not run them.
 
 [.validation]
-NOTE: *Not validated:* the two OADP samples below, which were not applied to a cluster.
+NOTE: *Not validated:* the ROSA sample below, which was not applied to a cluster.
+The ARO sample was validated with OADP 1.5: its backup location became `Available` and a backup of the `sample-app` namespace completed.
 
 .Sample OADP configuration for ROSA
 [%collapsible]
@@ -538,6 +539,11 @@ spec:
 .Sample OADP configuration for ARO
 [%collapsible]
 ====
+On ARO the `cloud-credentials-azure` secret holds an environment file under the `cloud` key, which you create yourself.
+With a storage account key it has four lines: `AZURE_SUBSCRIPTION_ID`, `AZURE_RESOURCE_GROUP`, `AZURE_STORAGE_ACCOUNT_ACCESS_KEY` and `AZURE_CLOUD_NAME=AzurePublicCloud`.
+`storageAccountKeyEnvVar` tells Velero to use that key.
+Without it, Velero tries to list the account's keys with an Azure identity, and on a cluster without one the backup location stays `Unavailable`.
+
 [source,yaml]
 ----
 apiVersion: oadp.openshift.io/v1alpha1
@@ -562,6 +568,7 @@ spec:
           resourceGroup: <storage-resource-group>
           storageAccount: <storage-account>
           subscriptionId: <subscription-id>
+          storageAccountKeyEnvVar: AZURE_STORAGE_ACCOUNT_ACCESS_KEY
         credential:
           name: cloud-credentials-azure
           key: cloud
