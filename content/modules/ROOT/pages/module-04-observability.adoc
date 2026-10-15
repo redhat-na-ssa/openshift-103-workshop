@@ -1128,10 +1128,7 @@ It sends through the HTTP Data Collector API, which Microsoft stopped supporting
 ====
 The same forwarder can send the API server audit logs to Log Analytics, for Microsoft Sentinel or your security team.
 Give them their own table: they are sensitive, they need the `collect-audit-logs` cluster role, and their volume adds noticeable Log Analytics charges.
-A `kubeAPIAudit` filter on the pipeline can drop the events you do not need.
-
-[.validation]
-NOTE: *Not validated:* forwarding audit logs from ARO, which was not run on a cluster.
+A `kubeAPIAudit` filter on the pipeline can drop the events you do not need: an idle validation cluster sent about 1,000 audit events a minute.
 
 Grant the collector's service account the audit role:
 
@@ -1144,6 +1141,10 @@ oc adm policy add-cluster-role-to-user \
 ----
 
 Create a second custom table, for example `AroAuditLogs_CL`, and add a matching stream and data flow to the data collection rule, as you did for `SampleAppLogs_CL`.
+Audit events have no `message` or `level` field, so declare the audit fields you keep instead, for example `verb`, `requestURI`, and `user` and `objectRef` as `dynamic`, and map them in the transformation, for example `User = tostring(user.username)` and `Resource = tostring(objectRef.resource)`.
+A changed rule can take about 20 minutes to reach the ingestion endpoint.
+Until it does, the collector log shows `InvalidStream` for the new stream and drops those events.
+
 Then add these entries to the `inputs`, `outputs` and `pipelines` lists of the `workshop` forwarder:
 
 [source,yaml]
