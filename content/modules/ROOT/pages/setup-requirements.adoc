@@ -136,6 +136,16 @@ a|Permission to create, in a resource group:
 
 `Reader` on the cluster's managed resource group (the `aro-...` group the cluster creates), to look up its load balancer, public IPs and network interfaces (Module 3).
 
+The subscription must have the `Microsoft.ContainerRegistry` (Module 2), `Microsoft.OperationalInsights` and `Microsoft.Insights` (Module 4) resource providers registered.
+A new subscription may not, and an attendee with access only to a resource group cannot register them, so the subscription owner registers them before the day:
+
+[source,bash]
+----
+for p in Microsoft.ContainerRegistry Microsoft.OperationalInsights Microsoft.Insights; do
+  az provider register --namespace "$p"
+done
+----
+
 In Microsoft Entra ID: permission to create an app registration for the ARO identity provider (Module 2).
 |===
 
