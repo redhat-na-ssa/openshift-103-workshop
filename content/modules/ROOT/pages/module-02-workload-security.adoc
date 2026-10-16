@@ -80,7 +80,8 @@ spec:
       serviceAccountName: sample-app
       containers:
       - name: sample-app
-        image: ghcr.io/redhat-na-ssa/openshift-cloud-workshop/sample-app:1.0-root
+        image:
+          ghcr.io/redhat-na-ssa/openshift-cloud-workshop/sample-app:1.0-root
         ports:
         - name: http
           containerPort: 8080
@@ -287,13 +288,12 @@ oc adm policy add-scc-to-user anyuid \
   --namespace sample-app
 ----
 
-Go back to the root image:
+Go back to the root image by undoing the last rollout:
 
 [source,bash]
 ----
-oc set image deployment/sample-app \
-  --namespace sample-app \
-  sample-app=ghcr.io/redhat-na-ssa/openshift-cloud-workshop/sample-app:1.0-root
+oc rollout undo deployment/sample-app \
+  --namespace sample-app
 ----
 
 [source,bash]
