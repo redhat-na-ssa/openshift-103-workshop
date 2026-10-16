@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Sample application for the OpenShift Cloud Workshop.
+"""Sample application for the OpenShift 103 Workshop.
 
 Lists the objects in an S3 bucket (ROSA) or a Blob container (ARO),
 using whatever cloud credentials the pod is given.

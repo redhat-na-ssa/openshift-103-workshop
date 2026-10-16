@@ -1,13 +1,18 @@
-name: modules
-title: OpenShift Cloud Workshop
-version: master
+# The site's home part. Every workshop under workshops/ belongs to this same component
+# (name ROOT, no version), so one navigation spans all of them. The playbooks list this
+# folder last, which makes this file's title, nav and attributes the ones the site uses;
+# a workshop's own antora.yml only applies when it is built alone.
+name: ROOT
+title: "OpenShift 103 Workshop"
+version: ~
 nav:
   - modules/ROOT/nav.adoc
+  - modules/rosa-and-aro/nav.adoc
+  # add-workshop.py adds workshops above this line
 
 asciidoc:
   attributes:
-    lab_name: "OpenShift Cloud Workshop"
-    release-version: master
+    lab_name: "OpenShift 103 Workshop"
     page-pagination: true
     # provider tabs: picking ROSA or ARO switches every tab set on the page
     tabs-sync-option: ''

@@ -383,7 +383,7 @@ Run a second copy of the sample application in it, as a stand-in for a service w
 ----
 oc create deployment records \
   --namespace restricted-data \
-  --image ghcr.io/redhat-na-ssa/openshift-cloud-workshop/sample-app:1.0 \
+  --image ghcr.io/redhat-na-ssa/openshift-103-workshop/sample-app:1.0 \
   --port 8080
 ----
 

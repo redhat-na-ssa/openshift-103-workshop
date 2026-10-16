@@ -1,0 +1,6 @@
+# Keep the tools image build context small.
+www
+.cache
+node_modules
+vendor
+.bundle

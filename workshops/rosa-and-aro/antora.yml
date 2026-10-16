@@ -1,0 +1,15 @@
+# Used only when this workshop is built alone (preview.sh --workshop rosa-and-aro):
+# in the full site, content/antora.yml provides the title, nav and attributes.
+name: ROOT
+title: "OpenShift on ROSA and ARO"
+version: ~
+nav:
+  - modules/rosa-and-aro/nav.adoc
+
+asciidoc:
+  attributes:
+    lab_name: "OpenShift on ROSA and ARO"
+    page-pagination: true
+    # provider tabs: picking ROSA or ARO switches every tab set on the page
+    tabs-sync-option: ''
+    page-links: []

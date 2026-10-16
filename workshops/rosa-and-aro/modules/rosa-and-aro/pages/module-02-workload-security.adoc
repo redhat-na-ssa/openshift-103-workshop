@@ -23,7 +23,7 @@ image::module-02-admission-flow.svg["Admission path on EKS and AKS compared with
 == On ROSA and ARO
 
 The sample application lists the objects in a storage bucket and serves HTTP on port 8080.
-It comes in two images built from the same https://github.com/redhat-na-ssa/openshift-cloud-workshop/tree/main/sample-app[Containerfile]:
+It comes in two images built from the same https://github.com/redhat-na-ssa/openshift-103-workshop/tree/main/sample-app[Containerfile]:
 
 * `sample-app:1.0-root` behaves like many upstream images: it runs as root and writes to a directory owned by root.
 * `sample-app:1.0` is the same image, fixed to run under any user ID.
@@ -81,7 +81,7 @@ spec:
       containers:
       - name: sample-app
         image:
-          ghcr.io/redhat-na-ssa/openshift-cloud-workshop/sample-app:1.0-root
+          ghcr.io/redhat-na-ssa/openshift-103-workshop/sample-app:1.0-root
         ports:
         - name: http
           containerPort: 8080
@@ -258,7 +258,7 @@ Switch to the fixed image:
 ----
 oc set image deployment/sample-app \
   --namespace sample-app \
-  sample-app=ghcr.io/redhat-na-ssa/openshift-cloud-workshop/sample-app:1.0
+  sample-app=ghcr.io/redhat-na-ssa/openshift-103-workshop/sample-app:1.0
 ----
 
 [source,bash]
@@ -351,7 +351,7 @@ Switch back to the fixed image, which replaces it:
 ----
 oc set image deployment/sample-app \
   --namespace sample-app \
-  sample-app=ghcr.io/redhat-na-ssa/openshift-cloud-workshop/sample-app:1.0
+  sample-app=ghcr.io/redhat-na-ssa/openshift-103-workshop/sample-app:1.0
 ----
 
 [source,bash]

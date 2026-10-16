@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - 'content/**'
+      - 'workshops/**'
       - 'default-pdf.yml'
       - 'antora-assembler.yml'
       - 'Gemfile'

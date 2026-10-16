@@ -1,63 +1,26 @@
-= Introduction
+= OpenShift 103 Workshop
 
 This workshop is for platform engineers who already run Amazon EKS or Azure AKS and now operate Red Hat OpenShift Service on AWS (ROSA) or Azure Red Hat OpenShift (ARO).
 
 It is not a sales pitch.
 Each section shows what is different, which differences matter in daily operation, where ROSA and ARO save you work compared with a platform you build yourself on EKS or AKS, and where the native service is the better tool.
 
-ifdef::openshift-102-showroom[]
-include::openshift-102:ROOT:partial$cli-tools-container.adoc[]
-endif::[]
+== Where to Start
 
-== How the Workshop Works
+[cols="1,2",options="header"]
+|===
+|You are |Start here
 
-You do the hands-on work on one cluster: ROSA or ARO, whichever your team runs.
-If your team runs both, you can have one of each and run every step on both.
-In this workshop, ROSA always means ROSA with hosted control planes (HCP), the default architecture for new ROSA clusters; ROSA classic is not covered.
-Where the steps differ between the two, they appear in tabs: pick *ROSA (AWS)* or *ARO (Azure)* once, and every page follows your choice.
-Switch to the other tab to read what changes on the other cloud.
-Where it helps, a step also shows how you would do the same task on EKS or AKS, as a reference block you read but do not run.
-No EKS or AKS cluster is needed.
+|Running a delivery of the workshop
+|xref:instructor.adoc[Workshop instructor]: what the workshop covers, the environment it needs, and how to run it.
 
-One sample application runs through Modules 2 to 4.
-You deploy it, give it cloud credentials, expose it, apply network policy to it, scale nodes under it and monitor it.
+|Taking the workshop
+|xref:attendee.adoc[Workshop attendee]: how the workshop works and where to begin.
+|===
 
-Every section follows the same pattern:
+== Included Workshops
 
-* *On EKS and AKS*: the habit you bring with you.
-* *On ROSA and ARO*: the same task, done the OpenShift way.
-* *What Matters*: the differences that change how you operate.
-* *Where Each Wins*: what ROSA and ARO take off your plate, and where EKS and AKS are better.
-* *App Teams Will Notice*: differences your application teams will ask you about, where there are any.
+Each one stands on its own; run them in the order listed or pick the ones your group needs.
 
-The last page of each module ends with a few questions to check your understanding.
-
-== Modules
-
-. *xref:module-01-who-manages-what.adoc[The Service Model]*: who manages what on each platform, what it costs, what a cluster ships with, and what it takes to get, secure and pay for one.
-. *xref:module-02-access-and-tenancy.adoc[Access and Workload Security]*: logging in, onboarding teams, pod security defaults and cloud credentials for pods.
-. *xref:module-03-exposing-apps.adoc[Networking]*: exposing applications, pod networking and network policy.
-. *xref:module-04-scaling-nodes.adoc[Day-2 Operations]*: scaling nodes, upgrades and observability.
-
-The xref:quick-reference.adoc[Quick Reference] after Module 4 sums up the workshop on one page.
-
-== Prerequisites
-
-This workshop assumes the following:
-
-* You operate Kubernetes on EKS or AKS today, and are comfortable with `kubectl` and the `aws` or `az` CLI.
-* You have access to a ROSA cluster, an ARO cluster or both, prepared as described in the xref:setup-requirements.adoc[Setup Requirements].
-
-== Expectations
-
-After completing this workshop, you will be able to:
-
-* Explain what Red Hat, AWS and Microsoft manage on ROSA and ARO, and what remains your job.
-
-* Map your EKS and AKS habits for access, security, networking, scaling, upgrades and observability to ROSA and ARO.
-
-* Recognize the differences that matter in daily operation, and the ones your application teams will notice.
-
-* Judge where ROSA and ARO improve on a self-built EKS or AKS platform, and where the native service is the better choice.
-
-Before running the workshop, review the xref:setup-requirements.adoc[Setup Requirements].
+* xref:rosa-and-aro:index.adoc[OpenShift on ROSA and ARO]: the service model, access and workload security, networking and day-2 operations, compared with EKS and AKS.
+// add-workshop.py adds workshops above this line
