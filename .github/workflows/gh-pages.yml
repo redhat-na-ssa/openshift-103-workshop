@@ -2,6 +2,10 @@ name: Publish to GitHub Pages
 # Builds and deploys the site with the shared workflow in shpwrck/workshop-common.
 on:
   workflow_dispatch:
+  # rebuild after each release, so the footer and the Downloads page show it
+  workflow_run:
+    workflows: [Release]
+    types: [completed]
   push:
     branches: [main]
     paths-ignore:
@@ -19,4 +23,5 @@ concurrency:
 
 jobs:
   pages:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     uses: shpwrck/workshop-common/.github/workflows/pages.yml@main
