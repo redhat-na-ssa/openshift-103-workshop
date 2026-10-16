@@ -1,0 +1,25 @@
+name: Release
+# Publishes a release with everything needed to run the workshop disconnected: the PDF,
+# the runtime and tools images, the Helm chart and an offline bundle. Uses the shared
+# workflow in shpwrck/workshop-common; see "Releases" in its README.
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: Release to create, such as v1.0.0
+        required: true
+        default: v1.0.0
+
+permissions:
+  contents: write  # the release and its files
+  packages: write  # the images on ghcr.io
+
+jobs:
+  release:
+    uses: shpwrck/workshop-common/.github/workflows/release.yml@main
+    with:
+      tag-name: ${{ github.event_name == 'push' && github.ref_name || inputs.tag_name }}
+      title: "OpenShift 103 Workshop"

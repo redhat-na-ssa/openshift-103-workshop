@@ -74,4 +74,6 @@ Run the workflow from the Actions tab to rebuild the images without a change.
 
 == Releases
 
-To publish a release with its PDF, run the *Build and Release PDF Documentation* workflow from the Actions tab with the next version, such as `v1.0.0`, or push a tag of that name.
+Run the *Release* workflow from the Actions tab with the next version, such as `v1.1.0`, or push a tag of that name.
+It publishes the PDF, the runtime and tools images, the Helm chart and an offline bundle; see "Releases" in workshop-common's README.
+The tools image adds `rosa`, `aws` and `az` (`tools/install.sh`) to the shared tools.

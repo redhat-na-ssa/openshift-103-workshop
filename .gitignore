@@ -40,3 +40,9 @@ yarn.lock
 # Ignore Antora Assembler workspace and bundled gems (PDF build)
 build/
 vendor/bundle/
+
+# Release builds and local previews
+.offline-chart/
+.preview-playbook.yml
+.standalone-*.yml
+.workshop-common/
