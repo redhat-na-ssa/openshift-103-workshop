@@ -1,5 +1,6 @@
 * xref:index.adoc[Workshop home]
 * xref:instructor.adoc[Workshop instructor]
+** xref:downloads.adoc[Downloads]
 ** xref:rosa-and-aro:setup-requirements.adoc[OpenShift on ROSA and ARO]
 // add-workshop.py adds workshops above this line
 * xref:attendee.adoc[Workshop attendee]
