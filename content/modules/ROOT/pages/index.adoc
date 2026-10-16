@@ -12,10 +12,10 @@ Each section shows what is different, which differences matter in daily operatio
 |You are |Start here
 
 |Running a delivery of the workshop
-|xref:instructor.adoc[Workshop instructor]: what the workshop covers, the environment it needs, and how to run it; xref:downloads.adoc[Downloads] has the release's PDF, Helm chart and disconnected guide.
+|xref:instructor.adoc[Workshop Instructor Guide]: what the workshop covers, the environment it needs, and how to run it; xref:downloads.adoc[Downloads] has the release's PDF, Helm chart and disconnected guide.
 
 |Taking the workshop
-|xref:attendee.adoc[Workshop attendee]: how the workshop works and where to begin.
+|xref:attendee.adoc[Workshop Attendee Guide]: how the workshop works and where to begin.
 
 |Looking for the command-line tools
 |xref:cli-tools.adoc[Shared CLI tools]: run `oc`, `rosa`, `aws`, `az` and the other tools in a pod on the cluster instead of installing them.

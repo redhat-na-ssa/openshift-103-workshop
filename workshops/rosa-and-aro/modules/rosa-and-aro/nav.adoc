@@ -1,17 +1,4 @@
+// The pages are listed in partials/nav-items.adoc, which the full site's
+// navigation also includes, under Workshop Content.
 .xref:index.adoc[OpenShift on ROSA and ARO]
-* Module 1: The Service Model
-** xref:module-01-who-manages-what.adoc[Who Manages What]
-** xref:module-01-what-ships.adoc[What Ships and How You Extend It]
-** xref:module-01-living-with-the-service.adoc[Living With the Service]
-* Module 2: Access and Workload Security
-** xref:module-02-access-and-tenancy.adoc[Access and Tenancy]
-** xref:module-02-workload-security.adoc[Workload Security Defaults]
-** xref:module-02-cloud-credentials.adoc[Pod Cloud Credentials]
-* Module 3: Networking
-** xref:module-03-exposing-apps.adoc[Exposing an App]
-** xref:module-03-pod-networking.adoc[Pod Networking and Policy]
-* Module 4: Day-2 Operations
-** xref:module-04-scaling-nodes.adoc[Scaling Nodes]
-** xref:module-04-upgrades.adoc[Upgrades]
-** xref:module-04-observability.adoc[Observability]
-* xref:quick-reference.adoc[Quick Reference]
+include::partial$nav-items.adoc[]

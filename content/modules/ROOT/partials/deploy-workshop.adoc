@@ -1,4 +1,4 @@
-// How to deploy the release's files, shown on the Workshop instructor page.
+// How to deploy the release's files, shown on the Workshop Instructor Guide page.
 // From workshop-common's template; keep it the same in every repo.
 // content/antora.yml sets fallbacks for site-image-basename, chart-version and
 // release-tag; the Pages and Release workflows pass the released values.
@@ -124,7 +124,7 @@ Any web server can serve that folder as it is.
 
 === Check the Deployment
 
-* The site opens at the Route's address, on the Workshop home page.
+* The site opens at the Route's address, on the Workshop Home page.
 * The tools pod is running:
 +
 [source,bash,subs=attributes+]
