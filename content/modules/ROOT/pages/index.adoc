@@ -12,7 +12,7 @@ Each section shows what is different, which differences matter in daily operatio
 |You are |Start here
 
 |Running a delivery of the workshop
-|xref:instructor.adoc[Workshop instructor]: what the workshop covers, the environment it needs, and how to run it.
+|xref:instructor.adoc[Workshop instructor]: what the workshop covers, the environment it needs, and how to run it; xref:downloads.adoc[Downloads] has the release's PDF, Helm chart and disconnected guide.
 
 |Taking the workshop
 |xref:attendee.adoc[Workshop attendee]: how the workshop works and where to begin.
