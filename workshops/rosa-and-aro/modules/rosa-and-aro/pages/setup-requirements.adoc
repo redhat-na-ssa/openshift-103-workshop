@@ -1,4 +1,4 @@
-= Setup Requirements
+= OpenShift on ROSA and ARO: Setup Requirements
 
 This page lists everything needed to run this workshop.
 
