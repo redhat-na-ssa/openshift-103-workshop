@@ -1,4 +1,5 @@
 name: Publish to GitHub Pages
+# Builds and deploys the site with the shared workflow in redhat-na-ssa/workshop-common.
 on:
   workflow_dispatch:
   push:
@@ -8,6 +9,7 @@ on:
       - ".gitignore"
 
 permissions:
+  contents: read
   pages: write
   id-token: write
 
@@ -16,60 +18,5 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # tags and history for the footer build stamp
-      - name: configure pages
-        id: pages
-        uses: actions/configure-pages@v5
-      - name: setup node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20.13.1
-      - name: install antora
-        run: npm install --global @antora/cli@3.1 @antora/site-generator@3.1 @asciidoctor/tabs@1.0.0-beta.6
-      - name: antora generate
-        run: |
-          # stamp the footer with the release, commit and build time (partials/build-info.hbs);
-          # Antora camel-cases key names, so build-commit reaches the UI as site.keys.buildCommit.
-          # Values are YAML-parsed, so each is double-quoted to keep a short SHA such as
-          # 67713e7 from being read as a number.
-          keys=()
-          key() { keys+=(--key "$1=\"$2\""); }
-          key build-repo "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY"
-          key build-commit "$(git rev-parse HEAD)"
-          key build-short "$(git rev-parse --short=7 HEAD)"
-          key build-date "$(date -u '+%Y-%m-%d %H:%M UTC')"
-          release=$(git describe --tags --abbrev=0 2>/dev/null || true)
-          if [ -n "$release" ]; then
-            ahead=$(git rev-list --count "$release..HEAD")
-            version=$release
-            if [ "$ahead" -eq 1 ]; then version="$release + 1 commit"; fi
-            if [ "$ahead" -gt 1 ]; then version="$release + $ahead commits"; fi
-            key build-release "$release"
-            key build-version "$version"
-          fi
-          # build for wherever Pages serves this repo (an org subpath such as
-          # https://redhat-na-ssa.github.io/<repo>, or a custom domain), so links,
-          # the 404 page and the sitemap match the published URL.
-          antora generate default-site.yml --stacktrace \
-            --url "${{ steps.pages.outputs.base_url }}" \
-            "${keys[@]}"
-      - name: upload pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: www
-  deploy:
-    needs: build
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    steps:
-    - name: deploy github pages
-      id: deployment
-      uses: actions/deploy-pages@v4
+  pages:
+    uses: redhat-na-ssa/workshop-common/.github/workflows/pages.yml@main
