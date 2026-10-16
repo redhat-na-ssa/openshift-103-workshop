@@ -3,3 +3,4 @@
 ** xref:rosa-and-aro:setup-requirements.adoc[OpenShift on ROSA and ARO]
 // add-workshop.py adds workshops above this line
 * xref:attendee.adoc[Workshop attendee]
+** xref:cli-tools.adoc[Shared CLI tools]

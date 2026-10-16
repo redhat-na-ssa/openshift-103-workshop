@@ -1,0 +1,84 @@
+// The Shared CLI tools page, from workshop-common's template; keep it the same in every repo.
+// content/antora.yml sets workshop-name, extra-cli-tools and a fallback tools image;
+// the Pages and Release workflows pass the published image's name and tag.
+
+.Shared CLI tools image ({lab_name})
+
+If you prefer not to install the command-line tools on your laptop, run the workshop's *tools image* on the cluster.
+[subs="specialcharacters,attributes,quotes,replacements,macros,post_replacements"]
+It has `oc`, `kubectl`, `helm`, {extra-cli-tools}`jq`, `yq`, `git`, `gpg`, `curl`, `wget`, `skopeo` and a `docker` shim, and an interactive `bash` session lists them when it starts.
+You don't need a local `oc` client to start it: apply the manifest below from the web console.
+
+Image (change the tag to match the release you deployed):
+
+`{tools-image-basename}:{tools-image-tag}`
+
+To start it from the web console:
+
+. In the OpenShift web console, select your *Project*.
+. Click *+* in the top bar, then *Import YAML*.
+. Paste the manifest below, change its `image:` line if you mirror images, then click *Create*.
+. Go to *Workloads → Deployments → {workshop-name}-tools*, open the *Pods* tab, select the running pod, then *Terminal*. Start `bash` if the terminal opens `sh`.
+
+[source,yaml,subs=attributes+]
+----
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {workshop-name}-tools
+  labels:
+    app.kubernetes.io/name: {workshop-name}-tools
+    app.kubernetes.io/part-of: {workshop-name}
+spec:
+  replicas: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {workshop-name}-tools
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {workshop-name}-tools
+    spec:
+      containers:
+        - name: tools
+          image: {tools-image-basename}:{tools-image-tag}
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+----
+
+The release's offline bundle has the same manifest as `tools-deployment.yaml`, with `TOOLS.md`, which describes the image, and `images-mirror.txt`, which lists the images to mirror for a disconnected cluster.
+The pod keeps running until you delete the Deployment.
+
+Commands in the pod act as the pod's `default` ServiceAccount, which has no permissions in your project.
+Log in as yourself with `oc login` inside the pod first (in the web console, click your user name, then *Copy login command*), or ask a project admin to grant the ServiceAccount `edit`.
+If the login reports `certificate signed by unknown authority`, add `--certificate-authority=/var/run/secrets/kubernetes.io/serviceaccount/ca.crt` to it.
+
+The workshop's Helm chart, `{workshop-name}`, is in `~/chart` in the pod.
+To install the site from the pod, into your existing project and without a second tools pod:
+
+[source,bash]
+----
+helm upgrade --install workshop ~/chart \
+  --namespace <your-project> \
+  --set tools.enabled=false
+----
+
+Leave out `--create-namespace`, which fails for users who can't create projects.
+
+The deployed site also serves the chart as a Helm chart repository at `/helm/`, so you can add it from a workstation without cloning the repository:
+
+[source,bash,subs=attributes+]
+----
+helm repo add {workshop-name} \
+  https://<your-site-route>/helm/
+----
+
+There's no container engine in the image.
+`docker` maps a few commands to `skopeo`: `manifest inspect`, `pull` (to a local directory), `image inspect` and `history`.

@@ -1,0 +1,3 @@
+= Shared CLI tools container
+
+include::partial$cli-tools-container.adoc[]
