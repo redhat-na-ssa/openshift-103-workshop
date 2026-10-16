@@ -76,4 +76,5 @@ Run the workflow from the Actions tab to rebuild the images without a change.
 
 Run the *Release* workflow from the Actions tab with the next version, such as `v1.1.0`, or push a tag of that name.
 It publishes the PDF, the runtime and tools images, the Helm chart and an offline bundle; see "Releases" in workshop-common's README.
+To ship another file with every release, put it in `downloads/`.
 The tools image adds `rosa`, `aws` and `az` (`tools/install.sh`) to the shared tools.
