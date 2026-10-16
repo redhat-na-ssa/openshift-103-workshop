@@ -5,4 +5,4 @@ assembly:
   attributes:
     source-highlighter: rouge
 build:
-  command: bundle exec asciidoctor-pdf
+  command: bundle exec asciidoctor-pdf -r ../workshop-common/pdf/workshop-pdf.rb
