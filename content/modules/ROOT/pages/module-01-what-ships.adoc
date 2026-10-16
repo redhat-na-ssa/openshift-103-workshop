@@ -544,7 +544,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://github.com/redhat-na-ssa/ocp-cloud-workshop.git
+    repoURL: https://github.com/redhat-na-ssa/openshift-cloud-workshop.git
     targetRevision: main
     path: exercises/module-01/gitops-hello
   destination:
