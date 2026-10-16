@@ -1,0 +1,13 @@
+name: Check content
+# Fails a pull request on runnable commands in sentences, code lines too long for the PDF,
+# Antora warnings or broken links; see "Pull request checks" in shpwrck/workshop-common.
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    uses: shpwrck/workshop-common/.github/workflows/content-check.yml@main
