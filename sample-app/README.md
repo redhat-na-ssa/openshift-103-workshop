@@ -7,8 +7,8 @@ exposes Prometheus metrics.
 
 | Image | Use |
 |-------|-----|
-| `ghcr.io/shpwrck/ocp-cloud-workshop/sample-app:1.0` | Everywhere. Runs under any user ID. |
-| `ghcr.io/shpwrck/ocp-cloud-workshop/sample-app:1.0-root` | Module 2 only. Expects root, so it fails under OpenShift's default SCC. |
+| `ghcr.io/redhat-na-ssa/ocp-cloud-workshop/sample-app:1.0` | Everywhere. Runs under any user ID. |
+| `ghcr.io/redhat-na-ssa/ocp-cloud-workshop/sample-app:1.0-root` | Module 2 only. Expects root, so it fails under OpenShift's default SCC. |
 
 Both images are built from `Containerfile` by the
 `Sample App Image` workflow on every push to `main` that changes this
