@@ -1,0 +1,135 @@
+// How to deploy the release's files, shown on the Workshop instructor page.
+// From workshop-common's template; keep it the same in every repo.
+// content/antora.yml sets fallbacks for site-image-basename, chart-version and
+// release-tag; the Pages and Release workflows pass the released values.
+
+A release has everything needed to run the workshop: the site image, the tools image and a Helm chart that deploys both.
+Get the files from xref:downloads.adoc[Downloads].
+On a cluster that can reach ghcr.io, you need only the chart; on a disconnected cluster, you also mirror the images first.
+
+[cols="1,2",options="header"]
+|===
+|Part |What it runs
+
+|`{site-image-basename}:{tools-image-tag}`
+|This site, served over HTTP on port 8080.
+
+|`{tools-image-basename}:{tools-image-tag}`
+|A pod with the command-line tools the exercises use, as xref:cli-tools.adoc[Shared CLI tools] describes.
+
+|`{workshop-name}-{chart-version}.tgz`
+|The Helm chart: a Deployment, Service and Route for the site, and a Deployment for the tools pod.
+|===
+
+You need `oc` and `helm` on your workstation, and a user who can create a project.
+The tools image has both, if you'd rather run the steps from a pod.
+
+=== Deploy on a Connected Cluster
+
+. Download `{workshop-name}-{chart-version}.tgz` from xref:downloads.adoc[Downloads].
+
+. Create a project for the workshop:
++
+[source,bash]
+----
+oc new-project workshop
+----
+
+. Install the chart into it:
++
+[source,bash,subs=attributes+]
+----
+helm upgrade --install workshop \
+  ./{workshop-name}-{chart-version}.tgz \
+  --namespace workshop
+----
+
+. Print the site's address and open it in a browser:
++
+[source,bash,subs=attributes+]
+----
+oc get route workshop-{workshop-name} \
+  --namespace workshop \
+  --output jsonpath='{.spec.host}{"\n"}'
+----
+
+The chart's notes, printed after the install, repeat these steps.
+To leave out the tools pod, add `--set tools.enabled=false` to the install.
+
+=== Deploy on a Disconnected Cluster
+
+. Download `{workshop-name}-{chart-version}.tgz`, `images-mirror.txt` and `DISCONNECTED.md` from xref:downloads.adoc[Downloads] on a host that can reach both ghcr.io and your registry.
+
+. Set the registry and path to mirror to, replacing the example with your own:
++
+[source,bash]
+----
+REGISTRY=registry.example.com/workshop
+----
+
+. Mirror the site image:
++
+[source,bash,subs=attributes+]
+----
+oc image mirror \
+  {site-image-basename}:{tools-image-tag} \
+  $REGISTRY/{workshop-name}:{tools-image-tag}
+----
+
+. Mirror the tools image the same way:
++
+[source,bash,subs=attributes+]
+----
+oc image mirror \
+  {tools-image-basename}:{tools-image-tag} \
+  $REGISTRY/{workshop-name}-tools:{tools-image-tag}
+----
+
+. Mirror the images the exercises pull, which each workshop's setup requirements list.
+
+. Create a project for the workshop:
++
+[source,bash]
+----
+oc new-project workshop
+----
+
+. Install the chart, pointing it at the mirrored images, from a host that can reach the cluster and has the chart and `REGISTRY` set:
++
+[source,bash,subs=attributes+]
+----
+helm upgrade --install workshop \
+  ./{workshop-name}-{chart-version}.tgz \
+  --namespace workshop \
+  --set image.repository=$REGISTRY/{workshop-name} \
+  --set tools.image.repository=$REGISTRY/{workshop-name}-tools
+----
+
+. Print the site's address and open it in a browser:
++
+[source,bash,subs=attributes+]
+----
+oc get route workshop-{workshop-name} \
+  --namespace workshop \
+  --output jsonpath='{.spec.host}{"\n"}'
+----
+
+`DISCONNECTED.md` has the same steps for reading offline.
+
+=== Deploy Without Helm
+
+* *The site:* the offline bundle on the release page has the built site in `www/`.
+Any web server can serve that folder as it is.
+* *The tools pod:* import `tools-deployment.yaml` from xref:downloads.adoc[Downloads] in the web console, as xref:cli-tools.adoc[Shared CLI tools] describes.
+
+=== Check the Deployment
+
+* The site opens at the Route's address, on the Workshop home page.
+* The tools pod is running:
++
+[source,bash,subs=attributes+]
+----
+oc get deployment workshop-{workshop-name}-tools \
+  --namespace workshop
+----
+* Each workshop's setup requirements end with a verification checklist; run it before the attendees start.
