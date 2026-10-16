@@ -853,6 +853,7 @@ These are the names the exercises give the resources, to help find them:
 
 The workshop pages are AsciiDoc files in `content/modules/ROOT/pages/`, and `content/modules/ROOT/nav.adoc` sets the navigation.
 Antora builds the site, and the Publish to GitHub Pages workflow deploys it from `main`.
+The site's look (theme, CSS, tabs, copy buttons, footer) and the build and PDF workflows come from https://github.com/redhat-na-ssa/workshop-common[workshop-common], which OpenShift 101 and 102 share; change them there.
 
 To preview the site with Podman, build it into `www/`:
 

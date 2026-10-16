@@ -11,11 +11,11 @@ content:
 
 ui:
   bundle:
-    url: https://github.com/rhpds/rhdp_showroom_theme/releases/download/v0.0.1/ui-bundle.zip
+    # Showroom theme plus the shared workshop CSS, tabs, copy buttons and footer stamp;
+    # see https://github.com/redhat-na-ssa/workshop-common
+    url: https://github.com/redhat-na-ssa/workshop-common/releases/download/ui-bundle/ui-bundle.zip
     snapshot: true
   supplemental_files:
-    - path: ./content/supplemental-ui
-    - path: ./content/lib
     - path: .nojekyll
     - path: ui.yml
       contents: "static_files: [ .nojekyll ]"
