@@ -1,5 +1,5 @@
 name: Publish to GitHub Pages
-# Builds and deploys the site with the shared workflow in redhat-na-ssa/workshop-common.
+# Builds and deploys the site with the shared workflow in shpwrck/workshop-common.
 on:
   workflow_dispatch:
   push:
@@ -19,4 +19,4 @@ concurrency:
 
 jobs:
   pages:
-    uses: redhat-na-ssa/workshop-common/.github/workflows/pages.yml@main
+    uses: shpwrck/workshop-common/.github/workflows/pages.yml@main
