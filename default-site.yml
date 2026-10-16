@@ -12,8 +12,8 @@ content:
 ui:
   bundle:
     # Showroom theme plus the shared workshop CSS, tabs, copy buttons and footer stamp;
-    # see https://github.com/redhat-na-ssa/workshop-common
-    url: https://github.com/redhat-na-ssa/workshop-common/releases/download/ui-bundle/ui-bundle.zip
+    # see https://github.com/shpwrck/workshop-common
+    url: https://github.com/shpwrck/workshop-common/releases/download/ui-bundle/ui-bundle.zip
     snapshot: true
   supplemental_files:
     - path: .nojekyll

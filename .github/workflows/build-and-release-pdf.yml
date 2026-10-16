@@ -1,5 +1,5 @@
 name: Build and Release PDF Documentation
-# Builds the PDF and publishes the release with the shared workflow in redhat-na-ssa/workshop-common.
+# Builds the PDF and publishes the release with the shared workflow in shpwrck/workshop-common.
 on:
   push:
     tags:
@@ -16,7 +16,7 @@ permissions:
 
 jobs:
   release:
-    uses: redhat-na-ssa/workshop-common/.github/workflows/pdf-release.yml@main
+    uses: shpwrck/workshop-common/.github/workflows/pdf-release.yml@main
     with:
       tag-name: ${{ github.event_name == 'push' && github.ref_name || inputs.tag_name }}
       pdf-name: ocp-cloud-workshop

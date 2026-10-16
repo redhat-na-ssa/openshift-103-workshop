@@ -1,5 +1,5 @@
 name: Test PDF Build
-# Builds the PDF on pull requests with the shared workflow in redhat-na-ssa/workshop-common.
+# Builds the PDF on pull requests with the shared workflow in shpwrck/workshop-common.
 on:
   pull_request:
     paths:
@@ -14,4 +14,4 @@ permissions:
 
 jobs:
   test-build:
-    uses: redhat-na-ssa/workshop-common/.github/workflows/pdf-test.yml@main
+    uses: shpwrck/workshop-common/.github/workflows/pdf-test.yml@main
