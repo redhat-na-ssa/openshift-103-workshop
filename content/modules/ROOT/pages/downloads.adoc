@@ -3,6 +3,7 @@
 // From workshop-common's template; keep it the same in every repo.
 // The Release and Pages workflows set release-tag, chart-version, downloads-base and
 // release-page; a build that isn't from a release has none of them.
+// To ship another file with every release, put it in the repo's downloads/ folder.
 
 ifdef::downloads-base[]
 Release {release-tag} of {lab_name} is made of the files below.
@@ -34,12 +35,15 @@ The site also serves it as a Helm chart repository at `/helm/`.
 
 Images the exercises themselves pull are listed on each workshop's setup requirements page, linked from xref:instructor.adoc[Workshop Instructor Guide].
 
+// Lists the files in the repo's downloads/ folder; the Pages and Release workflows write it.
+include::partial$workshop-downloads.adoc[opts=optional]
+
 == On the Release Page
 
 The release page, {release-page}, also has:
 
-* `{workshop-name}-offline-{release-tag}.tar.gz`, the offline bundle: all the files above plus the built site in `www/`, to serve with any web server instead of the site image
-* CycloneDX SBOMs of the site and tools images
+* `{workshop-name}-offline-{release-tag}.tar.gz`, the offline bundle: all the files above, the SBOMs, and the built site in `www/`, to serve with any web server instead of the site image
+* CycloneDX SBOMs of the site and tools images, `{workshop-name}-{release-tag}.sbom.cdx.json` and `{workshop-name}-tools-{release-tag}.sbom.cdx.json`
 endif::[]
 
 ifndef::downloads-base[]
