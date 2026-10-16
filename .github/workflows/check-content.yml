@@ -10,6 +10,4 @@ permissions:
 
 jobs:
   check:
-    uses: shpwrck/workshop-common/.github/workflows/content-check.yml@claude/project-thread-hpleif
-    with:
-      common-ref: claude/project-thread-hpleif
+    uses: shpwrck/workshop-common/.github/workflows/content-check.yml@main
