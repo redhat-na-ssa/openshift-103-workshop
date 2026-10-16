@@ -1,7 +1,7 @@
 ---
 site:
   title: OpenShift Cloud Workshop
-  url: "https://redhat-na-ssa.github.io/ocp-cloud-workshop"
+  url: "https://redhat-na-ssa.github.io/openshift-cloud-workshop"
   start_page: modules::index.adoc
 
 content:
