@@ -11,6 +11,8 @@ xref:rosa-and-aro:index.adoc#_how_the_workshop_works[How the Workshop Works] exp
 
 Before you start, run the xref:rosa-and-aro:setup-requirements.adoc#_verification_checklist[Verification Checklist] in the setup requirements for your workshop.
 
+You don't have to install the command-line tools on your laptop: xref:cli-tools.adoc[Shared CLI tools] shows how to run them in a pod on the cluster.
+
 == Workshops
 
 * xref:rosa-and-aro:index.adoc[OpenShift on ROSA and ARO]: the service model, access and workload security, networking and day-2 operations on ROSA and ARO, compared with EKS and AKS.

@@ -30,6 +30,9 @@ Each attendee runs the hands-on steps on one cluster, ROSA or ARO, whichever the
 An attendee whose team runs both can have one of each and run every step on both, as xref:rosa-and-aro:index.adoc#_how_the_workshop_works[How the Workshop Works] and xref:rosa-and-aro:setup-requirements.adoc[Setup Requirements] describe.
 Several exercises change cluster-wide settings, so each attendee or pair needs a cluster of their own.
 
+Shared by all the workshops: attendees who don't want to install the command-line tools run the workshop CLI tools image on the cluster, as xref:cli-tools.adoc[Shared CLI tools] describes.
+Make sure attendees can pull that image, or mirror it for a disconnected cluster.
+
 [#plan-the-clusters]
 === Plan the Clusters
 

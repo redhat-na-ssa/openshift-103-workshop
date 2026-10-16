@@ -13,6 +13,14 @@ nav:
 asciidoc:
   attributes:
     lab_name: "OpenShift 103 Workshop"
+    # The Shared CLI tools page: the repo name names the chart and the tools Deployment,
+    # extra-cli-tools lists what tools/install.sh adds (each in backticks, then ", "),
+    # and the image is a fallback for local builds; the Pages and Release workflows
+    # pass the published image's name and tag.
+    workshop-name: "openshift-103-workshop"
+    extra-cli-tools: "`rosa`, `aws`, `az`, "
+    tools-image-basename: ghcr.io/redhat-na-ssa/openshift-103-workshop-tools
+    tools-image-tag: latest
     page-pagination: true
     # provider tabs: picking ROSA or ARO switches every tab set on the page
     tabs-sync-option: ''
