@@ -19,5 +19,5 @@ jobs:
     uses: shpwrck/workshop-common/.github/workflows/pdf-release.yml@main
     with:
       tag-name: ${{ github.event_name == 'push' && github.ref_name || inputs.tag_name }}
-      pdf-name: openshift-cloud-workshop
-      pdf-title: OpenShift Cloud Workshop
+      pdf-name: openshift-103-workshop
+      pdf-title: "OpenShift 103 Workshop"

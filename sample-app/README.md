@@ -1,14 +1,14 @@
 # Sample app
 
-The application that runs through Modules 2 to 4 of the OpenShift Cloud
+The application that runs through Modules 2 to 4 of the OpenShift 103
 Workshop. It lists the objects in an S3 bucket (ROSA) or a Blob
 container (ARO), using the cloud credentials the pod is given, and
 exposes Prometheus metrics.
 
 | Image | Use |
 |-------|-----|
-| `ghcr.io/redhat-na-ssa/openshift-cloud-workshop/sample-app:1.0` | Everywhere. Runs under any user ID. |
-| `ghcr.io/redhat-na-ssa/openshift-cloud-workshop/sample-app:1.0-root` | Module 2 only. Expects root, so it fails under OpenShift's default SCC. |
+| `ghcr.io/redhat-na-ssa/openshift-103-workshop/sample-app:1.0` | Everywhere. Runs under any user ID. |
+| `ghcr.io/redhat-na-ssa/openshift-103-workshop/sample-app:1.0-root` | Module 2 only. Expects root, so it fails under OpenShift's default SCC. |
 
 Both images are built from `Containerfile` by the
 `Sample App Image` workflow on every push to `main` that changes this

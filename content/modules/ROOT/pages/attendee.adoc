@@ -1,0 +1,21 @@
+= Workshop Attendee
+
+== How the Workshop Works
+
+Each workshop is a set of modules, and each page with hands-on steps lists its exercises before the first one.
+Copy each command with the button on its code block and run it as it is, unless the step says to change something.
+
+You do the hands-on work on one cluster: ROSA or ARO, whichever your team runs.
+Where the steps differ between the two, they appear in tabs: pick *ROSA (AWS)* or *ARO (Azure)* once, and every page follows your choice.
+xref:rosa-and-aro:index.adoc#_how_the_workshop_works[How the Workshop Works] explains the rest, including how each section is laid out.
+
+Before you start, run the xref:rosa-and-aro:setup-requirements.adoc#_verification_checklist[Verification Checklist] in the setup requirements for your workshop.
+
+== Workshops
+
+* xref:rosa-and-aro:index.adoc[OpenShift on ROSA and ARO]: the service model, access and workload security, networking and day-2 operations on ROSA and ARO, compared with EKS and AKS.
+// add-workshop.py adds workshops above this line
+
+== Where to Begin
+
+Start with xref:rosa-and-aro:module-01-who-manages-what.adoc#before-you-start[Before You Start] in Module 1, which logs you in to your cluster and sets the variables every later page uses.

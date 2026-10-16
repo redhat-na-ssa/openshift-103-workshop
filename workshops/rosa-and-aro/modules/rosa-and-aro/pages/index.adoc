@@ -1,13 +1,6 @@
-= Introduction
+= OpenShift on ROSA and ARO
 
-This workshop is for platform engineers who already run Amazon EKS or Azure AKS and now operate Red Hat OpenShift Service on AWS (ROSA) or Azure Red Hat OpenShift (ARO).
-
-It is not a sales pitch.
-Each section shows what is different, which differences matter in daily operation, where ROSA and ARO save you work compared with a platform you build yourself on EKS or AKS, and where the native service is the better tool.
-
-ifdef::openshift-102-showroom[]
-include::openshift-102:ROOT:partial$cli-tools-container.adoc[]
-endif::[]
+This workshop compares native managed Kubernetes on the public cloud (Amazon EKS and Azure AKS) with managed OpenShift: Red Hat OpenShift Service on AWS (ROSA) and Azure Red Hat OpenShift (ARO).
 
 == How the Workshop Works
 

@@ -1,11 +1,15 @@
 ---
 site:
-  title: OpenShift Cloud Workshop
-  url: "https://redhat-na-ssa.github.io/openshift-cloud-workshop"
-  start_page: modules::index.adoc
+  title: "OpenShift 103 Workshop"
+  url: "https://redhat-na-ssa.github.io/openshift-103-workshop"
+  start_page: ROOT::index.adoc
 
 content:
   sources:
+    # Each workshop under workshops/, then the home part, which must stay last.
+    - url: .
+      start_path: workshops/rosa-and-aro
+    # add-workshop.py adds workshops above this line
     - url: .
       start_path: content
 

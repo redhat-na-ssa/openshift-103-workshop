@@ -1,0 +1,26 @@
+= OpenShift 103 Workshop
+
+This workshop is for platform engineers who already run Amazon EKS or Azure AKS and now operate Red Hat OpenShift Service on AWS (ROSA) or Azure Red Hat OpenShift (ARO).
+
+It is not a sales pitch.
+Each section shows what is different, which differences matter in daily operation, where ROSA and ARO save you work compared with a platform you build yourself on EKS or AKS, and where the native service is the better tool.
+
+== Where to Start
+
+[cols="1,2",options="header"]
+|===
+|You are |Start here
+
+|Running a delivery of the workshop
+|xref:instructor.adoc[Workshop instructor]: what the workshop covers, the environment it needs, and how to run it.
+
+|Taking the workshop
+|xref:attendee.adoc[Workshop attendee]: how the workshop works and where to begin.
+|===
+
+== Included Workshops
+
+Each one stands on its own; run them in the order listed or pick the ones your group needs.
+
+* xref:rosa-and-aro:index.adoc[OpenShift on ROSA and ARO]: the service model, access and workload security, networking and day-2 operations, compared with EKS and AKS.
+// add-workshop.py adds workshops above this line

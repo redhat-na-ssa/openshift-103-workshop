@@ -62,4 +62,4 @@ jobs:
             ${{ env.IMAGE }}:sha-${{ github.sha }}${{ matrix.suffix }}
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
-            org.opencontainers.image.description=OpenShift Cloud Workshop sample app (${{ matrix.target }})
+            org.opencontainers.image.description=OpenShift 103 Workshop sample app (${{ matrix.target }})
