@@ -34,6 +34,7 @@ Shared by all the workshops: attendees who don't want to install the command-lin
 Make sure attendees can pull that image, or mirror it for a disconnected cluster.
 
 xref:downloads.adoc[Downloads] has every file of the release: the PDF, the Helm chart, the list of images to mirror and the guide for running the workshop in a disconnected cluster.
+<<deploy-the-workshop,Deploy the Workshop>> shows how to deploy them.
 
 [#plan-the-clusters]
 === Plan the Clusters
@@ -84,9 +85,15 @@ aws sts get-caller-identity \
   --output text
 ----
 
+[#deploy-the-workshop]
+== Deploy the Workshop
+
+include::partial$deploy-workshop.adoc[]
+
 == Before the Day
 
 . Prepare the environment from the setup requirements above, for every attendee, and check the <<setup-checklist,Setup Checklist>>.
+. Deploy the workshop, as <<deploy-the-workshop,Deploy the Workshop>> describes.
 . Run the workshop end to end once on an environment built the same way, as <<dry-run,Dry Run>> describes.
 . Decide who creates the <<the-rosa-temporary-administrator,ROSA temporary administrator>>, and send each attendee <<what-to-hand-each-attendee,their values>>.
 . Send attendees the xref:attendee.adoc[Workshop attendee] page so they can check their workstation.

@@ -21,6 +21,10 @@ asciidoc:
     extra-cli-tools: "`rosa`, `aws`, `az`, "
     tools-image-basename: ghcr.io/redhat-na-ssa/openshift-103-workshop-tools
     tools-image-tag: latest
+    # The deployment steps on Workshop instructor: the site image and the chart version,
+    # with fallbacks for builds that aren't from a release.
+    site-image-basename: ghcr.io/redhat-na-ssa/openshift-103-workshop
+    chart-version: "<version>"
     page-pagination: true
     # provider tabs: picking ROSA or ARO switches every tab set on the page
     tabs-sync-option: ''
