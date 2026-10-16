@@ -374,7 +374,7 @@ oc new-project restricted-data
 [source,bash]
 ----
 oc label namespace restricted-data \
-  workshop.k8socp.com/sensitivity=high
+  workshop.example.com/sensitivity=high
 ----
 
 Run a second copy of the sample application in it, as a stand-in for a service with sensitive data:
@@ -383,7 +383,7 @@ Run a second copy of the sample application in it, as a stand-in for a service w
 ----
 oc create deployment records \
   --namespace restricted-data \
-  --image ghcr.io/shpwrck/ocp-cloud-workshop/sample-app:1.0 \
+  --image ghcr.io/redhat-na-ssa/ocp-cloud-workshop/sample-app:1.0 \
   --port 8080
 ----
 
@@ -422,14 +422,14 @@ spec:
   subject:
     namespaces:
       matchLabels:
-        workshop.k8socp.com/sensitivity: high
+        workshop.example.com/sensitivity: high
   ingress:
   - name: allow-same-sensitivity
     action: Allow
     from:
     - namespaces:
         matchLabels:
-          workshop.k8socp.com/sensitivity: high
+          workshop.example.com/sensitivity: high
   - name: deny-all-other-namespaces
     action: Deny
     from:

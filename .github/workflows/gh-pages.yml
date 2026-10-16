@@ -24,6 +24,7 @@ jobs:
         with:
           fetch-depth: 0  # tags and history for the footer build stamp
       - name: configure pages
+        id: pages
         uses: actions/configure-pages@v5
       - name: setup node
         uses: actions/setup-node@v4
@@ -52,7 +53,12 @@ jobs:
             key build-release "$release"
             key build-version "$version"
           fi
-          antora generate default-site.yml --stacktrace "${keys[@]}"
+          # build for wherever Pages serves this repo (an org subpath such as
+          # https://redhat-na-ssa.github.io/<repo>, or a custom domain), so links,
+          # the 404 page and the sitemap match the published URL.
+          antora generate default-site.yml --stacktrace \
+            --url "${{ steps.pages.outputs.base_url }}" \
+            "${keys[@]}"
       - name: upload pages artifact
         uses: actions/upload-pages-artifact@v3
         with:

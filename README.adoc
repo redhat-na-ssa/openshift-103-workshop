@@ -1,9 +1,9 @@
 = OpenShift Cloud Workshop
-:site-url: https://cloud.workshop.k8socp.com/modules
+:site-url: https://redhat-na-ssa.github.io/ocp-cloud-workshop/modules
 
 A hands-on workshop comparing native managed Kubernetes on the public cloud (Amazon EKS and Azure AKS) with managed OpenShift (ROSA and ARO).
 
-Attendees follow the workshop on its site, https://cloud.workshop.k8socp.com[cloud.workshop.k8socp.com].
+Attendees follow the workshop on its site, https://redhat-na-ssa.github.io/ocp-cloud-workshop/[redhat-na-ssa.github.io/ocp-cloud-workshop].
 
 The rest of this README is the facilitator guide, for the instructor who runs a delivery of the workshop.
 The workshop site does not include it.
@@ -704,7 +704,7 @@ oc get deployment sample-app \
   --output wide
 ----
 
-`READY` shows `1/1`, and `IMAGES` shows `ghcr.io/shpwrck/ocp-cloud-workshop/sample-app:1.0`, not `1.0-root`.
+`READY` shows `1/1`, and `IMAGES` shows `ghcr.io/redhat-na-ssa/ocp-cloud-workshop/sample-app:1.0`, not `1.0-root`.
 
 Before link:{site-url}/module-03-exposing-apps.html[Exposing an App], the application and its Service run:
 
