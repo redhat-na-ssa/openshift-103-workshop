@@ -1,7 +1,7 @@
 name: Release
 # Publishes a release with everything needed to run the workshop disconnected: the PDF,
 # the runtime and tools images, the Helm chart and an offline bundle. Uses the shared
-# workflow in shpwrck/workshop-common; see "Releases" in its README.
+# workflow in redhat-na-ssa/workshop-common; see "Releases" in its README.
 on:
   push:
     tags:
@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   release:
-    uses: shpwrck/workshop-common/.github/workflows/release.yml@main
+    uses: redhat-na-ssa/workshop-common/.github/workflows/release.yml@main
     with:
       tag-name: ${{ github.event_name == 'push' && github.ref_name || inputs.tag_name }}
       title: "OpenShift 103 Workshop"

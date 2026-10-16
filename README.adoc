@@ -29,11 +29,11 @@ Its own `antora.yml` is used only when it is built alone.
 |Files the exercises use from the repo on GitHub, such as the application Argo CD syncs in Module 1.
 |===
 
-The site's look (theme, CSS, tabs, copy buttons, footer), the PDF look and the build and PDF workflows come from https://github.com/shpwrck/workshop-common[workshop-common], which the other OpenShift workshops share; change them there.
+The site's look (theme, CSS, tabs, copy buttons, footer), the PDF look and the build and PDF workflows come from https://github.com/redhat-na-ssa/workshop-common[workshop-common], which the other OpenShift workshops share; change them there.
 
 == Preview
 
-Clone https://github.com/shpwrck/workshop-common[workshop-common] next to this repository, and run this from this repository's folder to preview the whole site:
+Clone https://github.com/redhat-na-ssa/workshop-common[workshop-common] next to this repository, and run this from this repository's folder to preview the whole site:
 
 [source,bash]
 ----
