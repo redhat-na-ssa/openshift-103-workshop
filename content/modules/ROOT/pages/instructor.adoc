@@ -1,4 +1,4 @@
-= Workshop Instructor
+= Workshop Instructor Guide
 
 This page is for the instructor who runs a delivery of the workshop.
 
@@ -96,7 +96,7 @@ include::partial$deploy-workshop.adoc[]
 . Deploy the workshop, as <<deploy-the-workshop,Deploy the Workshop>> describes.
 . Run the workshop end to end once on an environment built the same way, as <<dry-run,Dry Run>> describes.
 . Decide who creates the <<the-rosa-temporary-administrator,ROSA temporary administrator>>, and send each attendee <<what-to-hand-each-attendee,their values>>.
-. Send attendees the xref:attendee.adoc[Workshop attendee] page so they can check their workstation.
+. Send attendees the xref:attendee.adoc[Workshop Attendee Guide] page so they can check their workstation.
 
 [#dry-run]
 === Dry Run

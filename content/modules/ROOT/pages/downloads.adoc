@@ -32,7 +32,7 @@ The site also serves it as a Helm chart repository at `/helm/`.
 |The tools pod on its own, to import in the web console, as xref:cli-tools.adoc[Shared CLI tools] describes.
 |===
 
-Images the exercises themselves pull are listed on each workshop's setup requirements page, linked from xref:instructor.adoc[Workshop instructor].
+Images the exercises themselves pull are listed on each workshop's setup requirements page, linked from xref:instructor.adoc[Workshop Instructor Guide].
 
 == On the Release Page
 

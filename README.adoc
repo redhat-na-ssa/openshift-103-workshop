@@ -3,7 +3,7 @@
 The source of the OpenShift 103 Workshop site, for platform engineers who run Amazon EKS or Azure AKS and now operate managed OpenShift: Red Hat OpenShift Service on AWS (ROSA) and Azure Red Hat OpenShift (ARO).
 
 The site is https://redhat-na-ssa.github.io/openshift-103-workshop/[redhat-na-ssa.github.io/openshift-103-workshop].
-Its https://redhat-na-ssa.github.io/openshift-103-workshop/instructor.html[Workshop instructor] page is the facilitator guide: the environment, before the day, the agenda and timings, and delivery notes.
+Its https://redhat-na-ssa.github.io/openshift-103-workshop/instructor.html[Workshop Instructor Guide] page is the facilitator guide: the environment, before the day, the agenda and timings, and delivery notes.
 
 This README is for maintainers of the repo.
 
@@ -16,10 +16,10 @@ The repo is one Antora component made of a home part and nested workshops:
 |Folder |What it holds
 
 |`content/`
-|The home part: the Workshop home, Workshop instructor and Workshop attendee pages, and the site's title, navigation and attributes in `content/antora.yml`.
+|The home part: the Workshop Home, Workshop Instructor Guide and Workshop Attendee Guide pages, and the site's title, navigation and attributes in `content/antora.yml`.
 
 |`workshops/rosa-and-aro/`
-|The OpenShift on ROSA and ARO workshop: its pages in `modules/rosa-and-aro/pages`, its diagrams in `modules/rosa-and-aro/assets/images`, and its navigation in `modules/rosa-and-aro/nav.adoc`.
+|The OpenShift on ROSA and ARO workshop: its pages in `modules/rosa-and-aro/pages`, its diagrams in `modules/rosa-and-aro/assets/images`, and its navigation in `modules/rosa-and-aro/partials/nav-items.adoc`.
 Its own `antora.yml` is used only when it is built alone.
 
 |`sample-app/`
@@ -62,7 +62,7 @@ Run this from this repository's folder, with a short lowercase name and the work
 ../workshop-common/scripts/add-workshop.py NAME "Workshop Title"
 ----
 
-It creates `workshops/NAME` from the workshop template and lists it in both playbooks, `content/antora.yml`, the home part's navigation, and the home, instructor and attendee pages.
+It creates `workshops/NAME` from the workshop template and lists it in both playbooks, the home part's navigation, and the home, instructor and attendee pages.
 Then write its pages, its setup requirements, and its row on the instructor page.
 
 == Sample App Image

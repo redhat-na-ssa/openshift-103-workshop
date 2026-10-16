@@ -7,8 +7,6 @@ title: "OpenShift 103 Workshop"
 version: ~
 nav:
   - modules/ROOT/nav.adoc
-  - modules/rosa-and-aro/nav.adoc
-  # add-workshop.py adds workshops above this line
 
 asciidoc:
   attributes:
@@ -21,10 +19,10 @@ asciidoc:
     extra-cli-tools: "`rosa`, `aws`, `az`, "
     tools-image-basename: ghcr.io/redhat-na-ssa/openshift-103-workshop-tools
     tools-image-tag: latest
-    # The deployment steps on Workshop instructor: the site image and the chart version,
+    # The deployment steps on the instructor guide: the site image and the chart version,
     # with fallbacks for builds that aren't from a release.
     site-image-basename: ghcr.io/redhat-na-ssa/openshift-103-workshop
-    chart-version: "<version>"
+    chart-version: "X.Y.Z"
     page-pagination: true
     # provider tabs: picking ROSA or ARO switches every tab set on the page
     tabs-sync-option: ''
